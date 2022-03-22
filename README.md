@@ -1,6 +1,7 @@
 # mount data-disk
 sudo mount /dev/mapper/vg-data /mnt/data
 
+uauaua
 # run container
 docker run --privileged -m 10G -p 8080:80 -v /mnt/data/export:/export -dti ummsbiocore/dolphinnext-studio
 #docker run --storage-opts dm.basesize=50G -m 10G -p 8080:80 -v ~/export:/export -dti ummsbiocore/dolphinnext-studio
