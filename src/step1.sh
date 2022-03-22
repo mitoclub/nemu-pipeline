@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# inp
 SPNAME=$1
 SEQUENCE=$2
 GENE=$3
@@ -7,13 +8,14 @@ GENE=$3
 DB=~/mtDB/mtDB
 TBLASTN=~/bin/tblastn 
 
-QUERY=query.fa
-OUT=query.out-mitocode
+query=query.fa
 
-printf ">$SPNAME\n$SEQUENCE\n" 1>$QUERY
-if [ -e $QUERY ]
-then
-echo "$QUERY generated"
-$TBLASTN -db $DB -db_gencode 2 -num_alignments 500 -query $QUERY -out $OUT 1>/dev/null 2>/dev/null
-echo "tblastn run completed. $OUT generated"
-fi
+# out
+query_out=query.out-mitocode
+
+printf ">$SPNAME\n$SEQUENCE\n" 1>$query
+
+echo "$query generated"
+$TBLASTN -db $DB -db_gencode 2 -num_alignments 500 -query $query -out $query_out 1>/dev/null 2>/dev/null
+# echo "tblastn run completed. $query_out generated"
+# rm $query
