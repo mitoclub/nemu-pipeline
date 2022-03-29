@@ -37,9 +37,10 @@ Include: yum
     BLAST_VERSION=2.6.0
     echo 'Installing ncbi-blast-$BLAST_VERSION! '
     cd /opt
-    wget --no-check-certificate https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/$BLAST_VERSION/ncbi-blast-$BLAST_VERSION+-x64-win64.tar.gz
-    tar -xvzf ncbi-blast-$BLAST_VERSION+-x64-win64.tar.gz
+    wget --no-check-certificate https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/$BLAST_VERSION/ncbi-blast-$BLAST_VERSION+-x64-linux.tar.gz
+    tar -xvzf ncbi-blast-$BLAST_VERSION+-x64-linux.tar.gz
     mv ncbi-blast-$BLAST_VERSION+ ncbi-blast
+    # chmod -R 755 ncbi-blast
     #final binaries in /opt/ncbi-blast/bin
     
     echo 'Installing macse_v2.05! '
