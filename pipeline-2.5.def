@@ -39,7 +39,8 @@ Include: yum
     cd /opt
     wget --no-check-certificate https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/$BLAST_VERSION/ncbi-blast-$BLAST_VERSION+-x64-win64.tar.gz
     tar -xvzf ncbi-blast-$BLAST_VERSION+-x64-win64.tar.gz
-    #final binaries in /opt/ncbi-blast-$BLAST_VERSION+/bin
+    mv ncbi-blast-$BLAST_VERSION+ ncbi-blast
+    #final binaries in /opt/ncbi-blast/bin
     
     echo 'Installing macse_v2.05! '
     cd /opt
@@ -110,7 +111,6 @@ Include: yum
     #final binaries in /opt/phyml-3.3.20200621/src
         
 %environment
-    BLAST_VERSION=2.6.0
     export LC_ALL=C
     export PATH=$PATH:/opt/scripts
     export PATH=$PATH:/opt/mview-1.67/bin
@@ -121,7 +121,7 @@ Include: yum
     export PATH=$PATH:/opt/iqtree-1.6.12-Linux/bin
     export PATH=$PATH:/opt/EMBOSS-6.6.0/build/bin
     export PATH=$PATH:/opt/phyml-3.3.20200621/src
-    export PATH=$PATH:/opt/ncbi-blast-$BLAST_VERSION+/bin
+    export PATH=$PATH:/opt/ncbi-blast/bin
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
 
