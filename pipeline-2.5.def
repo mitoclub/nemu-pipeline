@@ -34,11 +34,12 @@ Include: yum
     ls
     #final binaries in /opt/mview-1.67/bin
 
-    echo 'Installing ncbi-blast-2.12.0! '
+    BLAST_VERSION=2.6.0
+    echo 'Installing ncbi-blast-$BLAST_VERSION! '
     cd /opt
-    wget --no-check-certificate https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.12.0+-x64-linux.tar.gz
-    tar -xvzf ncbi-blast-2.12.0+-x64-linux.tar.gz
-    #final binaries in /opt/ncbi-blast-2.12.0+/bin
+    wget --no-check-certificate https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/$BLAST_VERSION/ncbi-blast-$BLAST_VERSION+-x64-win64.tar.gz
+    tar -xvzf ncbi-blast-$BLAST_VERSION+-x64-win64.tar.gz
+    #final binaries in /opt/ncbi-blast-$BLAST_VERSION+/bin
     
     echo 'Installing macse_v2.05! '
     cd /opt
@@ -119,9 +120,30 @@ Include: yum
     export PATH=$PATH:/opt/iqtree-1.6.12-Linux/bin
     export PATH=$PATH:/opt/EMBOSS-6.6.0/build/bin
     export PATH=$PATH:/opt/phyml-3.3.20200621/src
-    export PATH=$PATH:/opt/ncbi-blast-2.12.0+/bin
+    export PATH=$PATH:/opt/ncbi-blast-$BLAST_VERSION+/bin
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
+
+%test
+    test_command () {
+    if ! command -v "${1}"; then
+        echo "command ${1} not found!"
+        export FAILED_TESTS=1
+    fi
+    }
+
+    test_command bash
+    test_command perl
+    test_command java
+    test_command mview
+    test_command tblastn
+    test_command blastdbcmd
+    test_command nw_distance
+    test_command raxmlHPC-PTHREADS-SSE3
+    
+    if [ -n "$FAILED_TESTS" ]; then
+        exit 1
+    fi
 
 %labels
     Maintainer MutSpec
