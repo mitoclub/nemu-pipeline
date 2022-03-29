@@ -1,0 +1,129 @@
+Bootstrap: yum
+OSVersion: 7
+MirrorURL: http://mirror.centos.org/centos-7/7/os/x86_64/
+Include: yum
+
+%help
+    This container provides portable & reproducible components for MutSpec.
+    The container made by K.V. Gunbin aka GenKVG
+
+%post
+    yum --assumeyes update
+    yum install --assumeyes openjdk-11-jre-headless wget ncbi-blast perl-App-cpanminus openssl-devel perl-LWP-Protocol-https ant git libxml2 zlib-devel gcc automake autoconf
+    cpanm LWP::Simple
+    cpanm LWP::UserAgent
+    cpanm --force LWP::Protocol::https
+    cpanm File::Temp
+    cpanm Cwd
+
+    echo 'Installing Pipeline scripts v.2.2! '
+    cd /opt
+    wget http://bioinfodbs.kantiana.ru/pipeline-2.2.tar.gz
+    tar -xvzf pipeline-2.2.tar.gz
+    #final scripts in /opt/scripts
+    
+    echo 'Installing mview-1.67! '
+    cd /opt
+    wget --no-check-certificate -O mview-1.67.tar.gz https://sourceforge.net/projects/bio-mview/files/bio-mview/mview-1.67/mview-1.67.tar.gz/download
+    tar -xvzf mview-1.67.tar.gz
+    cd mview-1.67
+    perl Makefile.PL
+    make
+    cd bin
+    sed -i 's/\/path\/to\/mview\/unpacked\/folder/\/opt\/mview-1.67/' mview
+    ls
+    #final binaries in /opt/mview-1.67/bin
+
+    echo 'Installing ncbi-blast-2.12.0! '
+    cd /opt
+    wget --no-check-certificate https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.12.0+-x64-linux.tar.gz
+    tar -xvzf ncbi-blast-2.12.0+-x64-linux.tar.gz
+    #final binaries in /opt/ncbi-blast-2.12.0+/bin
+    
+    echo 'Installing macse_v2.05! '
+    cd /opt
+    wget https://bioweb.supagro.inra.fr/macse/releases/macse_v2.05.jar
+    #final jar in /opt
+    
+    echo 'Installing readseq 2.1.19! '
+    cd /opt
+    wget --no-check-certificate -O readseq.jar "https://osdn.net/frs/g_redir.php?m=jaist&f=readseq%2Freadseq%2F2.1.19%2Freadseq.jar"
+    #final jar in /opt
+    
+    echo 'Installing newick-utils-1.6! '
+    cd /opt
+    wget http://bioinfodbs.kantiana.ru/newick-utils-1.6.tar.gz
+    tar -xvzf newick-utils-1.6.tar.gz
+    cd newick-utils-1.6
+    ./configure --prefix=/opt/newick-utils-1.6/build
+    make install
+    cd build/bin
+    ls
+    #final binaries in /opt/newick-utils-1.6/build/bin
+    
+    echo 'Installing standard-RAxML-8.2.12! '
+    cd /opt
+    wget https://github.com/stamatak/standard-RAxML/archive/refs/tags/v8.2.12.tar.gz
+    tar -xvzf v8.2.12.tar.gz
+    cd standard-RAxML-8.2.12
+    make -f Makefile.SSE3.PTHREADS.gcc
+    ls
+    #final binaries in /opt/standard-RAxML-8.2.12
+    
+    echo 'Installing phylip-3.697! '
+    cd /opt
+    wget https://evolution.gs.washington.edu/phylip/download/phylip-3.697.tar.gz
+    tar -xvzf phylip-3.697.tar.gz
+    cd phylip-3.697/src
+    make -f Makefile.unx install
+    cd ../exe
+    ls
+    #final binaries in /opt/phylip-3.697/exe
+    
+    echo 'Installing iqtree-1.6.12! '
+    cd /opt
+    wget https://github.com/Cibiv/IQ-TREE/releases/download/v1.6.12/iqtree-1.6.12-Linux.tar.gz
+    tar -xvzf iqtree-1.6.12-Linux.tar.gz
+    #final binaries in /opt/iqtree-1.6.12-Linux/bin
+    
+    echo 'Installing EMBOSS-6.6.0! '
+    cd /opt
+    wget ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz
+    tar -xvzf EMBOSS-6.6.0.tar.gz
+    cd EMBOSS-6.6.0
+    ./configure --without-x --prefix=/opt/EMBOSS-6.6.0/build
+    make install 
+    cd build/bin
+    ls
+    #final binaries in /opt/EMBOSS-6.6.0/build/bin
+	
+    echo 'Installing PhyML v3.3! '
+    cd /opt
+    wget https://github.com/stephaneguindon/phyml/archive/refs/tags/v3.3.20200621.tar.gz
+    tar -xvzf v3.3.20200621.tar.gz
+    cd phyml-3.3.20200621
+    ./autogen.sh
+    ./configure --enable-XXXX
+    make
+    ls
+    #final binaries in /opt/phyml-3.3.20200621/src
+        
+%environment
+    export LC_ALL=C
+    export PATH=$PATH:/opt/scripts
+    export PATH=$PATH:/opt/mview-1.67/bin
+    export PATH=$PATH:/opt
+    export PATH=$PATH:/opt/newick-utils-1.6/build/bin
+    export PATH=$PATH:/opt/standard-RAxML-8.2.12
+    export PATH=$PATH:/opt/phylip-3.697/exe
+    export PATH=$PATH:/opt/iqtree-1.6.12-Linux/bin
+    export PATH=$PATH:/opt/EMBOSS-6.6.0/build/bin
+    export PATH=$PATH:/opt/phyml-3.3.20200621/src
+    export PATH=$PATH:/opt/ncbi-blast-2.12.0+/bin
+
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
+
+%labels
+    Maintainer MutSpec
+    Version v2.5
+
