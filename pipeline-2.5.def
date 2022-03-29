@@ -110,6 +110,7 @@ Include: yum
     #final binaries in /opt/phyml-3.3.20200621/src
         
 %environment
+    BLAST_VERSION=2.6.0
     export LC_ALL=C
     export PATH=$PATH:/opt/scripts
     export PATH=$PATH:/opt/mview-1.67/bin
@@ -127,7 +128,7 @@ Include: yum
 %test
     test_command () {
     if ! command -v "${1}"; then
-        echo "command ${1} not found!"
+        echo "!!!command ${1} not found!!!"
         export FAILED_TESTS=1
     fi
     }
