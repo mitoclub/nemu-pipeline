@@ -17,23 +17,23 @@ foreach $key (@keys)
 {
 print STDERR "$hash{$key}\r";
 @columns=split(/\s+/, $hash{$key});
-$entry=$columns[0];
+@prepig=split(/:/, $columns[0]); 
+$pig=$prepig[0];
 $range=$columns[$#columns];
 $range=~s/:/-/;
 # $strand=$columns[$#columns-2];
 for ($i=2;$i<6;$i++) {
-    print STDERR "-----$columns[$#columns-$i]-----\n";
     if ($columns[$#columns-$i] eq "+" or $columns[$#columns-$i] eq "-") {
         $strand=$columns[$#columns-$i];
         last;
     }
 }
-print STDERR "-----$strand-----\n";
+# print STDERR "-----$strand-----\n";
 $strand=~s/\+/plus/;
 $strand=~s/\-/minus/;
 $NUC_FILE.=">$key\n";
-print STDERR "command: blastdbcmd -db $ARGV[1] -entry $entry -range $range -strand '$strand' |\n";
-open (BLAST, "blastdbcmd -db $ARGV[1] -entry $entry -range $range -strand $strand |");
+print STDERR "command: blastdbcmd -db $ARGV[1] -pig $pig -range $range -strand $strand |\n";
+open (BLAST, "blastdbcmd -db $ARGV[1] -pig $pig -range $range -strand $strand |");
 while (<BLAST>)
 {
 unless ($_=~/^>/)
