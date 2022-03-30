@@ -22,10 +22,11 @@ $range=$columns[$#columns];
 $range=~s/:/-/;
 # $strand=$columns[$#columns-2];
 for ($i=2;$i<6;$i++) {
+    print STDERR "-----$columns[$#columns-$i]-----\n";
     if ($columns[$#columns-$i] eq "+" or $columns[$#columns-$i] eq "-") {
-        $strand=$columns[$#columns-$i]
-    };
-last
+        $strand=$columns[$#columns-$i];
+        last;
+    }
 }
 print STDERR "-----$strand-----\n";
 $strand=~s/\+/plus/;
