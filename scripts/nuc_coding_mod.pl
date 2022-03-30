@@ -32,7 +32,7 @@ for ($i=2;$i<6;$i++) {
 $strand=~s/\+/plus/;
 $strand=~s/\-/minus/;
 $NUC_FILE.=">$key\n";
-print STDERR "command: blastdbcmd -db $ARGV[1] -pig $pig -range $range -strand $strand |\n";
+# print STDERR "command: blastdbcmd -db $ARGV[1] -pig $pig -range $range -strand $strand |\n";
 open (BLAST, "blastdbcmd -db $ARGV[1] -pig $pig -range $range -strand $strand |");
 while (<BLAST>)
 {
