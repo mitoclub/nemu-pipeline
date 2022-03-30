@@ -30,12 +30,12 @@ if ($seq=~/\w/)
     }
 
 $seqNumber=keys %alig;
-if ($seqNumber>=4)
-{
+# if ($seqNumber>=4)
+# {
 open (Y, ">yes.O");
-print Y "Yes $seqNumber!\n";
+print Y "Seq number is $seqNumber!\n";
 close Y;
-}
+# }
 
 print "$outgrp";
 foreach $seq (keys %alig)

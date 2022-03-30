@@ -20,7 +20,7 @@ then
 ~/bin/header_sel_mod3.pl query.out-mitocode.fa $SPNAME 1>query.out-mitocode_sel.fa 2>query.out-mitocode_sel.hash 
 #4
 printf "fasta protein alignment with $SPNAME and outgroup was generated\nand names legenda was printed (*.namehash)\n"
-~/bin/nuc_coding_mod.pl query.out-mitocode_sel.hash 1>query.out-mitocode_sel.nuc 2>/dev/null
+~/bin/nuc_coding_mod.pl query.out-mitocode_sel.hash ~/mtDB/mtDB 1>query.out-mitocode_sel.nuc 2>/dev/null
 #5
 if [ -e query.out-mitocode_sel.nuc ]
 then

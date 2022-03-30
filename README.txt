@@ -1,7 +1,12 @@
+# create nucleotide blast-db
+makeblastdb -in humans_mt.fasta -dbtype nucl -title "Human mtDNA"
+sudo singularity exec --bind /mnt/data/export:/export src/image_pipeline-2.5.sif makeblastdb -in /export/data/humans_mt.fasta -dbtype nucl -title "Human mtDNA"
+
+
 # mount data-disk
 sudo mount /dev/mapper/vg-data /mnt/data
 
-uauaua
+
 # run container
 docker run --privileged -m 10G -p 8080:80 -v /mnt/data/export:/export -dti ummsbiocore/dolphinnext-studio
 #docker run --storage-opts dm.basesize=50G -m 10G -p 8080:80 -v ~/export:/export -dti ummsbiocore/dolphinnext-studio

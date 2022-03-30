@@ -20,7 +20,13 @@ print STDERR "$hash{$key}\r";
 $entry=$columns[0];
 $range=$columns[$#columns];
 $range=~s/:/-/;
-$strand=$columns[$#columns-2];
+# $strand=$columns[$#columns-2];
+for ($i=2;$i<6;$i++) {
+    if ($columns[$#columns-$i] eq "+" or $columns[$#columns-$i] eq "-") {
+        $strand=$columns[$#columns-$i]
+    };
+last
+}
 $strand=~s/\+/plus/;
 $strand=~s/\-/minus/;
 $NUC_FILE.=">$key\n";
