@@ -31,7 +31,7 @@ if [ -e yes.O ]
 then
 java -jar ~/bin/macse_v1.01b.jar -prog alignSequences -gc_def 2 -out_AA query.out-mitocode_sel_protalign_unique.fa -out_NT query.out-mitocode_sel_tranalign_unique.fa -seq query.out-mitocode_sel_unique.fa
 #7
-~/bin/macse2.pl query.out-mitocode_sel_tranalign_unique.fa 1>/dev/null 2>/dev/null
+~/bin/macse2.pl query.out-mitocode_sel_tranalign_unique.fa query.out-mitocode_sel_tranalign_unique.fa2 1>/dev/null 2>/dev/null
 #8
 ~/bin/mutnumbers.pl query.out-mitocode_sel_tranalign_unique.fa 1>$SPNAME.$GENE.mutnumbers 2>/dev/null
 #9

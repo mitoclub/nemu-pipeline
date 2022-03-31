@@ -49,7 +49,7 @@ foreach $nm (keys %seqs)
     }
 }
 
-open (O, ">$ARGV[0]");
+open (O, ">$ARGV[1]");
 foreach $seq (@seqs)
 {
 print O ">$seq\n";
