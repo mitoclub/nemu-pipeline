@@ -54,16 +54,21 @@ sort -grk 2 RAxML_bestTree.Rax_tree.branches 1>RAxML_bestTree.Rax_tree.branches.
 #14
 echo -e "phylogenetic tree was rerooted (*.tree)\nand list of lengths from root was generated(*.tree.srtbrlist)\n";
 ~/bin/raxmlHPC-PTHREADS-SSE3 -T 4 -f A -m GTRGAMMAIX -s query.out-mitocode_sel_tranalign.phy -t RAxML_bestTree.Rax_tree.rooted -n ANCESTORS 1>/dev/null 2>/dev/null
+#15
 if [ -e RAxML_nodeLabelledRootedTree.ANCESTORS ]
 then
 echo -e "ancestral sequences were reconstructed using ML approach (*.MLancestors.fa and *.MLancestors.prob)\nand inner nodes were labelled (*.tree.anclabels)\n"
 ~/bin/newick/bin/nw_distance -m m -s a -n RAxML_nodeLabelledRootedTree.ANCESTORS 1>RAxML_nodeLabelledRootedTree.ANCESTORS.matrix 2>/dev/null
+#16
 ~/bin/newick/bin/nw_distance -m r -s a -n RAxML_nodeLabelledRootedTree.ANCESTORS 1>RAxML_nodeLabelledRootedTree.ANCESTORS.list2root 2>/dev/null
+#17
 echo -e "nodal distance from root to any labelled tree node were calculated (*.tree.matrix)\n"
 ~/bin/pars.pl RAxML_nodeLabelledRootedTree.ANCESTORS query.out-mitocode_sel_tranalign_unique.fa parsimony.tmp.MPancestors.fa 1>/dev/null 2>/dev/null
+#18
 if [ -e parsimony.tmp.MPancestors.fa ]
 then
 ~/bin/parscompare.pl RAxML_marginalAncestralStates.ANCESTORS parsimony.tmp.MPancestors.fa RAxML_nodeLabelledRootedTree.ANCESTORS.matrix $SPNAME.$GENE.CSancestors.fa 1>$SPNAME.$GENE.CSancestors.MPinc 2>/dev/null
+#19
 echo -e "ancestral sequences were reconstructed using MP approach (*.MPancestors.fa)\nand compared with the same of ML approach (*.CSancestors.fa - fasta ML/MP incompatibilities masqued by N;\n*.CSancestors.MPinc - listed ML/MP incompatibilities)\n"
 mv query.out-mitocode_sel.hash $SPNAME.$GENE.namehash 
 mv query.out-mitocode_sel_tranalign_unique.fa $SPNAME.$GENE.terminals.nuc.fa 
@@ -76,6 +81,7 @@ mv RAxML_nodeLabelledRootedTree.ANCESTORS $SPNAME.$GENE.tree.anclabels
 mv RAxML_bestTree.Rax_tree.rooted $SPNAME.$GENE.tree 
 mv RAxML_bestTree.Rax_tree.branches.srt $SPNAME.$GENE.tree.srtbrlist 
 #rm query.out-mitocode* yes.O RAxML_* query.fa parsimony.tmp.* outfile outtree
+#end
 echo -e "files were renamed and temporary files were deleted\n"
 fi
 fi
