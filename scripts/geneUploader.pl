@@ -14,7 +14,7 @@ $dir = "$ARGV[2]";
 
 #assemble the esearch URL
 $base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
-$url = $base . "esearch.fcgi?db=$db1&term=$query&usehistory=y&retmax=500"; #5000 max
+$url = $base . "esearch.fcgi?db=$db1&term=$query&usehistory=y&retmax=100"; #5000 max
 
 #post the esearch URL
 $output = get($url);

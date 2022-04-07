@@ -1,11 +1,20 @@
 # Download refseq from 
 https://ftp.ncbi.nlm.nih.gov/refseq/release/mitochondrion/
 
+# extract gorilla from refseq file
+```
+awk 'BEGIN {RS=">"} /Gorilla/ {printf ">"$o}' mitochondrion.1.1.genomic.fna > gorilla.fna
+```
 
 # create nucleotide blast-db
 makeblastdb -in humans_mt.fasta -dbtype nucl -title "Human mtDNA"
 sudo singularity exec --bind /mnt/data/export:/export src/image_pipeline-2.5.sif makeblastdb -in /export/data/humans_mt.fasta -dbtype nucl -title "Human mtDNA"
 
+# mkdir DIR
+perl /opt/scripts/geneUploader.pl SPECIES GENE DIR
+
+# change ownership of dir
+sudo chown -R --reference=data/gorilla.fna data/base
 
 # mount data-disk
 sudo mount /dev/mapper/vg-data /mnt/data
