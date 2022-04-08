@@ -17,7 +17,8 @@ foreach $key (@keys)
 {
 print STDERR "$hash{$key}\r";
 @columns=split(/\s+/, $hash{$key});
-$entry=$columns[0];
+@preentry=split(/:/, $columns[0]); 
+$entry=$preentry[1];
 # @prepig=split(/:/, $columns[0]); 
 # $pig=$prepig[0];
 $range=$columns[$#columns];
