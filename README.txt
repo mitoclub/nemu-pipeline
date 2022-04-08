@@ -23,6 +23,17 @@ sudo chown -R --reference=data/gorilla.fna data/base
 sudo mount /dev/mapper/vg-data /mnt/data
 
 
+
+when:
+hits_file.toString() != "hits_yes.txt"
+
+validExitStatus 1
+errorStrategy 'finish'
+
+# KG query to NCBI
+mtDNA vertebrate
+
+
 # run container
 docker run --privileged -m 10G -p 8080:80 -v /mnt/data/export:/export -dti ummsbiocore/dolphinnext-studio
 #docker run --storage-opts dm.basesize=50G -m 10G -p 8080:80 -v ~/export:/export -dti ummsbiocore/dolphinnext-studio

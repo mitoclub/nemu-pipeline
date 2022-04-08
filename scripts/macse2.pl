@@ -41,7 +41,7 @@ for ($i=0;$i<$max;$i++)
 {
 foreach $nm (keys %seqs)
     {
-    if ($seqs{$nm}[$i]!~/[A-Za-z]/)
+    if ($seqs{$nm}[$i]!~/[A-Za-z]/ or $seqs{$nm}[$i]=~/[!\?\.,]/)
 	{
 	if ($nm=~/OUTGRP/){$seqs{$nm}[$i]="NNN"}
 	else {$nonnuccodons{$i}=1}
