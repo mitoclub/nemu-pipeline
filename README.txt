@@ -6,6 +6,9 @@ https://ftp.ncbi.nlm.nih.gov/refseq/release/mitochondrion/
 awk 'BEGIN {RS=">"} /Gorilla/ {printf ">"$o}' mitochondrion.1.1.genomic.fna > gorilla.fna
 ```
 
+# if-else in bash
+if [ `grep -c korilla hello.pl` -gt 1 ]; then echo yes; else echo no; fi
+
 # create nucleotide blast-db
 makeblastdb -in humans_mt.fasta -dbtype nucl -title "Human mtDNA"
 sudo singularity exec --bind /mnt/data/export:/export src/image_pipeline-2.5.sif makeblastdb -in /export/data/humans_mt.fasta -dbtype nucl -title "Human mtDNA"
@@ -36,6 +39,21 @@ bioinfo.int.kantiana.ru
 # change user for /export dir inside docker to run pipelines
 chown -v docker /export
 
+
+# 16.4, page 71
+• Optional Inputs:
+If you want use optional input parameter, you can check the optional checkbox. This feature allows flexibility for the
+user while defining process since the process will be executed in spite of the absence of the input parameter. Please
+check the example below for the use case:
+
+# directives to processes
+https://www.nextflow.io/docs/latest/process.html?highlight=clause#directives
+useful:
+   errorStrategy
+   time
+   validExitStatus
+   queue
+   pod
 
 
 # Когда запускал локально на mr@Smith
