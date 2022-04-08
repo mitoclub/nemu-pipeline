@@ -49,7 +49,12 @@ print "$i\t$variantsN\t$variantsS\n";
 $minMut++;
 }
 }
-$p=$minMut/$max;
-print "Variable positions\t$minMut\t$max\t$p\n";
-$p=$maxMut/$mass;
-print "Maximum number of substitutions\t$maxMut\t$mass\t$p\n";
+
+if ($max > 0) {
+    $p=$minMut/$max;
+    print "Variable positions\t$minMut\t$max\t$p\n";
+}
+if ($mass > 0) {
+    $p=$maxMut/$mass;
+    print "Maximum number of substitutions\t$maxMut\t$mass\t$p\n";
+}

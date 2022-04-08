@@ -11,7 +11,7 @@ if [ `grep -c korilla hello.pl` -gt 1 ]; then echo yes; else echo no; fi
 
 # create nucleotide blast-db
 makeblastdb -in humans_mt.fasta -dbtype nucl -title "Human mtDNA"
-sudo singularity exec --bind /mnt/data/export:/export src/image_pipeline-2.5.sif makeblastdb -in /export/data/humans_mt.fasta -dbtype nucl -title "Human mtDNA"
+sudo singularity exec --bind /mnt/data/export:/export src/image_pipeline-2.5.sif makeblastdb -in /export/data/humans_mt.fasta -dbtype nucl -title "Human mtDNA" -parse_seqids
 
 # mkdir DIR
 perl /opt/scripts/geneUploader.pl SPECIES GENE DIR
