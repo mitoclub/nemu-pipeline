@@ -30,11 +30,14 @@ if ($seq=~/\w/)
     }
 
 $seqNumber=keys %alig;
-if ($seqNumber>=4)
-{
-open (Y, ">report.txt");
-print Y "Seq number is $seqNumber!\n";
-close Y;
+if ($seqNumber>=4) {
+    open (Y, ">report_yes.txt");
+    print Y "Seq number is $seqNumber!\n";
+    close Y;
+} else {
+    open (N, ">report_no.txt");
+    print N "Seq number is too low - $seqNumber!\nBreak execution!\n";
+    close N;
 }
 
 print "$outgrp";
