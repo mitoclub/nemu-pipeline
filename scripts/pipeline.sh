@@ -50,9 +50,9 @@ then
 sort -grk 2 RAxML_bestTree.Rax_tree.branches 1>RAxML_bestTree.Rax_tree.branches.srt 2>/dev/null
 #13
 ~/bin/newick/bin/nw_reroot -l RAxML_bestTree.Rax_tree OUTGRP 1>RAxML_bestTree.Rax_tree.rooted 2>/dev/null
+echo -e "phylogenetic tree was rerooted (*.tree)\nand list of lengths from root was generated(*.tree.srtbrlist)\n";
 
 #14
-echo -e "phylogenetic tree was rerooted (*.tree)\nand list of lengths from root was generated(*.tree.srtbrlist)\n";
 ~/bin/raxmlHPC-PTHREADS-SSE3 -T 4 -f A -m GTRGAMMAIX -s query.out-mitocode_sel_tranalign.phy -t RAxML_bestTree.Rax_tree.rooted -n ANCESTORS 1>/dev/null 2>/dev/null
 #15
 if [ -e RAxML_nodeLabelledRootedTree.ANCESTORS ]
