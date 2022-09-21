@@ -1,0 +1,35 @@
+Bootstrap: localimage
+From: py2.sif
+
+%post
+    yum install --assumeyes which
+
+    ln -s /usr/local/bin/python3.8 /usr/local/bin/python3
+
+    TREESHRINK_VERSION=1.3.9
+    echo 'Installing TreeShrink!'
+    cd /opt
+    wget https://github.com/uym2/TreeShrink/archive/refs/tags/v$TREESHRINK_VERSION.tar.gz -O TreeShrink-$TREESHRINK_VERSION.tar.gz
+    tar -xvzf TreeShrink-$TREESHRINK_VERSION.tar.gz
+    cd TreeShrink-$TREESHRINK_VERSION
+    python3 setup.py install
+    
+    echo 'Installing mutspec-utils!'
+    cd /opt
+    git clone https://github.com/mitoclub/mutspec-utils.git
+    cd mutspec-utils
+    python3 setup.py install
+
+%test
+    test_command () {
+    if ! command -v "${1}"; then
+        echo "!!!command ${1} not found!!!"
+        export FAILED_TESTS=1
+    fi
+    }
+
+    test_command python3
+    
+    if [ -n "$FAILED_TESTS" ]; then
+        exit 1
+    fi

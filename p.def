@@ -7,7 +7,7 @@ From: centos:7
 
 %post
     yum --assumeyes update
-    yum install --assumeyes python3 python3-pip python3-venv wget
+    yum install --assumeyes wget git which  # python3 python3-pip python3-venv 
     # yum install --assumeyes openjdk-11-jre-headless wget ncbi-blast perl-App-cpanminus openssl-devel perl-LWP-Protocol-https ant git libxml2 zlib-devel gcc automake autoconf python3 python3-pip python3-venv
     # cpanm LWP::Simple
     # cpanm LWP::UserAgent
@@ -21,6 +21,20 @@ From: centos:7
     # tar -xvzf pipeline-2.2.tar.gz
     # #final scripts in /opt/scripts
 
+    yum -y groupinstall "Development Tools"
+    yum -y install openssl-devel bzip2-devel libffi-devel
+
+    PYTHON_VERSION=3.8.12
+    echo 'Installing Python!'
+    cd /opt
+    wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
+    tar -xvf Python-3.8.12.tgz
+    cd Python-3.8*/
+
+    ./configure --enable-optimizations
+    make altinstall
+    ln -s /usr/local/bin/python3.8 /usr/local/bin/python3
+
     TREESHRINK_VERSION=1.3.9
     echo 'Installing TreeShrink!'
     cd /opt
@@ -29,6 +43,11 @@ From: centos:7
     cd TreeShrink-$TREESHRINK_VERSION
     python3 setup.py install
     
+    echo 'Installing mutspec-utils!'
+    cd /opt
+    git clone https://github.com/mitoclub/mutspec-utils.git
+    cd mutspec-utils
+    python3 setup.py install
 
 
 %environment
@@ -38,16 +57,16 @@ From: centos:7
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
 
-%test
-    test_command () {
-    if ! command -v "${1}"; then
-        echo "!!!command ${1} not found!!!"
-        export FAILED_TESTS=1
-    fi
-    }
+# %test
+#     test_command () {
+#     if ! command -v "${1}"; then
+#         echo "!!!command ${1} not found!!!"
+#         export FAILED_TESTS=1
+#     fi
+#     }
 
-    test_command python3
+#     test_command python3
     
-    if [ -n "$FAILED_TESTS" ]; then
-        exit 1
-    fi
+#     if [ -n "$FAILED_TESTS" ]; then
+#         exit 1
+#     fi

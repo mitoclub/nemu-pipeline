@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: centos:7
+From: centos/python-38-centos7
 
 %help
     This container provides portable & reproducible components for MutSpec.
@@ -7,12 +7,39 @@ From: centos:7
 
 %post
     yum --assumeyes update
-    yum install --assumeyes openjdk-11-jre-headless wget ncbi-blast perl-App-cpanminus openssl-devel perl-LWP-Protocol-https ant git libxml2 zlib-devel gcc automake autoconf python3 python3-pip
+    yum install --assumeyes openjdk-11-jre-headless wget which ncbi-blast perl-App-cpanminus openssl-devel perl-LWP-Protocol-https ant git libxml2 zlib-devel gcc automake autoconf
+    yum -y groupinstall "Development Tools"
+    yum -y install openssl-devel bzip2-devel libffi-devel
     cpanm LWP::Simple
     cpanm LWP::UserAgent
     cpanm --force LWP::Protocol::https
     cpanm File::Temp
     cpanm Cwd
+
+    PYTHON_VERSION=3.8.12
+    echo 'Installing Python!'
+    cd /opt
+    wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
+    tar -xvf Python-3.8.12.tgz
+    cd Python-3.8*/
+
+    ./configure --enable-optimizations
+    make altinstall
+    ln -s /usr/local/bin/python3.8 /usr/local/bin/python3
+
+    TREESHRINK_VERSION=1.3.9
+    echo 'Installing TreeShrink!'
+    cd /opt
+    wget https://github.com/uym2/TreeShrink/archive/refs/tags/v$TREESHRINK_VERSION.tar.gz -O TreeShrink-$TREESHRINK_VERSION.tar.gz
+    tar -xvzf TreeShrink-$TREESHRINK_VERSION.tar.gz
+    cd TreeShrink-$TREESHRINK_VERSION
+    python3 setup.py install
+    
+    echo 'Installing mutspec-utils!'
+    cd /opt
+    git clone https://github.com/mitoclub/mutspec-utils.git
+    cd mutspec-utils
+    python3 setup.py install
 
     echo 'Installing Pipeline scripts v.2.2! '
     cd /opt
@@ -122,6 +149,12 @@ From: centos:7
     tar -xvzf TreeShrink-$TREESHRINK_VERSION.tar.gz
     cd TreeShrink-$TREESHRINK_VERSION
     python3 setup.py install
+    
+    echo 'Installing mutspec-utils!'
+    cd /opt
+    git clone https://github.com/mitoclub/mutspec-utils.git
+    cd mutspec-utils
+    python3 setup.py install
 
         
 %environment
@@ -151,6 +184,7 @@ From: centos:7
     test_command bash
     test_command perl
     test_command python3
+    test_command run_treeshrink.py
     test_command java
     test_command mview
     test_command tblastn
@@ -159,7 +193,6 @@ From: centos:7
     test_command blastdbcmd
     test_command nw_distance
     test_command raxmlHPC-PTHREADS-SSE3
-    test_command run_treeshrink.py
     
     if [ -n "$FAILED_TESTS" ]; then
         exit 1
