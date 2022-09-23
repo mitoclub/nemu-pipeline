@@ -22,14 +22,14 @@ From: py3.sif
     
     echo 'Installing mview-1.67! '
     cd /opt
-    wget --no-check-certificate -O mview-1.67.tar.gz https://sourceforge.net/projects/bio-mview/files/bio-mview/mview-1.67/mview-1.67.tar.gz/download
+    wget --no-check-certificate -O mview-1.67.tar.gz https://github.com/desmid/mview/archive/refs/tags/v1.67.tar.gz
     tar -xvzf mview-1.67.tar.gz
     cd mview-1.67
     perl Makefile.PL
-    make
-    cd bin
-    sed -i 's/\/path\/to\/mview\/unpacked\/folder/\/opt\/mview-1.67/' mview
-    ls
+    make install
+    # cd bin
+    # sed -i 's/\/path\/to\/mview\/unpacked\/folder/\/opt\/mview-1.67/' mview
+    # ls
     #final binaries in /opt/mview-1.67/bin
 
     BLAST_VERSION=2.6.0
@@ -118,7 +118,7 @@ From: py3.sif
 %environment
     export LC_ALL=C
     export PATH=$PATH:/opt/scripts
-    export PATH=$PATH:/opt/mview-1.67/bin
+    # export PATH=$PATH:/opt/mview-1.67/bin
     export PATH=$PATH:/opt
     export PATH=$PATH:/opt/newick-utils-1.6/build/bin
     export PATH=$PATH:/opt/standard-RAxML-8.2.12
