@@ -87,3 +87,7 @@ startup  # не создался нормальный ключ для локал
    24  ll /export/
    25  history
 
+# containers
+1. p.def - only python and its programms
+2. pipeline-2.5.def - working through p.def result container
+3. pipeline.def - independent and working
