@@ -91,3 +91,9 @@ startup  # не создался нормальный ключ для локал
 1. p.def - only python and its programms
 2. pipeline-2.5.def - working through p.def result container
 3. pipeline.def - independent and working
+
+notes:
+- Processes should have different names
+- one process run one time
+- types of processes outputs must be different
+- 
