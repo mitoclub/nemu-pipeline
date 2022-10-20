@@ -13,7 +13,8 @@ From: centos:7
     yum --assumeyes update
     yum install --assumeyes wget git which
     yum -y groupinstall "Development Tools"
-    yum -y install openssl-devel bzip2-devel libffi-devel sqlite-devel
+    yum -y install openssl-devel bzip2-devel libffi-devel sqlite-devel epel-release
+    yum -y install R
 
     echo 'Downloading packages!'
     cd /opt
@@ -37,11 +38,11 @@ From: centos:7
     cd TreeShrink-$TREESHRINK_VERSION
     python3 setup.py install
     
-    echo 'Installing mutspec-utils!'
-    cd /opt
-    git clone https://github.com/mitoclub/mutspec-utils.git
-    cd mutspec-utils
-    pip3 install -e .
+    # echo 'Installing mutspec-utils!'
+    # cd /opt
+    # git clone https://github.com/mitoclub/mutspec-utils.git
+    # cd mutspec-utils
+    # pip3 install -e .
 
 %test
     test_command () {
@@ -53,6 +54,7 @@ From: centos:7
 
     test_command python3
     test_command run_treeshrink.py
+    test_command R
     
     if [ -n "$FAILED_TESTS" ]; then
         exit 1
