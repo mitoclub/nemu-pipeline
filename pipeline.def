@@ -40,8 +40,7 @@ From: centos:7
 
     ####### PYTHON #######
     yum -y groupinstall "Development Tools"
-    yum -y install openssl-devel bzip2-devel libffi-devel sqlite-devel epel-release
-    yum -y install R
+    yum -y install openssl-devel bzip2-devel libffi-devel sqlite-devel
 
     echo 'Installing Python!'
     cd /opt
@@ -168,7 +167,6 @@ From: centos:7
     test_command bash
     test_command perl
     test_command python3
-    test_command R
     test_command run_treeshrink.py
     test_command java
     test_command mview

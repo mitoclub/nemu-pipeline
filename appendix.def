@@ -1,0 +1,22 @@
+Bootstrap: localimage
+From: image_pipeline-2.8.sif
+
+%post
+    yum -y install epel-release
+    yum -y install R
+
+    pip3 install Pyvolve
+
+%test
+    test_command () {
+    if ! command -v "${1}"; then
+        echo "!!!command ${1} not found!!!"
+        export FAILED_TESTS=1
+    fi
+    }
+
+    test_command R
+
+%labels
+    Maintainer MutSpec
+    Version v2.6
