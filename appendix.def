@@ -5,7 +5,7 @@ From: image_pipeline-2.8.sif
     yum -y install epel-release
     yum -y install R
 
-    pip3 install Pyvolve
+    pip3 install Pyvolve==1.1.0
 
 %test
     test_command () {
