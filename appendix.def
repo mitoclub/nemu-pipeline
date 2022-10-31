@@ -5,7 +5,10 @@ From: image_pipeline-2.8.sif
     yum -y install epel-release
     yum -y install R
 
-    pip3 install Pyvolve==1.1.0
+    cd /opt
+    git clone https://github.com/kpotoh/pyvolve.git
+    cd pyvolve
+    python3 setup.py `install`
 
 %test
     test_command () {
