@@ -6,9 +6,16 @@ From: image_pipeline-2.8.sif
     yum -y install R
 
     cd /opt
+    rm -fr mutspec-utils
+    wget https://github.com/mitoclub/mutspec-utils/archive/refs/tags/0.0.3.tar.gz -O mutspec-utils.tar.gz
+    tar -xvzf mutspec-utils.tar.gz
+    cd mutspec-utils-0.0.3
+    python3 setup.py install
+
+    cd /opt
     git clone https://github.com/kpotoh/pyvolve.git
     cd pyvolve
-    python3 setup.py `install`
+    python3 setup.py install
 
 %test
     test_command () {
@@ -19,6 +26,9 @@ From: image_pipeline-2.8.sif
     }
 
     test_command R
+    test_command calculate_mutspec.py
+    test_command pyvolve_process.py
+    test_command calculate_mutspec_pyvolve.py
 
 %labels
     Maintainer MutSpec
