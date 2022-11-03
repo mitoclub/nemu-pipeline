@@ -30,6 +30,11 @@ From: image_pipeline-2.8.sif
     test_command pyvolve_process.py
     test_command calculate_mutspec_pyvolve.py
 
+%environment
+    export MKL_NUM_THREADS=1
+    export NUMEXPR_NUM_THREADS=1
+    export OMP_NUM_THREADS=1
+
 %labels
     Maintainer MutSpec
     Version v2.6
