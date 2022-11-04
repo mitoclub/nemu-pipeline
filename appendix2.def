@@ -1,0 +1,22 @@
+Bootstrap: localimage
+From: image_pipeline-2.9.sif
+
+%post
+    cd /opt/mutspec-utils
+    git pull
+    python3 setup.py install
+
+%test
+    test_command () {
+    if ! command -v "${1}"; then
+        echo "!!!command ${1} not found!!!"
+        export FAILED_TESTS=1
+    fi
+    }
+
+    test_command calculate_mutspec.py
+    test_command pyvolve_process.py
+
+%labels
+    Maintainer MutSpec
+    Version v2.6
