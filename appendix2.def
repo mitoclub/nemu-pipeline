@@ -20,3 +20,4 @@ From: image_pipeline-2.9.sif
 %labels
     Maintainer MutSpec
     Version v2.6
+    Used for ms-utils update

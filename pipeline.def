@@ -3,7 +3,8 @@ From: centos:7
 
 %help
     This container provides portable & reproducible components for MutSpec.
-    The container made by K.V. Gunbin aka GenKVG
+    The container made by K.V. Gunbin aka GenKVG and B.E. Efimenko aka kpotoh
+    https://github.com/kpotoh/dolphin
 
 %files
     tools/* /opt
@@ -183,4 +184,4 @@ From: centos:7
 
 %labels
     Maintainer MutSpec
-    Version v2.6
+    Version v2.8

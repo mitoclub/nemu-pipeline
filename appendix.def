@@ -1,6 +1,11 @@
 Bootstrap: localimage
 From: image_pipeline-2.8.sif
 
+%help
+    This container provides portable & reproducible components for MutSpec.
+    The container made by K.V. Gunbin aka GenKVG and B.E. Efimenko aka kpotoh
+    https://github.com/kpotoh/dolphin
+
 %post
     yum -y install epel-release
     yum -y install R
@@ -37,4 +42,4 @@ From: image_pipeline-2.8.sif
 
 %labels
     Maintainer MutSpec
-    Version v2.6
+    Version v2.9
