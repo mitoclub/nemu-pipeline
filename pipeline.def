@@ -29,7 +29,7 @@ From: centos:7
     # wget http://bioinfodbs.kantiana.ru/pipeline-2.2.tar.gz
     # wget --no-check-certificate -O readseq.jar "https://osdn.net/frs/g_redir.php?m=jaist&f=readseq%2Freadseq%2F2.1.19%2Freadseq.jar"  # broken
     # wget --no-check-certificate -O mview-1.67.tar.gz https://github.com/desmid/mview/archive/refs/tags/v1.67.tar.gz
-    # wget --no-check-certificate https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.6.0/ncbi-blast-2.6.0+-x64-linux.tar.gz
+    # wget --no-check-certificate https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0+-x64-linux.tar.gz
     # wget https://bioweb.supagro.inra.fr/macse/releases/macse_v2.05.jar
     # wget http://bioinfodbs.kantiana.ru/newick-utils-1.6.tar.gz
     # wget https://github.com/stamatak/standard-RAxML/archive/refs/tags/v8.2.12.tar.gz -O RAxML-8.2.12.tar.gz
@@ -42,6 +42,8 @@ From: centos:7
     ####### PYTHON #######
     yum -y groupinstall "Development Tools"
     yum -y install openssl-devel bzip2-devel libffi-devel sqlite-devel
+    yum -y install epel-release
+    yum -y install R
 
     echo 'Installing Python!'
     cd /opt
@@ -62,7 +64,13 @@ From: centos:7
     cd /opt
     git clone https://github.com/mitoclub/mutspec-utils.git
     cd mutspec-utils
-    pip3 install -e .
+    python3 setup.py install
+
+    echo 'Installing pyvolve!'
+    cd /opt
+    git clone https://github.com/kpotoh/pyvolve.git
+    cd pyvolve
+    python3 setup.py install
     ####### PYTHON #######
 
     echo 'Installing Pipeline scripts v.2.2! '
@@ -78,10 +86,10 @@ From: centos:7
     make install
     #final binaries in /opt/mview-1.67/bin
 
-    echo 'Installing ncbi-blast-2.6.0! '
+    echo 'Installing ncbi-blast-2.13.0! '
     cd /opt
-    tar -xvzf ncbi-blast-2.6.0+-x64-linux.tar.gz
-    mv ncbi-blast-2.6.0+ ncbi-blast
+    tar -xvzf ncbi-blast-2.13.0+-x64-linux.tar.gz
+    mv ncbi-blast-2.13.0+ ncbi-blast
     #final binaries in /opt/ncbi-blast/bin
 
     echo 'Installing newick-utils-1.6! '
@@ -177,7 +185,10 @@ From: centos:7
     test_command blastdbcmd
     test_command nw_distance
     test_command raxmlHPC-PTHREADS-SSE3
-    
+    test_command R
+    test_command calculate_mutspec.py
+    test_command pyvolve_process.py
+
     if [ -n "$FAILED_TESTS" ]; then
         exit 1
     fi
