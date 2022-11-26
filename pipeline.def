@@ -47,7 +47,7 @@ From: centos:7
 
     echo 'Installing Python!'
     cd /opt
-    tar -xvf Python-3.8.12.tgz
+    tar -xvf Python-$PYTHON_VERSION.tgz
     cd Python-3.8*/
     ./configure --enable-optimizations
     make altinstall
@@ -77,6 +77,10 @@ From: centos:7
     cd /opt
     tar -xvzf pipeline-2.2.tar.gz
     #final scripts in /opt/scripts
+
+    echo 'Installing updated version of Pipeline scripts!'
+    cd /opt
+    git clone https://github.com/kpotoh/dolphin.git
     
     echo 'Installing mview-1.67! '
     cd /opt
@@ -152,6 +156,7 @@ From: centos:7
 %environment
     export LC_ALL=C
     export PATH=$PATH:/opt/scripts
+    export PATH=$PATH:/opt/dolphin/scripts
     # export PATH=$PATH:/opt/mview-1.67/bin
     export PATH=$PATH:/opt
     export PATH=$PATH:/opt/newick-utils-1.6/build/bin
