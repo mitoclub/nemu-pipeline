@@ -45,6 +45,9 @@ docker exec -it $(docker ps | tail -n 1 | cut -d " " -f 1) bash
 # change default hostname of web app in config file  BASE_PATH & PUBWEB_URL
 vim /export/dolphinnext/config/.sec
 
+# change ssl configs
+vim /etc/apache2/sites-enabled/default-ssl.conf
+
 # our host
 bioinfo.int.kantiana.ru
 
