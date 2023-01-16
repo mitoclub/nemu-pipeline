@@ -47,6 +47,13 @@ vim /export/dolphinnext/config/.sec
 
 # change ssl configs
 vim /etc/apache2/sites-enabled/default-ssl.conf
+                SSLCertificateFile      /etc/ssl/certs/ssl-cert-snakeoil.pem
+                SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+
+                SSLCertificateFile      /export/pki/kantiana_ru_2023_12_10.crt
+                SSLCertificateKeyFile /export/pki/kantiana_ru_2023_12_10.key
+
+sudo service apache2 restart
 
 # our host
 bioinfo.int.kantiana.ru
