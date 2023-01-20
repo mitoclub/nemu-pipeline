@@ -62,6 +62,17 @@ bioinfo.int.kantiana.ru
 chown -v docker /export
 
 
+```
+`tail -n $(($(wc -l cox2.faa | cut -f 1 -d " ") - 1))`
+
+# make db
+## DB must contain more than 2 species!!!
+
+mkdir DIR
+perl /opt/scripts/geneUploader.pl SPECIES GENE DIR
+```
+
+
 # 16.4, page 71
 • Optional Inputs:
 If you want use optional input parameter, you can check the optional checkbox. This feature allows flexibility for the
