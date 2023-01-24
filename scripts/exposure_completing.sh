@@ -1,7 +1,11 @@
 
+# export MKL_NUM_THREADS=1
+# export NUMEXPR_NUM_THREADS=1
+# export OMP_NUM_THREADS=1
+
 SCRIPTS_DIR=~/mutspec-utils/scripts
 
-indir=data/exposure/human_cytb
+indir=data/exposure/human_nd1
 
 mkdir -p $indir/ms $indir/pyvolve
 
@@ -22,11 +26,6 @@ raw_mulal=$indir/alignment_checked.fasta
 tree=$indir/pyvolve/tree.nwk
 mulal=$indir/pyvolve/mulal.fasta
 log_file=$indir/pyvolve/pyvolve_${label}.log
-
-# export MKL_NUM_THREADS=1
-# export NUMEXPR_NUM_THREADS=1
-# export OMP_NUM_THREADS=1
-
 
 # tree processing
 nw_prune $raw_tree OUTGRP | python3 -c "import sys,re; print(re.sub('\d+\.\d+e-\d+', lambda m: '{:.10f}'.format(float(m.group())), sys.stdin.read().strip()))" > ${tree}.ingroup
