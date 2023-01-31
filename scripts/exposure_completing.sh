@@ -5,17 +5,17 @@
 
 SCRIPTS_DIR=~/mutspec-utils/scripts
 
-lbl=nd1
+lbl=cytb
 indir=data/exposure/human_$lbl
 
 mkdir -p $indir/ms $indir/pyvolve
 
-# echo "Processing spectra calculation..."
-# python3 $SCRIPTS_DIR/calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
-#     --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf
+echo "Processing spectra calculation..."
+python3 $SCRIPTS_DIR/calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
+    --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf
 
 label=iqtree
-replics=10
+replics=200
 GENCODE=2
 scale_tree=1
 
