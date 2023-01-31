@@ -5,23 +5,33 @@
 
 SCRIPTS_DIR=~/mutspec-utils/scripts
 
-indir=data/exposure/human_nd1
+lbl=nd1
+indir=data/exposure/human_$lbl
 
 mkdir -p $indir/ms $indir/pyvolve
 
-echo "Processing spectra calculation..."
-python3 $SCRIPTS_DIR/calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
-    --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf
-
+# echo "Processing spectra calculation..."
+# python3 $SCRIPTS_DIR/calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
+#     --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf
 
 label=iqtree
-replics=100
+replics=10
 GENCODE=2
 scale_tree=1
 
 raw_tree=$indir/iqtree_anc_tree.nwk
 spectra=$indir/ms/ms12syn.tsv
 raw_mulal=$indir/alignment_checked.fasta
+
+if [ $lbl == cytb ]; then
+	rates=$indir/CYTB.rate
+elif [ $lbl == nd1 ]; then
+	rates=$indir/ND1.rate
+else
+	echo NotImplementedError
+	exit 1
+fi
+echo "rates: $rates" 
 
 tree=$indir/pyvolve/tree.nwk
 mulal=$indir/pyvolve/mulal.fasta
@@ -49,14 +59,16 @@ if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
 	exit 0
 fi
 
-python3 $SCRIPTS_DIR/pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s $spectra -o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE -l $scale_tree --write_anc
+python3 $SCRIPTS_DIR/pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s $spectra \
+	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE -l $scale_tree --write_anc --rates $rates
 echo -e "Mutation samples generated\n"
 
 
 for fasta_file in $indir/pyvolve/seqfile_sample-*.fasta; do
 	echo "Processing $fasta_file"
 	python3 $SCRIPTS_DIR/alignment2iqtree_states.py $fasta_file $fasta_file.state
-	python3 $SCRIPTS_DIR/3.collect_mutations.py --tree ${tree}.ingroup --states ${fasta_file}.state --gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout --force
+	python3 $SCRIPTS_DIR/3.collect_mutations.py --tree ${tree}.ingroup --states ${fasta_file}.state \
+		--gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout --force
 	rm $fasta_file ${fasta_file}.state
     cat $indir/pyvolve/mout/run.log >> $log_file
 	echo -e "\n\n">> $log_file
