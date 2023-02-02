@@ -5,27 +5,27 @@
 
 SCRIPTS_DIR=~/mutspec-utils/scripts
 
-lbl=cytb
-indir=data/exposure/human_$lbl
+organism=mus
+gene=nd1
 
-mkdir -p $indir/ms $indir/pyvolve
 
-echo "Processing spectra calculation..."
-python3 $SCRIPTS_DIR/calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
-    --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf
+indir=data/exposure/${organism}_${gene}
+echo "Input directory: $indir"
 
-label=iqtree
+mkdir -p $indir/ms $indir/pyvolve/out
+
+method=iqtree
 replics=200
 GENCODE=2
 scale_tree=1
 
 raw_tree=$indir/iqtree_anc_tree.nwk
-spectra=$indir/ms/ms12syn.tsv
 raw_mulal=$indir/alignment_checked.fasta
+spectra=$indir/ms/ms12syn.tsv
 
-if [ $lbl == cytb ]; then
+if [ $gene == cytb ]; then
 	rates=$indir/CYTB.rate
-elif [ $lbl == nd1 ]; then
+elif [ $gene == nd1 ]; then
 	rates=$indir/ND1.rate
 else
 	echo NotImplementedError
@@ -35,7 +35,21 @@ echo "rates: $rates"
 
 tree=$indir/pyvolve/tree.nwk
 mulal=$indir/pyvolve/mulal.fasta
-log_file=$indir/pyvolve/pyvolve_${label}.log
+log_file=$indir/pyvolve/pyvolve_${method}.log
+
+if [ ! -f ${indir}/observed_mutations_iqtree.tsv ] || 
+	[ ! -f ${indir}/exp_muts_invariant.tsv ] || 
+		[ ! -f $raw_mulal ] || [ ! -f $raw_tree ] ||
+			[ ! -f $rates ]; then
+	echo not all files are exist
+	exit 1
+fi
+echo All input files are exits. Start computing
+
+echo "Processing spectra calculation..."
+python3 $SCRIPTS_DIR/calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
+    --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf
+
 
 # tree processing
 nw_prune $raw_tree OUTGRP | python3 -c "import sys,re; print(re.sub('\d+\.\d+e-\d+', lambda m: '{:.10f}'.format(float(m.group())), sys.stdin.read().strip()))" > ${tree}.ingroup
@@ -75,12 +89,11 @@ for fasta_file in $indir/pyvolve/seqfile_sample-*.fasta; do
 	cat $indir/pyvolve/mout/mutations.tsv > $fasta_file.mutations
 done
 
-python3 $SCRIPTS_DIR/concat_mutations.py $indir/pyvolve/seqfile_sample-*.fasta.mutations $indir/pyvolve/mutations_${label}_pyvolve.tsv
+python3 $SCRIPTS_DIR/concat_mutations.py $indir/pyvolve/seqfile_sample-*.fasta.mutations $indir/pyvolve/mutations_${method}_pyvolve.tsv
 rm $indir/pyvolve/seqfile_sample-*.fasta.mutations
 echo "Mutations concatenation done"
 
-mkdir -p $indir/pyvolve/out
-python3 $SCRIPTS_DIR/calculate_mutspec.py -b $indir/pyvolve/mutations_${label}_pyvolve.tsv -e $indir/exp_muts_invariant.tsv \
-	-o $indir/pyvolve/out -l debug --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
+python3 $SCRIPTS_DIR/calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $indir/exp_muts_invariant.tsv \
+	-o $indir/pyvolve/out -l $gene --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
     --substract192 $indir/ms/ms192syn.tsv --substract12 $indir/ms/ms12syn.tsv
 echo "Mutational spectrum calculated"
