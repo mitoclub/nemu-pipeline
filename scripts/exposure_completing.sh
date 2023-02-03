@@ -1,12 +1,12 @@
 
-# export MKL_NUM_THREADS=1
-# export NUMEXPR_NUM_THREADS=1
-# export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=24
+export NUMEXPR_NUM_THREADS=24
+export OMP_NUM_THREADS=24
 
 SCRIPTS_DIR=~/mutspec-utils/scripts
 
-organism=mus
-gene=nd1
+organism=human
+gene=cytb
 
 
 indir=data/exposure/${organism}_${gene}
@@ -15,9 +15,8 @@ echo "Input directory: $indir"
 mkdir -p $indir/ms $indir/pyvolve/out
 
 method=iqtree
-replics=200
+replics=10
 GENCODE=2
-scale_tree=1
 
 raw_tree=$indir/iqtree_anc_tree.nwk
 raw_mulal=$indir/alignment_checked.fasta
@@ -31,7 +30,7 @@ else
 	echo NotImplementedError
 	exit 1
 fi
-echo "rates: $rates" 
+# echo "rates: $rates" 
 
 tree=$indir/pyvolve/tree.nwk
 mulal=$indir/pyvolve/mulal.fasta
@@ -49,7 +48,6 @@ echo All input files are exits. Start computing
 echo "Processing spectra calculation..."
 python3 $SCRIPTS_DIR/calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
     --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf
-
 
 # tree processing
 nw_prune $raw_tree OUTGRP | python3 -c "import sys,re; print(re.sub('\d+\.\d+e-\d+', lambda m: '{:.10f}'.format(float(m.group())), sys.stdin.read().strip()))" > ${tree}.ingroup
@@ -74,7 +72,7 @@ if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
 fi
 
 python3 $SCRIPTS_DIR/pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s $spectra \
-	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE -l $scale_tree --write_anc --rates $rates
+	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE -l 1 --write_anc --rates $rates
 echo -e "Mutation samples generated\n"
 
 
