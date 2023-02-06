@@ -10,7 +10,7 @@ proba_min="0.1" #//* @input @description:"Mutation probability cutoff: mutations
 # val(names2), file(states2)
 label=iqtree
 gencode=2
-nspecies=single # multiple
+nspecies=single # single multiple
 
 outdir=data/exposure/mammals_nd1/test_$nspecies
 mkdir -p $outdir
@@ -29,25 +29,30 @@ states2=../leaves_states.state
 
 if [ $nspecies == "single" ]; then
     # 3.collect_mutations.py --tree $tree --states $states1 --states $states2 \
-    #     --gencode $gencode --syn --proba --no-mutspec --outdir mout
+    #     --gencode $gencode --syn --proba --no-mutspec --outdir .
 
-    # mv mout/* .
     # mv mutations.tsv observed_mutations_${label}.tsv
     # mv expected_mutations.tsv expected_mutations.txt
     # mv run.log ${label}_mut_extraction.log
 
     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_mutations.txt -o . \
         --exclude OUTGRP,ROOT --mnum192 $mnum192 -l $label --proba --proba_min $proba_min --syn --plot -x pdf
+    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_mutations.txt -o . \
+        --exclude OUTGRP,ROOT --mnum192 $mnum192 -l $label --proba --proba_min $proba_min --syn --plot -x pdf --subset internal
 
     cp ms12syn_${label}.tsv ms12syn_${label}.txt
+
 elif [ $nspecies == "multiple" ]; then
     3.collect_mutations.py --tree $tree --states $states1 --states $states2 \
-        --gencode $gencode --syn --proba --outdir mout
+        --gencode $gencode --syn --proba --outdir .
 
-    mv mout/* .
     mv mutations.tsv observed_mutations_${label}.tsv
+    mv expected_mutations.tsv expected_mutations.txt
     mv run.log ${label}_mut_extraction.log
-    cp ms12syn_${label}.tsv ms12syn_${label}.txt
+
+    python ~/mutspec-utils/scripts/plot_spectra.py -s mutspec12.tsv  -o ${label}_ms12.pdf  -t
+    python ~/mutspec-utils/scripts/plot_spectra.py -s mutspec192.tsv -o ${label}_ms192.pdf -t
+
 else
     echo "ArgumentError: nspecies"
     exit 1

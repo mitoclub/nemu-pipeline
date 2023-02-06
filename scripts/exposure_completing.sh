@@ -1,13 +1,10 @@
 
-export MKL_NUM_THREADS=24
-export NUMEXPR_NUM_THREADS=24
-export OMP_NUM_THREADS=24
-
-SCRIPTS_DIR=~/mutspec-utils/scripts
+export MKL_NUM_THREADS=48
+export NUMEXPR_NUM_THREADS=48
+export OMP_NUM_THREADS=48
 
 organism=human
 gene=cytb
-
 
 indir=data/exposure/${organism}_${gene}
 echo "Input directory: $indir"
@@ -15,7 +12,7 @@ echo "Input directory: $indir"
 mkdir -p $indir/ms $indir/pyvolve/out
 
 method=iqtree
-replics=10
+replics=200
 GENCODE=2
 
 raw_tree=$indir/iqtree_anc_tree.nwk
@@ -46,8 +43,10 @@ fi
 echo All input files are exits. Start computing
 
 echo "Processing spectra calculation..."
-python3 $SCRIPTS_DIR/calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
-    --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf
+calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
+    --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf -l ${organism}_${gene} --mnum192 0
+calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
+    --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf -l ${organism}_${gene} --subset internal --mnum192 0
 
 # tree processing
 nw_prune $raw_tree OUTGRP | python3 -c "import sys,re; print(re.sub('\d+\.\d+e-\d+', lambda m: '{:.10f}'.format(float(m.group())), sys.stdin.read().strip()))" > ${tree}.ingroup
@@ -71,27 +70,37 @@ if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
 	exit 0
 fi
 
-python3 $SCRIPTS_DIR/pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s $spectra \
-	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE -l 1 --write_anc --rates $rates
-echo -e "Mutation samples generated\n"
+# pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s $spectra \
+# 	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE -l 1 --write_anc --rates $rates
+# echo -e "Mutation samples generated\n"
 
 
-for fasta_file in $indir/pyvolve/seqfile_sample-*.fasta; do
-	echo "Processing $fasta_file"
-	python3 $SCRIPTS_DIR/alignment2iqtree_states.py $fasta_file $fasta_file.state
-	python3 $SCRIPTS_DIR/3.collect_mutations.py --tree ${tree}.ingroup --states ${fasta_file}.state \
-		--gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout --force
-	rm $fasta_file ${fasta_file}.state
-    cat $indir/pyvolve/mout/run.log >> $log_file
-	echo -e "\n\n">> $log_file
-	cat $indir/pyvolve/mout/mutations.tsv > $fasta_file.mutations
-done
+# parallel --dry-run alignment2iqtree_states.py {} {}.state ::: $indir/pyvolve/seqfile_sample-*.fasta
+# parallel --dry-run 3.collect_mutations.py --tree ${tree}.ingroup --states {}.state \
+# 		--gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout --quiet ::: $indir/pyvolve/seqfile_sample-*.fasta
 
-python3 $SCRIPTS_DIR/concat_mutations.py $indir/pyvolve/seqfile_sample-*.fasta.mutations $indir/pyvolve/mutations_${method}_pyvolve.tsv
-rm $indir/pyvolve/seqfile_sample-*.fasta.mutations
-echo "Mutations concatenation done"
+# for fasta_file in $indir/pyvolve/seqfile_sample-*.fasta; do
+# 	echo "Processing $fasta_file"
+# 	alignment2iqtree_states.py $fasta_file $fasta_file.state
+# 	3.collect_mutations.py --tree ${tree}.ingroup --states ${fasta_file}.state \
+# 		--gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout --force
+# 	rm $fasta_file ${fasta_file}.state
+#     cat $indir/pyvolve/mout/run.log >> $log_file
+# 	echo -e "\n\n">> $log_file
+# 	cat $indir/pyvolve/mout/mutations.tsv > $fasta_file.mutations
+# done
 
-python3 $SCRIPTS_DIR/calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $indir/exp_muts_invariant.tsv \
-	-o $indir/pyvolve/out -l $gene --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
-    --substract192 $indir/ms/ms192syn.tsv --substract12 $indir/ms/ms12syn.tsv
+# # if [ ! -f ${indir}/observed_mutations_iqtree.tsv ]; then
+# concat_mutations.py $indir/pyvolve/seqfile_sample-*.fasta.mutations $indir/pyvolve/mutations_${method}_pyvolve.tsv
+# rm $indir/pyvolve/seqfile_sample-*.fasta.mutations
+# echo "Mutations concatenation done"
+# # else
+# # echo "File "
+
+calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $indir/exp_muts_invariant.tsv \
+	-o $indir/pyvolve/out -l ${organism}_${gene}_simulated --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
+    --substract192 $indir/ms/ms192syn_${organism}_${gene}.tsv --substract12 $indir/ms/ms12syn_${organism}_${gene}.tsv
+calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $indir/exp_muts_invariant.tsv \
+	-o $indir/pyvolve/out -l ${organism}_${gene}_internal_simulated --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
+    --substract192 $indir/ms/ms192syn_internal_${organism}_${gene}.tsv --substract12 $indir/ms/ms12syn_internal_${organism}_${gene}.tsv
 echo "Mutational spectrum calculated"
