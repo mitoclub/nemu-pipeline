@@ -39,24 +39,30 @@ close I;
 %nonnuccodons=();
 for ($i=0;$i<$max;$i++)
 {
-foreach $nm (keys %seqs)
-    {
-    if ($seqs{$nm}[$i]!~/[A-Za-z]/ or $seqs{$nm}[$i]=~/[!\?\.,]/)
-	{
-	if ($nm=~/OUTGRP/){$seqs{$nm}[$i]="NNN"}
-	else {$nonnuccodons{$i}=1}
+$nonnuccodons{$i}=0;
+foreach $nm (keys %seqs){
+    if ($seqs{$nm}[$i]=~/[^ACGTacgt]/) {
+		print $seqs{$nm}[$i];
+		$nonnuccodons{$i}+=1;
+		if ($seqs{$nm}[$i]=~/[!\?\.,]/) {
+			$seqs{$nm}[$i]="NNN"
+		}
 	}
-    }
 }
+}
+
+#if 30% of codons in alignment column than remove this column
+$nseqs = @seqs;
+$thresh=int(0.3 * $nseqs);
+print "nseqs = $nseqs, threshold = $thresh\n";
 
 open (O, ">$ARGV[1]");
 foreach $seq (@seqs)
 {
 print O ">$seq\n";
-for ($i=0;$i<$max;$i++)
-    {
-    unless (exists $nonnuccodons{$i}) {print O "$seqs{$seq}[$i]"}
-    }
+for ($i=0;$i<$max;$i++) {
+	if ($nonnuccodons{$i} < $thresh) {print O "$seqs{$seq}[$i]"}
+}
 print O "\n";
 }
 close O;

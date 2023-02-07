@@ -5,6 +5,8 @@ From: image_pipeline-2.9.sif
     cd /opt/mutspec-utils
     git pull
     python3 setup.py install
+    cd /opt/dolphin
+    git pull
 
 %test
     test_command () {
@@ -19,5 +21,5 @@ From: image_pipeline-2.9.sif
 
 %labels
     Maintainer MutSpec
-    Version v2.6
+    Version v2.11
     Used for ms-utils update
