@@ -1,0 +1,38 @@
+Traceback (most recent call last):
+  File "/home/kpotoh/env_bio/bin/pastml", line 8, in <module>
+    sys.exit(main())
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/pastml/acr.py", line 1227, in main
+    pastml_pipeline(**vars(params))
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/pastml/acr.py", line 660, in pastml_pipeline
+    acr_results = acr(forest=roots, columns=columns, column2states=column2states,
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/pastml/acr.py", line 378, in acr
+    pool.map(func=_work, iterable=character2settings.keys())
+  File "/usr/lib/python3.9/multiprocessing/pool.py", line 364, in map
+    return self._map_async(func, iterable, mapstar, chunksize).get()
+  File "/usr/lib/python3.9/multiprocessing/pool.py", line 771, in get
+    raise self._value
+  File "/usr/lib/python3.9/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+  File "/usr/lib/python3.9/multiprocessing/pool.py", line 48, in mapstar
+    return list(map(*args))
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/pastml/acr.py", line 362, in _work
+    return ml_acr(forest=forest, character=character, prediction_method=prediction_method, model=model,
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/pastml/ml.py", line 757, in ml_acr
+    optimise_likelihood(forest=forest, avg_br_len=avg_br_len, tree_len=tree_len, num_edges=num_nodes - 1,
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/pastml/ml.py", line 1067, in optimise_likelihood
+    optimize_likelihood_params(forest=forest, character=character, frequencies=frequencies,
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/pastml/ml.py", line 303, in optimize_likelihood_params
+    fres = minimize(get_v, x0=vs, method='L-BFGS-B', bounds=bounds)
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/scipy/optimize/_minimize.py", line 696, in minimize
+    res = _minimize_lbfgsb(fun, x0, args, jac, bounds,
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/scipy/optimize/_lbfgsb_py.py", line 359, in _minimize_lbfgsb
+    f, g = func_and_grad(x)
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/scipy/optimize/_differentiable_functions.py", line 286, in fun_and_grad
+    self._update_grad()
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/scipy/optimize/_differentiable_functions.py", line 256, in _update_grad
+    self._update_grad_impl()
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/scipy/optimize/_differentiable_functions.py", line 173, in update_grad
+    self.g = approx_derivative(fun_wrapped, self.x, f0=self.f,
+  File "/home/kpotoh/env_bio/lib/python3.9/site-packages/scipy/optimize/_numdiff.py", line 470, in approx_derivative
+    raise ValueError("`x0` violates bound constraints.")
+ValueError: `x0` violates bound constraints.

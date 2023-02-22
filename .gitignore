@@ -1,7 +1,6 @@
 *.sif
 *.zip
 *.tar*
-docs
 old
 data
 tools
