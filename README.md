@@ -7,10 +7,9 @@ We use [Dolphinnext]() system for interctive user-friendly execution of the pipe
 https://biopipelines.kantiana.ru/dolphinnext
 
 <details>
-  <summary>Login data</summary>
-  Test login could be used:
+  <summary>Test login data</summary>
 
-  Login - test<br>
+  Username - test<br>
   Password - dolphin
   
 </details>
