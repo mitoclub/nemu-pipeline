@@ -1,10 +1,14 @@
+THREADS=128
+export MKL_NUM_THREADS=$THREADS
+export NUMEXPR_NUM_THREADS=$THREADS
+export OMP_NUM_THREADS=$THREADS
 
-export MKL_NUM_THREADS=48
-export NUMEXPR_NUM_THREADS=48
-export OMP_NUM_THREADS=48
+organism=mus
+gene=nd1
 
-organism=human
-gene=cytb
+################################################################################
+################################ PREPARATION ###################################
+################################################################################
 
 indir=data/exposure/${organism}_${gene}
 echo "Input directory: $indir"
@@ -17,7 +21,6 @@ GENCODE=2
 
 raw_tree=$indir/iqtree_anc_tree.nwk
 raw_mulal=$indir/alignment_checked.fasta
-spectra=$indir/ms/ms12syn.tsv
 
 if [ $gene == cytb ]; then
 	rates=$indir/CYTB.rate
@@ -41,6 +44,10 @@ if [ ! -f ${indir}/observed_mutations_iqtree.tsv ] ||
 	exit 1
 fi
 echo All input files are exits. Start computing
+
+################################################################################
+############################### START COMPUTING ################################
+################################################################################
 
 echo "Processing spectra calculation..."
 calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
@@ -70,32 +77,34 @@ if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
 	exit 0
 fi
 
-# pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s $spectra \
-# 	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE -l 1 --write_anc --rates $rates
-# echo -e "Mutation samples generated\n"
+pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup \
+	-s $indir/ms/ms192syn_internal_${organism}_${gene}.tsv \
+	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE \
+	-l 1 --write_anc --rates $rates
+echo -e "Mutation samples generated\n"
 
 
 # parallel --dry-run alignment2iqtree_states.py {} {}.state ::: $indir/pyvolve/seqfile_sample-*.fasta
 # parallel --dry-run 3.collect_mutations.py --tree ${tree}.ingroup --states {}.state \
 # 		--gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout --quiet ::: $indir/pyvolve/seqfile_sample-*.fasta
 
-# for fasta_file in $indir/pyvolve/seqfile_sample-*.fasta; do
-# 	echo "Processing $fasta_file"
-# 	alignment2iqtree_states.py $fasta_file $fasta_file.state
-# 	3.collect_mutations.py --tree ${tree}.ingroup --states ${fasta_file}.state \
-# 		--gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout --force
-# 	rm $fasta_file ${fasta_file}.state
-#     cat $indir/pyvolve/mout/run.log >> $log_file
-# 	echo -e "\n\n">> $log_file
-# 	cat $indir/pyvolve/mout/mutations.tsv > $fasta_file.mutations
-# done
+for fasta_file in $indir/pyvolve/seqfile_sample-*.fasta; do
+	echo "Processing $fasta_file"
+	alignment2iqtree_states.py $fasta_file $fasta_file.state
+	collect_mutations.py --tree ${tree}.ingroup --states ${fasta_file}.state \
+		--gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout --force --quiet
+	rm $fasta_file ${fasta_file}.state
+    cat $indir/pyvolve/mout/run.log >> $log_file
+	echo -e "\n\n">> $log_file
+	cat $indir/pyvolve/mout/mutations.tsv > $fasta_file.mutations
+done
 
-# # if [ ! -f ${indir}/observed_mutations_iqtree.tsv ]; then
-# concat_mutations.py $indir/pyvolve/seqfile_sample-*.fasta.mutations $indir/pyvolve/mutations_${method}_pyvolve.tsv
-# rm $indir/pyvolve/seqfile_sample-*.fasta.mutations
-# echo "Mutations concatenation done"
-# # else
-# # echo "File "
+# if [ ! -f ${indir}/observed_mutations_iqtree.tsv ]; then
+concat_mutations.py $indir/pyvolve/seqfile_sample-*.fasta.mutations $indir/pyvolve/mutations_${method}_pyvolve.tsv
+rm $indir/pyvolve/seqfile_sample-*.fasta.mutations
+echo "Mutations concatenation done"
+# else
+# echo "File "
 
 calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $indir/exp_muts_invariant.tsv \
 	-o $indir/pyvolve/out -l ${organism}_${gene}_simulated --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
