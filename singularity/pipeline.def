@@ -73,15 +73,14 @@ From: centos:7
     python3 setup.py install
     ####### PYTHON #######
 
-    echo 'Installing Pipeline scripts v.2.2! '
-    cd /opt
-    tar -xvzf pipeline-2.2.tar.gz
-    #final scripts in /opt/scripts
+    #echo 'Installing Pipeline scripts v.2.2! '
+    #cd /opt
+    #tar -xvzf pipeline-2.2.tar.gz
+    ##final scripts in /opt/scripts
 
-    echo 'Installing updated version of Pipeline scripts!'
-    cd /opt
-    git clone https://github.com/kpotoh/dolphin.git
-    
+    echo 'Installing latest version of Pipeline scripts!'
+    git clone https://github.com/mitoclub/nemu-pipeline.git /opt/dolphin
+
     echo 'Installing mview-1.67! '
     cd /opt
     tar -xvzf mview-1.67.tar.gz

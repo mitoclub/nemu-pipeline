@@ -5,8 +5,10 @@ From: image_pipeline-2.9.sif
     cd /opt/mutspec-utils
     git pull
     python3 setup.py install
-    cd /opt/dolphin
-    git pull
+
+    cd /opt
+    rm -rf dolphin
+    git clone https://github.com/mitoclub/nemu-pipeline.git dolphin
 
 %test
     test_command () {

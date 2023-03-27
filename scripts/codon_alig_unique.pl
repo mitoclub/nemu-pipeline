@@ -30,7 +30,7 @@ if ($seq=~/\w/)
     }
 
 $seqNumber=keys %alig;
-if ($seqNumber>=4) {
+if ($seqNumber>=10) {
     open (Y, ">report_yes.txt");
     print Y "Seq number is $seqNumber!\n";
     close Y;
