@@ -3,8 +3,11 @@ export MKL_NUM_THREADS=$THREADS
 export NUMEXPR_NUM_THREADS=$THREADS
 export OMP_NUM_THREADS=$THREADS
 
-organism=mus
-gene=nd1
+# organism=mus
+# gene=nd1
+for organism in mus human; do
+for gene in nd1 cytb; do
+
 
 ################################################################################
 ################################ PREPARATION ###################################
@@ -113,3 +116,7 @@ calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $indir
 	-o $indir/pyvolve/out -l ${organism}_${gene}_internal_simulated --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
     --substract192 $indir/ms/ms192syn_internal_${organism}_${gene}.tsv --substract12 $indir/ms/ms12syn_internal_${organism}_${gene}.tsv
 echo "Mutational spectrum calculated"
+
+
+done
+done
