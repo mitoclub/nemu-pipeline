@@ -42,7 +42,7 @@ for ($i=0;$i<$max;$i++)
 $nonnuccodons{$i}=0;
 foreach $nm (keys %seqs){
     if ($seqs{$nm}[$i]=~/[^ACGTacgt]/) {
-		print $seqs{$nm}[$i];
+		# print $seqs{$nm}[$i];
 		$nonnuccodons{$i}+=1;
 		if ($seqs{$nm}[$i]=~/[!\?\.,]/) {
 			$seqs{$nm}[$i]="NNN"
