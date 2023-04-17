@@ -240,7 +240,7 @@ maxRetries 3
 
 script:
 """
-iqtree2 -s $mulal -m $params.IQTREE_model -asr -nt $THREADS --prefix anc
+iqtree2 -te $tree -s $mulal -m $params.IQTREE_model -asr -nt $THREADS --prefix anc
 mv anc.iqtree iqtree_anc_report.log
 # mv anc.state iqtree_anc.state
 mv anc.log iqtree_anc.log
