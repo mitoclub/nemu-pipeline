@@ -35,7 +35,7 @@ pastml --prediction_method MPPA -m HKY -t iqtree_anc_tree.nwk -d mammals_nd1.tsv
 parallel  mkdir -p out_{/.} ';' pastml --prediction_method MPPA -m HKY -t {/.}.nwk -d {} --work_dir out_{/.} --html out_{/.}/tree.html --threads 8 ::: *.tsv
 ```
 
-3. Reformat pastml output to usual states style
+4. Reformat pastml output to usual states style
 
 ```bash
 python mutspec/pastml2custom_format.py --model HKY --aln data/example_nematoda/alignments_nematoda_clean/ --outpath data/example_nematoda/genes_states.pastml_HKY.tsv data/example_nematoda/pastml_n_HKY/*
