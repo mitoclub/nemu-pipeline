@@ -25,14 +25,14 @@ iqtree_states_add_part.py strsym.state strsym.state.custom
 
 ```bash
 #pastml states
-collect_mutations.py --tree iqtree_anc_tree.nwk --states ../pastml_states/mammals_cytb_pastml_states.tsv --gencode 2 --syn --syn_c --syn4f --proba --no-phylocoef --outdir pastml_v2
-collect_mutations.py --tree iqtree_anc_tree.nwk --states ../pastml_states/mammals_nd1_pastml_states.tsv --gencode 2 --syn --syn_c --syn4f --proba --no-phylocoef --outdir pastml_v2
+nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states ../pastml_states/mammals_cytb_pastml_states.tsv --rates states/unrest.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --no-phylocoef --outdir pastml &
+nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states ../pastml_states/mammals_nd1_pastml_states.tsv --rates states/unrest.rate  --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --no-phylocoef --outdir pastml &
 
 #iqtree states
-nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states states/gtr.state.custom --states leaves_states.state --rates states/gtr.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --outdir gtr_simple &
-nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states states/gtr.state.custom --states leaves_states.state --rates states/gtr.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --outdir gtr_proba &
-nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states states/strsym.state.custom --states leaves_states.state --rates states/strsym.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --outdir strsym_simple &
-nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states states/strsym.state.custom --states leaves_states.state --rates states/strsym.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --outdir strsym_proba &
-nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states states/unrest.state.custom --states leaves_states.state --rates states/unrest.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --outdir unrest_simple &
-nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states states/unrest.state.custom --states leaves_states.state --rates states/unrest.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --outdir unrest_proba &
+collect_mutations.py --tree iqtree_anc_tree.nwk --states states/gtr.state.custom --states leaves_states.state --rates states/gtr.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --outdir gtr_simple
+collect_mutations.py --tree iqtree_anc_tree.nwk --states states/gtr.state.custom --states leaves_states.state --rates states/gtr.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --outdir gtr_proba
+collect_mutations.py --tree iqtree_anc_tree.nwk --states states/strsym.state.custom --states leaves_states.state --rates states/strsym.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --outdir strsym_simple
+collect_mutations.py --tree iqtree_anc_tree.nwk --states states/strsym.state.custom --states leaves_states.state --rates states/strsym.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --outdir strsym_proba
+collect_mutations.py --tree iqtree_anc_tree.nwk --states states/unrest.state.custom --states leaves_states.state --rates states/unrest.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --outdir unrest_simple
+collect_mutations.py --tree iqtree_anc_tree.nwk --states states/unrest.state.custom --states leaves_states.state --rates states/unrest.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --outdir unrest_proba
 ```

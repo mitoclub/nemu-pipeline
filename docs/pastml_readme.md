@@ -1,8 +1,10 @@
-## PastML
+# PastML workflow
 
-Used to reconstruct reference mutationals spectra
+PASTML was used to reconstruct reference mutationals spectra
 
 model HKY (maximal)
+
+## Workflow
 
 1. Reformat alignment for input. Genes separating
 
@@ -12,7 +14,7 @@ python mutspec/aln2pastml.py --aln data/example_nematoda/alignments_nematoda_cle
 
 2. Repair scipy
 
-There are error ([log](./pastml.log)) while minimizing some function during pastml run. Origin is scipy function in 
+There is a error ([log](./pastml.log)) while minimizing some function during pastml run. Origin is scipy function in 
 file `env_bio/lib/python3.9/site-packages/scipy/optimize/_numdiff.py`.
 
 Lines 469-470 (`approx_derivative` func) replaced by
