@@ -240,7 +240,10 @@ maxRetries 3
 
 script:
 """
-iqtree2 -te $tree -s $mulal -m $params.IQTREE_model -asr -nt $THREADS --prefix anc
+nw_labels -I $tree > leaves.txt
+filter_aln.py -a $mulal -l leaves.txt -o filtered_aln.phy
+
+iqtree2 -te $tree -s filtered_aln.phy -m $params.IQTREE_model -asr -nt $THREADS --prefix anc
 mv anc.iqtree iqtree_anc_report.log
 # mv anc.state iqtree_anc.state
 mv anc.log iqtree_anc.log
@@ -442,9 +445,9 @@ if [ $nspecies == "single" ]; then
     mv mutations.tsv observed_mutations_${label}.tsv
     mv run.log ${label}_mut_extraction.log
 
-    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_mutations.tsv -o . \
+    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_min --syn $params.syn4f $params.all --plot -x pdf
-    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_mutations.tsv -o . \
+    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_min --syn $params.syn4f $params.all --plot -x pdf --subset internal
 
     cp ms12syn_${label}.tsv ms12syn_${label}.txt
@@ -545,7 +548,7 @@ echo "Mutations extraction done"
 concat_mutations.py seqfile_sample-*.fasta.mutations mutations_${label}_pyvolve.tsv
 echo "Mutations concatenation done"
 
-calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_mutations.tsv -o . \
+calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_freqs.tsv -o . \
 	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f $params.all --mnum192 $params.mnum192 --plot -x pdf \
 	--substract12 \$spectra12 \$substractor192
 echo "Mutational spectrum calculated"
@@ -585,9 +588,9 @@ if [ $nspecies == "single" ]; then
     mv mutations.tsv observed_mutations_${label}.tsv
     mv run.log ${label}_mut_extraction.log
 
-    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_mutations.tsv -o . \
+    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_min --syn $params.syn4f $params.all --plot -x pdf
-    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_mutations.tsv -o . \
+    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_min --syn $params.syn4f $params.all --plot -x pdf --subset internal
 
     cp ms12syn_${label}.tsv ms12syn_${label}.txt
@@ -688,7 +691,7 @@ echo "Mutations extraction done"
 concat_mutations.py seqfile_sample-*.fasta.mutations mutations_${label}_pyvolve.tsv
 echo "Mutations concatenation done"
 
-calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_mutations.tsv -o . \
+calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_freqs.tsv -o . \
 	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f $params.all --mnum192 $params.mnum192 --plot -x pdf \
 	--substract12 \$spectra12 \$substractor192
 echo "Mutational spectrum calculated"
