@@ -16,7 +16,7 @@ iqtree2 -te iqtree_anc_tree.nwk -s alignment_checked.fasta -m STRSYM+FO+G6+I -as
 # iqtree2 -te iqtree_anc_tree.nwk -s alignment_checked.fasta -m UNREST+FO+G6+I -asr -nt 64 --prefix states/unrest --rate # ERROR SPECTRA
 iqtree2 -te iqtree_anc_tree.nwk -s alignment_checked.fasta -m 6.8a+FO+G6+I -asr -nt 64 --prefix states/RY6.8a --rate
 iqtree2 -te iqtree_anc_tree.nwk -s alignment_checked.fasta -m 8.8+FO+G6+I -asr -nt 64 --prefix states/RY8.8 --rate
-
+iqtree2 -te iqtree_anc_tree.nwk -s alignment_checked.fasta -m 10.12+FO+G6+I -asr -nt 64 --prefix states/RY10.12 --rate
 
 # and slightly reformat
 iqtree_states_add_part.py gtr.state gtr.state.custom
@@ -24,6 +24,7 @@ iqtree_states_add_part.py unrest.state unrest.state.custom
 iqtree_states_add_part.py strsym.state strsym.state.custom
 iqtree_states_add_part.py RY6.8a.state RY6.8a.state.custom
 iqtree_states_add_part.py RY8.8.state RY8.8.state.custom
+iqtree_states_add_part.py RY10.12.state RY10.12.state.custom
 ```
 
 3. Extract mutations from trees (TODO many descriptrion... PyMutSpec + simple + proba...)
@@ -53,5 +54,8 @@ collect_mutations.py --tree iqtree_anc_tree.nwk --states states/RY6.8a.state.cus
 
 collect_mutations.py --tree iqtree_anc_tree.nwk --states states/RY8.8.state.custom --states leaves_states.state --rates states/RY8.8.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --outdir RY8.8_simple
 collect_mutations.py --tree iqtree_anc_tree.nwk --states states/RY8.8.state.custom --states leaves_states.state --rates states/RY8.8.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --outdir RY8.8_proba
+
+nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states states/RY10.12.state.custom --states leaves_states.state --rates states/RY10.12.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --outdir RY10.12_simple &
+nohup collect_mutations.py --tree iqtree_anc_tree.nwk --states states/RY10.12.state.custom --states leaves_states.state --rates states/RY10.12.rate --gencode 2 --no-mutspec --save-exp-muts --syn --syn_c --syn4f --proba --outdir RY10.12_proba &
 
 ```
