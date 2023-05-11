@@ -1,6 +1,10 @@
 Bootstrap: localimage
 From: image_pipeline-2.9.sif
 
+%files
+    tools/macse_v2.06.jar /opt
+    tools/mafft-7.505-with-extensions-src.tgz /opt
+
 %post
     cd /opt/mutspec-utils
     git pull
@@ -9,6 +13,14 @@ From: image_pipeline-2.9.sif
     cd /opt
     rm -rf dolphin
     git clone https://github.com/mitoclub/nemu-pipeline.git dolphin
+
+    # mafft install
+    cd /opt
+    tar xzf mafft-7.505-with-extensions-src.tgz
+    cd mafft-7.505-with-extensions/core
+    make clean
+    make
+    make install
 
 %test
     test_command () {
@@ -20,6 +32,7 @@ From: image_pipeline-2.9.sif
 
     test_command calculate_mutspec.py
     test_command pyvolve_process.py
+    test_command mafft
 
 %labels
     Maintainer MutSpec
