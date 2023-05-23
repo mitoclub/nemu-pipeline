@@ -8,6 +8,7 @@
 - [nuc_coding_mod.pl](./nuc_coding_mod.pl) - nucleotide sequences extraction from BLAST database
 - [rename_tree_nodes.sh](./rename_tree_nodes.sh) - part of simulation (pyvolve) process 
 - [resci.py](./resci.py) - reformat scientific notation to float 
+- [blasting.sh](./blasting.sh) - tblastn for homologous sequences search 
 
 ## Scripts-formatters
 
@@ -26,6 +27,7 @@
 - [process_midori_headers.py](./process_midori_headers.py) - extract species names from MIDORI records and place them after record index (>ID NAME DESCR)
 - [run_pyvolve.sh](./run_pyvolve.sh) - legacy??? TODO 
 - [split_genomes_to_genes.py](./split_genomes_to_genes.py) - split GAGP dataset to genes
+- [ali_sim_run.py](./ali_sim_run.py) - Run simulation to get test data for pipeline verification 
 
 
 ## External scripts from [PyMutSpec](https://github.com/mitoclub/PyMutSpec)
