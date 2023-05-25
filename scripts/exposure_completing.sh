@@ -1,20 +1,22 @@
-THREADS=128
+THREADS=64
 export MKL_NUM_THREADS=$THREADS
 export NUMEXPR_NUM_THREADS=$THREADS
 export OMP_NUM_THREADS=$THREADS
 
-# organism=mus
+
+organism=human
+gene=$1
 # gene=nd1
-for organism in mus human; do
-for gene in nd1 cytb; do
+# for organism in mouse human; do
+# for gene in nd1 cytb cox1; do
 
 
 ################################################################################
 ################################ PREPARATION ###################################
 ################################################################################
 
-indir=data/exposure/${organism}_${gene}
-echo "Input directory: $indir"
+indir=data/selection_search/${organism}_${gene}
+echo -e "\nInput directory: $indir"
 
 mkdir -p $indir/ms $indir/pyvolve/out
 
@@ -22,26 +24,14 @@ method=iqtree
 replics=100
 GENCODE=2
 
-raw_tree=$indir/iqtree_anc_tree.nwk
-raw_mulal=$indir/alignment_checked.fasta
+raw_tree=$indir/IQTREE/iqtree_anc_tree.nwk
+raw_mulal=$indir/sequences/alignment_checked.fasta
+obs_mutations=$indir/tables/observed_mutations_iqtree.tsv
+exp_mutations=$indir/exp_muts_invariant.tsv  # TODO create
+rates=data/selection_search/rates/${organism}_${gene}.rate
 
-if [ $gene == cytb ]; then
-	rates=$indir/CYTB.rate
-elif [ $gene == nd1 ]; then
-	rates=$indir/ND1.rate
-else
-	echo NotImplementedError
-	exit 1
-fi
-# echo "rates: $rates" 
-
-tree=$indir/pyvolve/tree.nwk
-mulal=$indir/pyvolve/mulal.fasta
-
-if [ ! -f ${indir}/observed_mutations_iqtree.tsv ] || 
-	[ ! -f ${indir}/exp_muts_invariant.tsv ] || 
-		[ ! -f $raw_mulal ] || [ ! -f $raw_tree ] ||
-			[ ! -f $rates ]; then
+if [ ! -f $obs_mutations ] || [ ! -f $exp_mutations ] || 
+	   [ ! -f $raw_mulal ] || [ ! -f $raw_tree ] || [ ! -f $rates ]; then
 	echo not all files are exist
 	exit 1
 fi
@@ -51,11 +41,12 @@ echo All input files are exits. Start computing
 ############################### START COMPUTING ################################
 ################################################################################
 
+tree=$indir/pyvolve/tree.nwk
+mulal=$indir/pyvolve/mulal.fasta
+
 echo "Processing spectra calculation..."
-# calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
-#     --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf -l ${organism}_${gene} --mnum192 0
-calculate_mutspec.py -b ${indir}/observed_mutations_iqtree.tsv -e ${indir}/exp_muts_invariant.tsv -o $indir/ms \
-    --exclude OUTGRP,ROOT --proba  --syn --plot -x pdf -l ${organism}_${gene} --subset internal --mnum192 0
+calculate_mutspec.py -b $obs_mutations -e $exp_mutations -o $indir/ms \
+    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} --subset internal --mnum192 0
 
 # tree processing
 nw_prune $raw_tree OUTGRP | python3 -c "import sys,re; print(re.sub('\d+\.\d+e-\d+', lambda m: '{:.10f}'.format(float(m.group())), sys.stdin.read().strip()))" > ${tree}.ingroup
@@ -95,14 +86,13 @@ concat_mutations.py $indir/pyvolve/mout/*/mutations.tsv $indir/pyvolve/mutations
 echo "Mutations concatenation done"
 
 
-# calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $indir/exp_muts_invariant.tsv \
+# calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $exp_mutations \
 # 	-o $indir/pyvolve/out -l ${organism}_${gene}_simulated --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
 #     --substract192 $indir/ms/ms192syn_${organism}_${gene}.tsv --substract12 $indir/ms/ms12syn_${organism}_${gene}.tsv
-calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $indir/exp_muts_invariant.tsv \
+calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $exp_mutations \
 	-o $indir/pyvolve/out -l ${organism}_${gene}_internal_simulated --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
     --substract192 $indir/ms/ms192syn_internal_${organism}_${gene}.tsv --substract12 $indir/ms/ms12syn_internal_${organism}_${gene}.tsv
 echo "Mutational spectrum calculated"
 
-
-done
-done
+# done
+# done

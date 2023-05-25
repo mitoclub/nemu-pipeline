@@ -1,4 +1,4 @@
-THREADS = 4
+THREADS = 16
 // params.outdir = params.sequence.replaceFirst(/\.fasta/, "")
 
 if (!params.sequence){params.sequence = ""} 

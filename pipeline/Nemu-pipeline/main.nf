@@ -1,4 +1,4 @@
-THREADS = 4
+THREADS = 16
 
 if (!params.species_name){params.species_name = ""} 
 if (!params.sequence){params.sequence = ""} 
