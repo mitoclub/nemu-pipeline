@@ -11,7 +11,7 @@ GTR and RY10.12 are substitution models used in state reconstruction in [IQTREE2
 
 ## Compare different approaches of synonymous spectra adjusting (normalization) - COSMIC-like versus phylogenetically correct way:
 
-- [pastml_compare_SYN_vs_SYN_C_pcutoff_0.3_catcutoff_4_mtypes16_mnum20_.pdf](pastml_compare_SYN_vs_SYN_C_pcutoff_0.3_catcutoff_4_mtypes16_mnum20_.pdf) - syn and syn_c are almost equal (99% of distribution have similarity > 0.8)
+- [pastml_compare_SYN_vs_SYN_C_pcutoff_0.3_catcutoff_4_mtypes16_mnum20_.pdf](pastml_compare_SYN_vs_SYN_C_pcutoff_0.3_catcutoff_4_mtypes16_mnum20_.pdf) - syn (phylogenetical normalization) and syn_c (COSMIC-like normalization) are almost equal (99% of distribution have similarity > 0.8)
 
 ## Compare spectra derived using different methods of ancestral state recontruction with reference method **pastml**:
 
