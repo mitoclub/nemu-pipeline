@@ -6,8 +6,10 @@ if (!params.gencode){params.gencode = ""}
 if (!params.nspecies){params.nspecies = ""} 
 if (!params.outgroup){params.outgroup = ""} 
 if (!params.aligned){params.aligned = ""} 
+if (!params.treefile){params.treefile = ""} 
 
 g_2_multipleFasta_g_428 = file(params.sequence, type: 'any') 
+precalculated_tree = file(params.treefile, type: 'any') 
 Channel.value(params.gencode).into{g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
 Channel.value(params.nspecies).into{g_397_mode_g_410;g_397_mode_g_411;g_397_mode_g_422;g_397_mode_g_423}
 Channel.value(params.outgroup).set{g_398_outgroup_g_428}
@@ -120,10 +122,11 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 
 input:
  set val(name), file(mulal) from g_424_phylip_g_409
+ set val(treename), file(prectree) from precalculated_tree
 
 output:
  set val("iqtree"), file("iqtree.nwk")  into g_409_tree_g_315
- file "*.log"  into g_409_logFile
+ file "*.log" optional true  into g_409_logFile
 
 when:
 run_IQTREE == "true"
@@ -134,10 +137,14 @@ maxRetries 3
 script:
 
 """
-iqtree2 -s $mulal -m $iqtree_model -nt $THREADS --prefix phylo
-mv phylo.treefile iqtree.nwk
-mv phylo.iqtree iqtree_report.log
-mv phylo.log iqtree.log
+if []; then
+	iqtree2 -s $mulal -m $iqtree_model -nt $THREADS --prefix phylo
+	mv phylo.treefile iqtree.nwk
+	mv phylo.iqtree iqtree_report.log
+	mv phylo.log iqtree.log
+else
+	cat $prectree > iqtree.nwk
+
 """
 
 }
@@ -185,7 +192,7 @@ output:
  set val(name), file("${name}.branches")  into g_132_branches
 
 """
-nw_distance -m p -s l -n $tree | sort -grk 2 1> ${name}.branches
+nw_distance -m p -s f -n $tree | sort -grk 2 1> ${name}.branches
 
 if [ `grep OUTGRP ${name}.branches | cut -f 2 | python3 -c "import sys; print(float(sys.stdin.readline().strip()) > 0)"` == False ]; then
 	cat "${name}.branches"

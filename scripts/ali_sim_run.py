@@ -7,6 +7,7 @@ THREADS = 4
 SEED = random.randint(0, 100000)
 MAMMALS_TREE = "/home/kpotoh/dolphin/data/alisim/external/mam.nwk"
 ROOT_SEQ = "/home/kpotoh/dolphin/data/alisim/external/human_cytb.fasta"
+LENGTH = 1140
 
 cmd = "iqtree2 --alisim {} -m {}{}+F{}+G6+I{} -t {} --seed {} --write-all -nt {} {} -af fasta"
 
@@ -36,7 +37,7 @@ def generate_rates(n, rev=True):
 mdl = "gtr"
 
 for label in ["rnd", "cytb"]:
-    root_seq = "" if label == "rnd" else f"--root-seq {ROOT_SEQ},human_cytb"
+    root_seq = f"--length {LENGTH}" if label == "rnd" else f"--root-seq {ROOT_SEQ},human_cytb"
 
     # for raw_tree in ["mam", 100, 1000]:
     for raw_tree in ["mam"]:
