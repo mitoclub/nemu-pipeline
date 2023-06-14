@@ -118,11 +118,13 @@ process iqtree_build_tree {
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /.*.log$/) "logs/$filename"
+	else if (filename =~ /.*.nwk$/) "tmp/$filename"
 }
 
 input:
  set val(name), file(mulal) from g_424_phylip_g_409
- set val(treename), file(prectree) from precalculated_tree
+ file prectree from precalculated_tree
+ file labels_mapping from g_428_outputFileTxt
 
 output:
  set val("iqtree"), file("iqtree.nwk")  into g_409_tree_g_315
@@ -137,14 +139,22 @@ maxRetries 3
 script:
 
 """
-if []; then
+if [ -f $prectree ]; then
+	if [ ! -f $labels_mapping ]; then 
+		echo "Something went wrong. Expected that tree must be relabeled \
+		according to relabeled alignment, but file with labels map doesn't exist"
+		exit 1
+	fi
+
+	awk '{print \$2 "\t" \$1}' species_mapping.txt > species2label.txt
+	nw_rename $prectree species2label.txt > iqtree.nwk
+
+else
 	iqtree2 -s $mulal -m $iqtree_model -nt $THREADS --prefix phylo
 	mv phylo.treefile iqtree.nwk
 	mv phylo.iqtree iqtree_report.log
 	mv phylo.log iqtree.log
-else
-	cat $prectree > iqtree.nwk
-
+fi
 """
 
 }
@@ -165,7 +175,7 @@ output:
  file "*.log"  into g_315_logFile
 
 """
-if [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
+if [ $params.phylo.run_shrinking == true ] && [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
 	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.quantile -x OUTGRP
 	mv treeshrink.nwk ${name}_shrinked.nwk
 	mv treeshrink_summary.txt ${name}_treeshrink.log
@@ -707,24 +717,24 @@ echo "Mutational spectrum calculated"
 }
 
 
-process count_prior_mutations {
+// process count_prior_mutations {
 
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /mutnumbers.tsv$/) "mutspec_tables/$filename"
-}
+// publishDir params.outdir, overwrite: true, mode: 'copy',
+// 	saveAs: {filename ->
+// 	if (filename =~ /mutnumbers.tsv$/) "mutspec_tables/$filename"
+// }
 
-input:
- file seqs from g_433_multipleFasta_g_420
+// input:
+//  file seqs from g_433_multipleFasta_g_420
 
-output:
- file "mutnumbers.tsv"  into g_420_outputFileTSV
+// output:
+//  file "mutnumbers.tsv"  into g_420_outputFileTSV
 
-"""
-/opt/dolphin/scripts/mutnumbers.pl $seqs 1>mutnumbers.tsv
+// """
+// /opt/dolphin/scripts/mutnumbers.pl $seqs 1>mutnumbers.tsv
 
-"""
-}
+// """
+// }
 
 
 process mut_processing_params {
@@ -752,6 +762,7 @@ println "run_pyvolve: ${run_pyvolve}"
 println "replics: ${replics}"
 println "scale_tree: ${scale_tree}"
 println "threads: ${THREADS}"
+println "Run treeshrink: ${params.phylo.run_shrinking}"
 println ""
 
 params.syn4f = syn4f == "true" ? "--syn4f" : ""

@@ -5,7 +5,7 @@ import random
 N = 10
 THREADS = 4
 SEED = random.randint(0, 100000)
-MAMMALS_TREE = "/home/kpotoh/dolphin/data/alisim/external/mam.nwk"
+MAMMALS_TREE = "/home/kpotoh/dolphin/data/alisim/external/mam_with_outgrp.nwk"
 ROOT_SEQ = "/home/kpotoh/dolphin/data/alisim/external/human_cytb.fasta"
 LENGTH = 1140
 
