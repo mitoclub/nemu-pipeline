@@ -105,13 +105,7 @@ java -jar /opt/readseq.jar -a -f Phylip -o aln.phy $aln
 """
 }
 
-run_IQTREE = params.iqtree_build_tree.run_IQTREE
-iqtree_model = params.iqtree_build_tree.iqtree_model
-quantile = params.iqtree_build_tree.quantile
-//* @style @condition:{run_IQTREE="true", iqtree_model, quantile}
-
-params.IQTREE_model = iqtree_model
-params.quantile = quantile
+run_iqtree = params.phylo.run_iqtree
 
 process iqtree_build_tree {
 
@@ -131,7 +125,7 @@ output:
  file "*.log" optional true  into g_409_logFile
 
 when:
-run_IQTREE == "true"
+run_iqtree == "true"
 
 errorStrategy 'retry'
 maxRetries 3
@@ -150,7 +144,7 @@ if [ -f $prectree ]; then
 	nw_rename $prectree species2label.txt > iqtree.nwk
 
 else
-	iqtree2 -s $mulal -m $iqtree_model -nt $THREADS --prefix phylo
+	iqtree2 -s $mulal -m $params.phylo.iqtree_model -nt $THREADS --prefix phylo
 	mv phylo.treefile iqtree.nwk
 	mv phylo.iqtree iqtree_report.log
 	mv phylo.log iqtree.log
@@ -176,7 +170,7 @@ output:
 
 """
 if [ $params.phylo.run_shrinking == true ] && [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
-	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.quantile -x OUTGRP
+	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.phylo.quantile -x OUTGRP
 	mv treeshrink.nwk ${name}_shrinked.nwk
 	mv treeshrink_summary.txt ${name}_treeshrink.log
 	mv treeshrink.txt ${name}_pruned_nodes.log
@@ -260,9 +254,8 @@ script:
 nw_labels -I $tree > leaves.txt
 filter_aln.py -a $mulal -l leaves.txt -o filtered_aln.phy
 
-iqtree2 -te $tree -s filtered_aln.phy -m $params.IQTREE_model -asr -nt $THREADS --prefix anc
+iqtree2 -te $tree -s filtered_aln.phy -m $params.phylo.iqtree_anc_model -asr -nt $THREADS --prefix anc
 mv anc.iqtree iqtree_anc_report.log
-# mv anc.state iqtree_anc.state
 mv anc.log iqtree_anc.log
 nw_reroot anc.treefile OUTGRP | sed 's/;/ROOT;/' > iqtree_anc_tree.nwk
 
@@ -314,7 +307,7 @@ output:
 
 """
 if [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
-	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.quantile -x OUTGRP
+	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.phylo.quantile -x OUTGRP
 	mv treeshrink.nwk ${name}_shrinked.nwk
 	mv treeshrink_summary.txt ${name}_treeshrink.log
 	mv treeshrink.txt ${name}_pruned_nodes.log
@@ -463,9 +456,9 @@ if [ $nspecies == "single" ]; then
     mv run.log ${label}_mut_extraction.log
 
     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_min --syn $params.syn4f $params.all --plot -x pdf
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf
     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_min --syn $params.syn4f $params.all --plot -x pdf --subset internal
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf --subset internal
 
     cp ms12syn_${label}.tsv ms12syn_${label}.txt
     if [-f ms192syn_${label}.tsv ]; then
@@ -514,7 +507,7 @@ output:
  file "*.log"  into g_423_logFile
 
 when:
-params.run_pyvolve == "true" && nspecies == "single"
+params.run_simulation == "true" && nspecies == "single"
 
 script:
 """
@@ -606,9 +599,9 @@ if [ $nspecies == "single" ]; then
     mv run.log ${label}_mut_extraction.log
 
     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_min --syn $params.syn4f $params.all --plot -x pdf
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf
     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_min --syn $params.syn4f $params.all --plot -x pdf --subset internal
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba --proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf --subset internal
 
     cp ms12syn_${label}.tsv ms12syn_${label}.txt
     if [-f ms192syn_${label}.tsv ]; then
@@ -657,7 +650,7 @@ output:
  file "*.log"  into g_422_logFile
 
 when:
-params.run_pyvolve == "true" && nspecies == "single"
+params.run_simulation == "true" && nspecies == "single"
 
 script:
 """
@@ -745,11 +738,11 @@ syn4f = params.mut_processing_params.syn4f
 all = params.mut_processing_params.all
 mnum192 = params.mut_processing_params.mnum192
 use_probabilities = params.mut_processing_params.use_probabilities
-proba_min = params.mut_processing_params.proba_min
-run_pyvolve = params.mut_processing_params.run_pyvolve
+proba_cutoff = params.mut_processing_params.proba_cutoff
+run_simulation = params.mut_processing_params.run_simulation
 replics = params.mut_processing_params.replics
 scale_tree = params.mut_processing_params.scale_tree
-//* @style @multicolumn:{syn4f, all, mnum192}, {use_probabilities, proba_min}, {run_pyvolve, replics, scale_tree} @condition:{run_pyvolve="true", replics, scale_tree}
+//* @style @multicolumn:{syn4f, all, mnum192}, {use_probabilities, proba_cutoff}, {run_simulation, replics, scale_tree} @condition:{run_simulation="true", replics, scale_tree}
 
 println ""
 println "Arguments:"
@@ -757,20 +750,21 @@ println "syn4f: ${syn4f}"
 println "all: ${all}"
 println "mnum192: ${mnum192}"
 println "use_probabilities: ${use_probabilities}"
-println "proba_min: ${proba_min}"
-println "run_pyvolve: ${run_pyvolve}"
+println "proba_cutoff: ${proba_cutoff}"
+println "run_simulation: ${run_simulation}"
 println "replics: ${replics}"
 println "scale_tree: ${scale_tree}"
 println "threads: ${THREADS}"
 println "Run treeshrink: ${params.phylo.run_shrinking}"
+println "Shrinking Quantile: ${params.phylo.quantile}"
 println ""
 
 params.syn4f = syn4f == "true" ? "--syn4f" : ""
 params.all = all == "true" ? "--all" : ""
 params.mnum192 = mnum192
 params.proba = use_probabilities == "true" ? "--proba" : ""
-params.proba_min = proba_min
-params.run_pyvolve = run_pyvolve
+params.proba_cutoff = proba_cutoff
+params.run_simulation = run_simulation
 params.replics = replics
 params.scale_tree = scale_tree
 
