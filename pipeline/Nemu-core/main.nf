@@ -228,6 +228,8 @@ nw_reroot -l $tree OUTGRP 1>${name}_rooted.nwk
 }
 
 
+rate = params.mut_processing_params.exclude_cons_sites == "true" ? "--rate" : ""
+
 process iqtree_anc {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
@@ -254,7 +256,7 @@ script:
 nw_labels -I $tree > leaves.txt
 filter_aln.py -a $mulal -l leaves.txt -o filtered_aln.phy
 
-iqtree2 -te $tree -s filtered_aln.phy -m $params.phylo.iqtree_anc_model -asr -nt $THREADS --prefix anc
+iqtree2 -te $tree -s filtered_aln.phy -m $params.phylo.iqtree_anc_model -asr -nt $THREADS --prefix anc $rate
 mv anc.iqtree iqtree_anc_report.log
 mv anc.log iqtree_anc.log
 nw_reroot anc.treefile OUTGRP | sed 's/;/ROOT;/' > iqtree_anc_tree.nwk
