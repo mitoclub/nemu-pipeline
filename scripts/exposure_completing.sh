@@ -77,6 +77,8 @@ echo -e "Mutation samples generated\n"
 
 parallel --jobs $THREADS alignment2iqtree_states.py {} {}.state ::: $indir/pyvolve/seqfile_sample-*.fasta
 
+# HERE I DIDN'T USE RATES, BECAUSE EXP DON'T USED IN SEQUENTIAL ANALYSIS AND OBS FILTERED IN NB.
+# BUT IN COMMON CASE WE MUST USE RATES HERE 
 parallel --jobs $THREADS collect_mutations.py --tree ${tree}.ingroup --states {} --gencode $GENCODE --syn --no-mutspec \
 			 --outdir $indir/pyvolve/mout/{#} --force --quiet ::: $indir/pyvolve/seqfile_sample-*.fasta.state
 
