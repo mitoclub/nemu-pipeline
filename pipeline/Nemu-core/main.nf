@@ -7,6 +7,8 @@ if (!params.outgroup){params.outgroup = ""}
 if (!params.aligned){params.aligned = ""} 
 if (!params.treefile){params.treefile = ""} 
 
+THREADS = params.njobs
+
 g_2_multipleFasta_g_428 = file(params.sequence, type: 'any') 
 precalculated_tree = file(params.treefile, type: 'any') 
 Channel.value(params.gencode).into{g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
@@ -165,7 +167,7 @@ input:
 
 output:
  set val("${name}_shrinked"), file("${name}_shrinked.nwk")  into g_315_tree_g_302, g_315_tree_g_132
- file "*.log"  into g_315_logFile
+ file "*.log" optional true into g_315_logFile
 
 """
 if [ $params.phylo.run_shrinking == true ] && [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
@@ -463,7 +465,8 @@ scale_tree = params.mut_processing_params.scale_tree
 //* @style @multicolumn:{syn4f, all, mnum192}, {use_probabilities, proba_cutoff}, {run_simulation, replics, scale_tree} @condition:{run_simulation="true", replics, scale_tree}
 
 println ""
-println "Arguments:"
+println "PARAMETERS:"
+println "Mode: ${params.nspecies}"
 println "all: ${all}"
 println "syn: true"
 println "syn4f: ${syn4f}"

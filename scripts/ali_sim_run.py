@@ -10,9 +10,9 @@ ROOT_SEQ_NAME = "human_cytb"
 LENGTH = 1140
 SEED = random.randint(0, 100000)
 
-debug_mode = True
+debug_mode = False
 OUTDIR = "generations_mam"
-N = 5
+N = 50
 
 
 cmd = "iqtree2 --alisim {} -m {}{}{}+G6+I{} -t {} --seed {} --write-all {} -af fasta {} -redo"
@@ -80,8 +80,8 @@ for mdl in ["gtr", "12.12"]:
     for gene in ["rnd", "cytb"]:
         root_seq = f"--length {LENGTH}" if gene == "rnd" else f"--root-seq {ROOT_SEQ},{ROOT_SEQ_NAME}"
 
-        for raw_tree in [100, 1000]:
-        # for raw_tree in ["mam"]:
+        # for raw_tree in [100, 1000]:
+        for raw_tree in ["mam"]:
             if isinstance(raw_tree, int):
                 is_random_tree = True
                 tree = "RANDOM{bd{0.1/0.05}/" + str(raw_tree) + "}"
