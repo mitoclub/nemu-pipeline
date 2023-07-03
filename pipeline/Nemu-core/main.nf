@@ -250,7 +250,7 @@ alignment2iqtree_states.py $aln leaves_states.state
 }
 
 
-rate_arg = params.siterates.exclude_cons_sites == "true" ? "--rate" : ""
+estimate_rates = params.siterates.exclude_cons_sites == "true" ? "--rate" : ""
 
 process iqtree_anc {
 
@@ -269,7 +269,7 @@ input:
 output:
  set val("iqtree"), file("iqtree_anc_tree.nwk")  into g_326_tree_g_410, g_326_tree_g_422
  set val("iqtree"), file("iqtree_anc.state")  into g_326_state_g_410
- file "*.rate"  optional true into g_326_ratefile
+ file "anc.rate"  optional true into g_326_ratefile
  file "*.log"  into g_326_logFile
 
 errorStrategy 'retry'
@@ -280,7 +280,7 @@ script:
 nw_labels -I $tree > leaves.txt
 filter_aln.py -a $mulal -l leaves.txt -o filtered_aln.phy
 
-iqtree2 -te $tree -s filtered_aln.phy -m $params.phylo.iqtree_anc_model -asr -nt $THREADS --prefix anc $rate_arg
+iqtree2 -te $tree -s filtered_aln.phy -m $params.phylo.iqtree_anc_model -asr -nt $THREADS --prefix anc $estimate_rates
 mv anc.iqtree iqtree_anc_report.log
 mv anc.log iqtree_anc.log
 nw_reroot anc.treefile OUTGRP | sed 's/;/ROOT;/' > iqtree_anc_tree.nwk
@@ -322,6 +322,7 @@ if [-f $rates ]; then
 	echo "TODO add external rates file support here (if exist, check that it has appropriate format and replace generated $rates file)"
 else
 	rates_arg=""
+	exit 1  # TODO delete line
 fi
 
 
