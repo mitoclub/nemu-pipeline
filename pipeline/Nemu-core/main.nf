@@ -15,6 +15,7 @@ Channel.value(params.gencode).into{g_396_gencode_g_410;g_396_gencode_g_411;g_396
 Channel.value(params.nspecies).into{g_397_mode_g_410;g_397_mode_g_411;g_397_mode_g_422;g_397_mode_g_423}
 Channel.value(params.outgroup).set{g_398_outgroup_g_428}
 Channel.value(params.aligned).set{g_431_type_g_433}
+// text_files = Channel.fromPath( '/path/*.txt' ).ifEmpty( file('./default.txt') ) for optioanl input
 
 
 process fasta_qc {
@@ -269,7 +270,7 @@ input:
 output:
  set val("iqtree"), file("iqtree_anc_tree.nwk")  into g_326_tree_g_410, g_326_tree_g_422
  set val("iqtree"), file("iqtree_anc.state")  into g_326_state_g_410
- file "anc.rate"  optional true into g_326_ratefile
+ path "anc.rate" into g_326_ratefile
  file "*.log"  into g_326_logFile
 
 errorStrategy 'retry'
@@ -281,13 +282,15 @@ nw_labels -I $tree > leaves.txt
 filter_aln.py -a $mulal -l leaves.txt -o filtered_aln.phy
 
 iqtree2 -te $tree -s filtered_aln.phy -m $params.phylo.iqtree_anc_model -asr -nt $THREADS --prefix anc $estimate_rates
+if [ ! -f anc.rate ]; then
+	touch anc.rate
+fi
 mv anc.iqtree iqtree_anc_report.log
 mv anc.log iqtree_anc.log
 nw_reroot anc.treefile OUTGRP | sed 's/;/ROOT;/' > iqtree_anc_tree.nwk
 
 iqtree_states_add_part.py anc.state iqtree_anc.state
 """
-
 }
 
 
@@ -305,7 +308,7 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 input:
  set val(namet), file(tree) from g_326_tree_g_410
  set val(label), file(states1) from g_326_state_g_410
- file rates from g_326_ratefile
+ path rates from g_326_ratefile
  set val(names2), file(states2) from g_421_state_g_410
  val nspecies from g_397_mode_g_410
  val gencode from g_396_gencode_g_410
@@ -317,21 +320,17 @@ output:
  file "ms*syn_${label}.txt" optional true  into g_410_outputFileTxt_g_422
 
 """
-if [-f $rates ]; then
-	rates_arg="--rates $rates"
-	echo "TODO add external rates file support here (if exist, check that it has appropriate format and replace generated $rates file)"
-else
-	rates_arg=""
-	exit 1  # TODO delete line
-fi
-
-
 if [ $nspecies == "single" ]; then
-    collect_mutations.py --tree $tree --states $states1 --states $states2 \
-        --gencode $gencode --syn $params.syn4f $params.proba_arg --no-mutspec \
-		\${rates_arg} --cat-cutoff $params.siterates.cons_cat_cutoff \
-		--outdir mout $save_exp_muts
-	
+	if [ $params.siterates.exclude_cons_sites == true ]; then 
+		collect_mutations.py --tree $tree --states $states1 --states $states2 \
+			--gencode $gencode --syn $params.syn4f $params.proba_arg --no-mutspec \
+			--rates $rates --cat-cutoff $params.siterates.cons_cat_cutoff \
+			--outdir mout $save_exp_muts
+	else
+		collect_mutations.py --tree $tree --states $states1 --states $states2 \
+			--gencode $gencode --syn $params.syn4f $params.proba_arg --no-mutspec \
+			--outdir mout $save_exp_muts
+	fi
 	mv mout/* .
     mv mutations.tsv observed_mutations_${label}.tsv
     mv run.log ${label}_mut_extraction.log
@@ -348,9 +347,9 @@ if [ $nspecies == "single" ]; then
 	
 elif [ $nspecies == "multiple" ]; then
     collect_mutations.py --tree $tree --states $states1 --states $states2 \
-        --gencode $gencode --syn $params.syn4f $params.proba_arg --rates $rates \
-		\${rates_arg} --cat-cutoff $params.siterates.cons_cat_cutoff \
-		--outdir mout
+        --gencode $gencode --syn $params.syn4f $params.proba_arg \
+		--rates $rates --cat-cutoff $params.siterates.cons_cat_cutoff \
+		--outdir mout $save_exp_muts
         
 	mv mout/* .
     mv mutations.tsv observed_mutations_${label}.tsv
@@ -480,7 +479,7 @@ println "Tree scaling coefficient: ${scale_tree}"
 println "Threads: ${THREADS}"
 println "Run treeshrink: ${params.phylo.run_shrinking}"
 println "Shrinking Quantile: ${params.phylo.quantile}"
-println "Exclude conservstive sites: ${params.siterates.exclude_cons_sites}"
+println "Exclude conservative sites: ${params.siterates.exclude_cons_sites}"
 println ""
 
 params.syn4f = syn4f == "true" ? "--syn4f" : ""
