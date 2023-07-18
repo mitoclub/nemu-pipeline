@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# mkdir -p /home/kpotoh/dolphin/tmp/evolve_sc_raxml
-cd /home/mr/dolphin/tmp/evolve
+# mkdir -p /home/kpotoh/nemu-pipeline/tmp/evolve_sc_raxml
+cd /home/mr/nemu-pipeline/tmp/evolve
 
 raw_tree=../evolve/iqtree_anc_tree.nwk
 spectra=../evolve/ms12syn_iqtree.tsv

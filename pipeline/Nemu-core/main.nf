@@ -5,18 +5,24 @@ if (!params.gencode){params.gencode = ""}
 if (!params.nspecies){params.nspecies = ""} 
 if (!params.outgroup){params.outgroup = ""} 
 if (!params.aligned){params.aligned = ""} 
-if (!params.treefile){params.treefile = ""} 
+if (!params.verbose){params.verbose = "false"} 
+if (!params.treefile){
+	params.treefile = "NO_FILE"
+	Channel.value(params.treefile).set{precalculated_tree}
+} else {
+	precalculated_tree = file(params.treefile, type: 'any') 
+} 
 
 THREADS = params.njobs
 
 g_2_multipleFasta_g_428 = file(params.sequence, type: 'any') 
-precalculated_tree = file(params.treefile, type: 'any') 
 Channel.value(params.gencode).into{g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
 Channel.value(params.nspecies).into{g_397_mode_g_410;g_397_mode_g_411;g_397_mode_g_422;g_397_mode_g_423}
 Channel.value(params.outgroup).set{g_398_outgroup_g_428}
 Channel.value(params.aligned).set{g_431_type_g_433}
 // text_files = Channel.fromPath( '/path/*.txt' ).ifEmpty( file('./default.txt') ) for optioanl input
 
+min_input_nseqs = 4
 
 process fasta_qc {
 
@@ -35,8 +41,8 @@ output:
  file "char_numbers.log"  into g_428_logFile
 
 """
-if [ `grep -c ">" $query` -lt 10 ]; then
-	echo "Number of sequences must be >= 10"
+if [ `grep -c ">" $query` -lt $min_input_nseqs ]; then
+	echo "Number of sequences must be >= $min_input_nseqs"
 	exit 1
 fi
 
@@ -77,6 +83,7 @@ output:
 
 """
 if [ $aligned == "true" ]; then
+	# TODO add verification of aligment and delete this useless argument!!!!
 	echo "No need to align!"
 	cp $seqs aln.fasta
 elif [ $aligned == "false" ]; then
@@ -135,7 +142,8 @@ maxRetries 3
 script:
 
 """
-if [ -f $prectree ]; then
+# if input contains precalculated_tree
+if [ $prectree -ne "input.2" ]; then
 	if [ ! -f $labels_mapping ]; then 
 		echo "Something went wrong. Expected that tree must be relabeled \
 		according to relabeled alignment, but file with labels map doesn't exist"
@@ -464,23 +472,31 @@ replics = params.mut_processing_params.replics
 scale_tree = params.mut_processing_params.scale_tree
 //* @style @multicolumn:{syn4f, all, mnum192}, {use_probabilities, proba_cutoff}, {run_simulation, replics, scale_tree} @condition:{run_simulation="true", replics, scale_tree}
 
-println ""
-println "PARAMETERS:"
-println "Mode: ${params.nspecies}"
-println "all: ${all}"
-println "syn: true"
-println "syn4f: ${syn4f}"
-println "Minimal number of mutations to save 192-component spectrum (mnum192): ${mnum192}"
-println "Use probabilities: ${use_probabilities}"
-println "Mutation probability cutoff: ${proba_cutoff}"
-println "Run simulation: ${run_simulation}"
-println "Replics in simulation: ${replics}"
-println "Tree scaling coefficient: ${scale_tree}"
-println "Threads: ${THREADS}"
-println "Run treeshrink: ${params.phylo.run_shrinking}"
-println "Shrinking Quantile: ${params.phylo.quantile}"
-println "Exclude conservative sites: ${params.siterates.exclude_cons_sites}"
-println ""
+if (params.verbose == 'true') {
+	println ""
+	println "PARAMETERS:"
+	println "Mode: ${params.nspecies}"
+	println "all: ${all}"
+	println "syn: true"
+	println "syn4f: ${syn4f}"
+	println "Minimal number of mutations to save 192-component spectrum (mnum192): ${mnum192}"
+	println "Use probabilities: ${use_probabilities}"
+	if (use_probabilities == 'true'){
+		println "Mutation probability cutoff: ${proba_cutoff}"
+	}
+	println "Run simulation: ${run_simulation}"
+	if (run_simulation == 'true'){
+		println "Replics in simulation: ${replics}"
+		println "Tree scaling coefficient: ${scale_tree}"
+	}
+	println "Threads: ${THREADS}"
+	println "Run treeshrink: ${params.phylo.run_shrinking}"
+	if (params.phylo.run_shrinking == 'true'){
+		println "Shrinking Quantile: ${params.phylo.quantile}"
+	}
+	println "Exclude conservative sites: ${params.siterates.exclude_cons_sites}"
+	println ""
+}
 
 params.syn4f = syn4f == "true" ? "--syn4f" : ""
 params.all = all == "true" ? "--all" : ""

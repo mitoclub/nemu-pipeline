@@ -4,8 +4,8 @@ import random
 
 from ete3 import PhyloTree
 
-MAMMALS_TREE = "/home/kpotoh/dolphin/data/alisim/external/mam_with_outgrp.nwk"
-ROOT_SEQ = "/home/kpotoh/dolphin/data/alisim/external/human_cytb.fasta"
+MAMMALS_TREE = "/home/kpotoh/nemu-pipeline/data/alisim/external/mam_with_outgrp.nwk"
+ROOT_SEQ = "/home/kpotoh/nemu-pipeline/data/alisim/external/human_cytb.fasta"
 ROOT_SEQ_NAME = "human_cytb"
 LENGTH = 1140
 SEED = random.randint(0, 100000)
