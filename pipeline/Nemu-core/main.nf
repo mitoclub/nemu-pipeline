@@ -22,6 +22,9 @@ Channel.value(params.outgroup).set{g_398_outgroup_g_428}
 Channel.value(params.aligned).set{g_431_type_g_433}
 // text_files = Channel.fromPath( '/path/*.txt' ).ifEmpty( file('./default.txt') ) for optioanl input
 
+// TODO write log file fith full params list
+// TODO rename output directories and maybe files
+
 min_input_nseqs = 4
 
 process fasta_qc {
