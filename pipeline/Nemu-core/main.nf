@@ -347,9 +347,12 @@ if [ $nspecies == "single" ]; then
     mv run.log ${label}_mut_extraction.log
 
     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg --proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf
-    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg --proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf --subset internal
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+		--proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf
+    
+	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+		--proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf --subset internal
 
     cp ms12syn_${label}.tsv ms12syn_${label}.txt
     if [-f ms192syn_${label}.tsv ]; then
@@ -360,6 +363,7 @@ elif [ $nspecies == "multiple" ]; then
     collect_mutations.py --tree $tree --states $states1 --states $states2 \
         --gencode $gencode --syn $params.syn4f $params.proba_arg \
 		--rates $rates --cat-cutoff $params.siterates.cons_cat_cutoff \
+		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
 		--outdir mout $save_exp_muts
         
 	mv mout/* .
