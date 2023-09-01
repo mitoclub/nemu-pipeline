@@ -17,8 +17,13 @@ def main(infile, outfile):
         for site, nuc in enumerate(seq, 1):
             site_rates[site][nuc] += 1
 
-    d = pd.DataFrame(site_rates).T
-    nseqs = d.max().max()
+    d = pd.DataFrame(site_rates).T  # table contain site specific nucl counts
+    
+    # number of sequences
+    nseqs = d.sum(axis=1).max()
+    # nseqs = d.max().max()
+
+    # annotate sites as invariative if maximal value (4 nucl counts) equal to num of seqs
     inv = (d.max(axis=1) != nseqs).astype(int).rename("Cat")
     inv.index.name = "Site"
     inv.to_csv(outfile, sep="\t")
