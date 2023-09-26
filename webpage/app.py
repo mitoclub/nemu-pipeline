@@ -56,6 +56,7 @@ elif sampling == SAMPLING_AUTO:
     outgrp = None
 
 with st.expander("**Advanced pipeline parameters**"):
+    # TODO add sections: phylo params ...
     col1, col2 = st.columns(2)
     with col1:
         run_iqtree = st.checkbox('Use IQTREE2', True, help='Check the box to use IQTREE2 for phylogeny reconstruction (http://www.iqtree.org/doc/Substitution-Models)')
@@ -79,6 +80,8 @@ with st.expander("**Advanced pipeline parameters**"):
     with col4:
         mnum192 = st.number_input("Mutation types cutoff", 1, 192, 16, 1, help='Number of mutation types (max 192) required to calculate and plot 192-component mutational spectrum')
     
+    nreplics = scale_tree = ncategories = cat_cutoff = None
+    simulate = False
     if level == SPECIES:
         simulate = st.checkbox('Run simulation of neutral evolution', help='Run simulation using pyvolve to estimate mutation spectra neutrality. Available only for species-specific analysis')
         if simulate:
@@ -87,11 +90,7 @@ with st.expander("**Advanced pipeline parameters**"):
                 nreplics = st.number_input("Number of replics", 1, 50, 10, 1, help='Number of replics to simulate neutral evolution in pyvolve')
             with col6:
                 scale_tree = st.number_input("Tree scaling coefficient", 0., 10., 1., help='Scaling coefficient for tree in pyvolve')
-        else:
-            nreplics = scale_tree = None
 
-    else:
-        simulate = False
     site_rates = st.checkbox('Run site rates estimation in phylogenetic inference')
     if site_rates:
         col7, col8 = st.columns(2)
@@ -99,11 +98,12 @@ with st.expander("**Advanced pipeline parameters**"):
             ncategories = st.number_input("Number of categories", 2, 8, 6, 1, help='Site rates from discrete Gamma model with N categories')
         with col8:
             cat_cutoff = st.number_input("Category cutoff", 0, ncategories, 1, 1, help='Minimal category of sites that will be used in synonymous nucleoride frequencies calculation')
-    else:
-        ncategories = cat_cutoff = None
+
+email = st.text_input("email", placeholder='test@example.com')
 
 params = {
     'job_title': job_title if job_title else f'Run-{random.randint(100, 10000)}',
+    'email': email,
     'sampling': sampling,
     'level': level,
     'species_name': species_name,
@@ -129,10 +129,9 @@ params = {
     'ncategories': ncategories,
     'cat_cutoff': cat_cutoff,
 
-
 }
-st.json(params)
 st.button('Run pipeline!')
+st.json(params)
 
 
 # with st.sidebar:
