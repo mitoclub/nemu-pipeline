@@ -39,3 +39,5 @@ assert GENETIC_CODES_MITO == _GENETIC_CODES_MITO
 def gencode_id2title(s: str):
     return gencodes.get(s, None)
 
+def run_pipeline():
+    return
