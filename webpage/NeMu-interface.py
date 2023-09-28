@@ -13,6 +13,7 @@ Page scheme:
 import random
 
 import streamlit as st
+# import streamlit.config as sconfig
 
 from utils import GENETIC_CODES_MITO, GENETIC_CODES, gencode_id2title, run_pipeline
 
@@ -23,7 +24,7 @@ st.set_page_config(
     page_title="NeMu pipeline",
     page_icon="🦈",
     layout="centered",
-    # initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
     menu_items={
         'About': "# This is a header. This is an *extremely* cool app!",
         'Get Help': 'https://github.com/mitoclub/nemu-pipeline/wiki',
@@ -31,6 +32,7 @@ st.set_page_config(
     }
 )
 st.title('NeMu pipeline')
+st.sidebar.header("NeMu Pipeline")
 st.markdown('The pipeline for neutral mutation spectra evaluation based on evolutionary data for one species')
 st.markdown('Execute pipeline on IKBFU server')
 
@@ -46,12 +48,15 @@ if sampling == SAMPLING_CUSTOM:
     level = st.radio('Level', [SPECIES, COMPARATIVE], help=f'"{SPECIES}" to analyse single species, "{COMPARATIVE}" to analyse several species')
     gencode = st.selectbox('Genetic code', GENETIC_CODES, 1, format_func=gencode_id2title, help='Genetic code for alighning and mutations annotation')
     gene_db = species_name = None
+    st.divider()
     seqs = st.file_uploader('Query fasta', help='Fasta-file with several nucleotide sequences')
     outgrp = st.text_input("Outgroup", placeholder="OUTGRP", help="Id or header of outgroup record in query fasta (>Id)")
 
 elif sampling == SAMPLING_AUTO:
     level = st.radio('Level of analysis', [SPECIES], help=f'"{COMPARATIVE}" to analyse several species, "{SPECIES}" to analyse single species')
     gencode = st.selectbox('Genetic code', GENETIC_CODES_MITO, format_func=gencode_id2title, help='Genetic code for blasting, alighning and mutations annotation')
+    st.divider()
+    # https://docs.streamlit.io/library/advanced-features/forms is shit
     gene_db = st.selectbox('mtDNA gene', dbs, help='Select precomputed blast-db from MIDORI2 reference database of mitochondrial DNA sequences based on GenBank version 253 (GB253)')
     species_name = st.text_input('Species name', help='For example *Canis lupus*')
     seqs = st.text_area("Query protein sequence", max_chars=10000, placeholder="TSKHHFGFQAAAWYWHFVDVVWLFLYVSIYWWGS...", help='Single protein sequence that will be used in homoloug nucleotide sequences search using tblastn ')
@@ -134,13 +139,22 @@ params = {
 
 }
 # button that move user to results page??? YES
-st.button('Run pipeline!', on_click=st.balloons)
+# st.button('Run pipeline!', on_click=st.balloons)
+
+st.link_button("Run pipeline! href to Results", 
+               f"/Results/?job_id={st.session_state.job_id}&email={st.session_state.email}")
+
+# https://github.com/blackary/st_pages ????
+
+# st.markdown('<a href="/Results" target=_top>Results</a>', unsafe_allow_html=True)
 
 st.subheader('st.session_state:')
 st.json(st.session_state)
 
 st.subheader('Pipeline params:')
 st.json(params)
+
+st.divider()
 
 #### !!!!!!!!!!!!!!
 # job_id send to url params and areate new link that will follow to the results page that will read params and show results of current work
