@@ -17,7 +17,7 @@ THREADS = params.njobs
 
 g_2_multipleFasta_g_428 = file(params.sequence, type: 'any') 
 Channel.value(params.gencode).into{g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
-Channel.value(params.nspecies).into{g_397_mode_g_410;g_397_mode_g_411;g_397_mode_g_422;g_397_mode_g_423}
+Channel.value(params.nspecies).into{g_397_mode_g_410;g_397_mode_g_411;g_397_mode_g_422;g_397_mode_g_423;g_397_mode_g_424}
 Channel.value(params.outgroup).set{g_398_outgroup_g_428}
 Channel.value(params.aligned).set{g_431_type_g_433}
 // text_files = Channel.fromPath( '/path/*.txt' ).ifEmpty( file('./default.txt') ) for optioanl input
@@ -79,6 +79,7 @@ input:
  val aligned from g_431_type_g_433
  file seqs from g_428_multipleFasta_g_433
  val gencode from g_396_gencode_g_433
+ val nspecies from g_397_mode_g_424
 
 output:
  file "alignment_checked.fasta"  into g_433_multipleFasta_g_420, g_433_multipleFasta_g_421, g_433_multipleFasta_g_423, g_433_multipleFasta_g_422, g_433_multipleFasta_g_424
@@ -90,7 +91,21 @@ if [ $aligned == "true" ]; then
 	echo "No need to align!"
 	cp $seqs aln.fasta
 elif [ $aligned == "false" ]; then
-	java -jar /opt/macse_v2.05.jar -prog alignSequences -gc_def $gencode -out_AA aln_aa.fasta -out_NT aln.fasta -seq $seqs
+	if [ $nspecies == "single" ] || [ `grep -c ">" $seqs` -le 1000 ]; then
+		java -jar /opt/macse_v2.06.jar -prog alignSequences -gc_def $gencode \
+			-out_AA aln_aa.fasta -out_NT aln.fasta -seq $seqs
+	else
+		echo "Comparative-species analysis OR too many seuqences (>1000), need to use mafft as aligner"
+		# NT2AA
+		java -jar /opt/macse_v2.06.jar -prog translateNT2AA -seq $seqs \
+			-gc_def $gencode -out_AA translated.faa
+		#ALN AA
+		mafft --thread $THREADS translated.faa > translated_aln.faa
+		#AA_ALN --> NT_ALN
+		java -jar /opt/macse_v2.06.jar -prog reportGapsAA2NT \
+			-align_AA translated_aln.faa -seq $seqs -out_NT aln.fasta
+
+	fi
 else
 	echo "Inappropriate values for 'aligned'"
 	exit 1
