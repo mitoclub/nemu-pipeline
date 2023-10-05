@@ -41,3 +41,74 @@ def gencode_id2title(s: str):
 
 def run_pipeline():
     return
+
+CONFIG_NEMU_HEAD = '''
+// Process Config:
+
+singularity.enabled = true
+
+process {
+  container = '/home/dolphin/image_pipeline.sif' // TODO check
+  executor = 'local'
+  cpus = '1'
+  memory = '2 GB'
+}
+
+executor {
+  $local {
+    cpus = '4'
+    memory = '20 GB'
+  }  
+}
+'''
+
+CONFIG_NEMU_BODY = '''
+// Run Parameters:
+
+params.sequence = 'sequences.fasta'
+params.gencode = '{gencode}'
+params.nspecies = '{nspecies}'
+params.outgroup = '{outgrp}'
+params.aligned = '{aligned}'
+params.species_name = '{species_name}'
+params.Mt_DB = '/db/MIDORI2_UNIQ_NUC_SP_GB253_{gene_db}_BLAST'
+params.verbose = 'false'
+
+// Process Parameters:
+
+// Process Parameters for raxml_build_tree:
+params.raxml_build_tree.run_RAXML = "{run_raxml}" //* @checkbox @description:"Check the box to use RAXML for phylogeny reconstruction."
+params.raxml_build_tree.raxml_model = "{model_raxml}" //* @input @description:"Substitution model for RAxML"
+
+// Process Parameters for iqtree_build_tree:
+params.iqtree_build_tree.run_IQTREE = "{run_iqtree}" //* @checkbox @description:"Checkk the box to use RAXML for phylogeny reconstruction."
+params.iqtree_build_tree.iqtree_model = "{model_iqtree}" //* @input @description:"Substitution model for IQTREE2. Could be 'MFP' to run modelfinder."
+params.iqtree_build_tree.quantile = "{shrink_quantile}" //* @input @description:"The quantile(s) to set threshold for treeshrink."
+
+// Process Parameters for Phylogeny:
+params.phylo.run_shrinking = "{run_shrinking}"
+
+// Process Parameters for mut_processing_params:
+params.mut_processing_params.syn4f = "{syn4f}" //* @checkbox @description:"Run extraction of mutational spectrum based on synonymous fourfold mutations"
+params.mut_processing_params.all = "{mall}" //* @checkbox @description:"Run extraction of mutational spectrum based on all mutations"
+params.mut_processing_params.mnum192 = "{mnum192}" //* @input @description:"Number of mutation types (max 192) required to calculate and plot 192-component mutational spectra"
+params.mut_processing_params.use_probabilities = "{use_proba}" //* @checkbox @description:"Use probabilities of nucleotides in mutational spectra calculation"
+params.mut_processing_params.proba_min = "{proba_cutoff}" //* @input @description:"Mutation probability cutoff: mutations with lower probability will not be considered in spectra calculation"
+params.mut_processing_params.run_pyvolve = "{simulate}" //* @checkbox @description:"Run simulation using pyvolve. Available only when nspecies = 'multiple'"
+params.mut_processing_params.replics = "{nreplics}" //* @input @description:"Number of replics to simulate neutral evolution in pyvolve"
+params.mut_processing_params.scale_tree = "{scale_tree}" //* @input @description:"Scaling coefficient for tree in pyvolve: less"
+'''
+
+def prepare_config(map):
+    lines = []
+    for line in CONFIG_NEMU_BODY.split('\n'):
+        new_line = line.format_map(map)
+        lines.append(new_line)
+        print(new_line)
+    
+    return CONFIG_NEMU_HEAD + '\n'.join(lines)
+
+
+def prepare_sequences(path):
+    # TODO
+    return

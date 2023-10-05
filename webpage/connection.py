@@ -3,14 +3,15 @@
 """
 Steps:
 
+0. prepare config and input files (fasta QC here again sprotein or nuclaotide)
 1. send to remote server input params and input file
 2. execute pipeline with params on the server in custom dir
 3. zippify output and prepare image for interface
 4. send files to local
-5. send email to user with zip file (almost done)
-6. store data in the local database
-7. access the files from results page in the interface
-8. remove files after X hours (24 or 48)
+DONE 5. send email to user with zip file
+6. store data in the local database (just some results dir and subdirs that contain results for each output)
+7. access the files from results page in the interface (easy read files)
+8. remove files after X hours (24 or 48) (run some process that will check dir creation time and delete if its life excess X h)
 
 """
 
@@ -18,6 +19,14 @@ Steps:
 import random
 import os
 import tempfile
+from typing import List
+
+import email, smtplib, ssl
+
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import paramiko
 
@@ -62,20 +71,15 @@ def connect():
     ssh.close()
 
 
-def send_email():
-    import email, smtplib, ssl
-
-    from email import encoders
-    from email.mime.base import MIMEBase
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
-    subject = "An email with attachment from Python"
-    body = "This is an email with attachment sent from Python"
-    sender_email = ""
-    receiver_email = ""
-    # password = input("Type your password and press enter:")
-    password = ''
+def send_email(receiver_email: str, filenames: List[str], subject=None, body=None):
+    """
+    params:
+        - filename: str - path to filename in same directory as script
+    """
+    subject = subject or "NeMu pipeline execution results"
+    body = body or "This is an email with attachment sent from Python"
+    sender_email = os.environ['EMAIL_LOGIN']
+    password = os.environ['EMAIL_PASSWORD']
 
     # Create a multipart message and set headers
     message = MIMEMultipart()
@@ -87,26 +91,24 @@ def send_email():
     # Add body to email
     message.attach(MIMEText(body, "plain"))
 
-    filename = "document.txt"  # In same directory as script
-
     # Open PDF file in binary mode
-    with open(filename, "rb") as attachment:
-        # Add file as application/octet-stream
-        # Email client can usually download this automatically as attachment
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment.read())
+    for filename in filenames:
+        with open(filename, "rb") as attachment:
+            # Add file as application/octet-stream
+            # Email client can usually download this automatically as attachment
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
 
-    # Encode file in ASCII characters to send by email    
-    encoders.encode_base64(part)
+        # Encode file in ASCII characters to send by email    
+        encoders.encode_base64(part)
+        # Add header as key/value pair to attachment part
+        part.add_header(
+            "Content-Disposition",
+            f"attachment; filename= {os.path.basename(filename)}",
+        )
+        # Add attachment to message and convert message to string
+        message.attach(part)
 
-    # Add header as key/value pair to attachment part
-    part.add_header(
-        "Content-Disposition",
-        f"attachment; filename= {filename}",
-    )
-
-    # Add attachment to message and convert message to string
-    message.attach(part)
     text = message.as_string()
 
     # Log in to server using secure context and send email
@@ -117,7 +119,7 @@ def send_email():
 
 
 if __name__ == "__main__":
-    send_email()
+    send_email('galogenid36326@gmail.com', ['requirements.txt', '.streamlit/config.toml'])
 
 
 

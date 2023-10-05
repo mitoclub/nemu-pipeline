@@ -12,10 +12,17 @@ Page scheme:
 
 import random
 
+from dotenv import load_dotenv
 import streamlit as st
 # import streamlit.config as sconfig
 
-from utils import GENETIC_CODES_MITO, GENETIC_CODES, gencode_id2title, run_pipeline
+from utils import (
+    GENETIC_CODES_MITO, GENETIC_CODES,
+    gencode_id2title, run_pipeline, prepare_config,
+)
+from connection import send_email
+
+load_dotenv()
 
 if 'job_id' not in st.session_state:
     st.session_state.job_id = random.randint(1000, 1000000)
@@ -26,7 +33,7 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed",
     menu_items={
-        'About': "# This is a header. This is an *extremely* cool app!",
+        'About': "# NeMu pipeline interface",
         'Get Help': 'https://github.com/mitoclub/nemu-pipeline/wiki',
         'Report a bug': "https://github.com/mitoclub/nemu-pipeline/issues",
     }
@@ -70,7 +77,9 @@ with st.expander("**Advanced pipeline parameters**"):
         model_iqtree = '10.12+FO+G6+I' if level == COMPARATIVE else 'GTR+FO+G6+I'
         if run_iqtree:
             model_iqtree = st.text_input('Substitution model for IQTREE2', model_iqtree)
-        shrink_quantile = st.number_input("Quantile for TreeShrink", 0., 1., 0.05, 0.01)
+        run_shrinking = st.checkbox('Use Tree Shrinking', True, help='Filter out outlier nodes (https://uym2.github.io/TreeShrink/)')
+        if run_shrinking:
+            shrink_quantile = st.number_input("Quantile for TreeShrink", 0., 1., 0.05, 0.01)
 
     with col2:
         run_raxml = st.checkbox('Use RAxML', False, help='Check the box to use RAXML for phylogeny reconstruction')
@@ -80,11 +89,11 @@ with st.expander("**Advanced pipeline parameters**"):
 
     syn4f = st.checkbox('Synonymous fourfold mutations', help="Run extraction of mutational spectrum based on synonymous fourfold mutations")
     mall  = st.checkbox('Synonymous and nonsynonymous', help='Run extraction of mutational spectrum based on all mutations: synonymous and nonsynonymous')
-    proba = st.checkbox('Use probabilities', True, help='Use probabilities of nucleotides in mutational spectra calculation')
+    use_proba = st.checkbox('Use probabilities', True, help='Use probabilities of nucleotides in mutational spectra calculation')
     col3, col4 = st.columns(2)
     with col3:
-        proba_cutoff = st.number_input('Mutation probability cutoff', 0., 1., 0.3, 0.05, help="Mutation probability cutoff: mutations with lower probability will not be considered in spectra calculation")
-    with col4:
+        if use_proba:
+            proba_cutoff = st.number_input('Mutation probability cutoff', 0., 1., 0.3, 0.05, help="Mutation probability cutoff: mutations with lower probability will not be considered in spectra calculation")
         mnum192 = st.number_input("Mutation types cutoff", 1, 192, 16, 1, help='Number of mutation types (max 192) required to calculate and plot 192-component mutational spectrum')
 
     nreplics = scale_tree = ncategories = cat_cutoff = None
@@ -108,6 +117,10 @@ with st.expander("**Advanced pipeline parameters**"):
 
 email = st.text_input("email", key='email', placeholder='test@example.com')
 
+if email:
+    st.button("Send test email", on_click=send_email, 
+            args=(st.session_state.email, ['requirements.txt', '.streamlit/config.toml']))
+
 params = {
     'job_id': st.session_state.job_id,
     'job_title': job_title,
@@ -124,10 +137,11 @@ params = {
     'model_iqtree': model_iqtree,
     'run_raxml': run_raxml,
     'model_raxml': model_raxml,
+    'run_shrinking': run_shrinking,
     'shrink_quantile': shrink_quantile,
     'syn4f': syn4f,
     'mall': mall,
-    'proba': proba,
+    'use_proba': use_proba,
     'proba_cutoff': proba_cutoff,
     'mnum192': mnum192,
     'simulate': simulate,
@@ -136,13 +150,17 @@ params = {
     'site_rates': site_rates,
     'ncategories': ncategories,
     'cat_cutoff': cat_cutoff,
+    'nspecies': 'TODO',
+    'aligned': 'TODO',
 
 }
 # button that move user to results page??? YES
-# st.button('Run pipeline!', on_click=st.balloons)
 
-st.link_button("Run pipeline! href to Results", 
-               f"/Results/?job_id={st.session_state.job_id}&email={st.session_state.email}")
+run_it = st.button('Run pipeline!', on_click=run_pipeline)
+if run_it:
+    print(prepare_config(params))
+    st.link_button("Go to Results page", 
+                  f"/Results/?job_id={st.session_state.job_id}&email={st.session_state.email}")
 
 # https://github.com/blackary/st_pages ????
 

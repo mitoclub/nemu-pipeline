@@ -19,7 +19,7 @@ params = st.experimental_get_query_params()
 st.text('experimental_get_query_params:')
 st.json(params)
 for key in ['job_id', 'email']:
-    if key in params and key not in st.session_state:
+    if key not in st.session_state and key in params:
         st.session_state[key] = params[key][0]
 
 st.subheader('st.session_state:')
