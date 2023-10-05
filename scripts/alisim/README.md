@@ -26,7 +26,7 @@ scripts/ali_sim_run.py
 parallel --jobs 168 select_records.py -p Node -p ROOT -v {} {.}.fa.leaves ::: generations_mam/*.fa
 parallel --jobs 168 select_records.py -p T -p OUTGRP  {} {.}.fa.leaves ::: generations_sp/*.fa
 
-# extract inv sites from simulated sequences
+# extract inv sites from simulated sequences for sp
 parallel --jobs 168 python ../../scripts/alisim/extract_inv_sites.py {} {.}.inv ::: generations_sp/*.fa
 
 # extract ground truth mutations
