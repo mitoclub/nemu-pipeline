@@ -3,10 +3,10 @@ usage: streamlit run demo.py
 
 Page scheme:
 0. done description 
-1. sampling type (auto, custom data)
-2. inter- or intra-species mode
-3. main params
-4. hided optional params with defaults
+1. done sampling type (auto, custom data)
+2. done inter- or intra-species mode
+3. done main params
+4. done hided optional params with defaults
 5. results subpage that will show images and suggest to download results
 '''
 
@@ -17,7 +17,8 @@ import streamlit as st
 # import streamlit.config as sconfig
 
 from utils import (
-    GENETIC_CODES_MITO, GENETIC_CODES,
+    GENETIC_CODES_MITO, GENETIC_CODES, DBS, 
+    SAMPLING_AUTO, SAMPLING_CUSTOM, COMPARATIVE, SPECIES,
     gencode_id2title, run_pipeline, prepare_config,
 )
 from connection import send_email
@@ -44,29 +45,28 @@ st.markdown('The pipeline for neutral mutation spectra evaluation based on evolu
 st.markdown('Execute pipeline on IKBFU server')
 
 
-dbs = ['CO1','CO2','CO3','Cytb','A6','A8','ND1','ND2','ND3','ND4','ND4L','ND5','ND6']
-SAMPLING_AUTO, SAMPLING_CUSTOM = 'Auto','Custom'
-COMPARATIVE, SPECIES = 'Comparative-species', 'Species-specific'
-
 st.header("Inputs")
 job_title = st.text_input("Job Title", placeholder='Test Run (optional)', max_chars=100)
-sampling = st.radio('Sampling type', [SAMPLING_AUTO, SAMPLING_CUSTOM], help=f'Select "{SAMPLING_AUTO}" to search homologous sequences in the blast-dbs of mitochondrial genes or "{SAMPLING_CUSTOM}" to execute pipeline on custom homologous sequences')
+sampling = st.radio('Sampling type*', [SAMPLING_AUTO, SAMPLING_CUSTOM], help=f'Select "{SAMPLING_AUTO}" to search homologous sequences in the blast-dbs of mitochondrial genes or "{SAMPLING_CUSTOM}" to execute pipeline on custom homologous sequences')
 if sampling == SAMPLING_CUSTOM:
-    level = st.radio('Level', [SPECIES, COMPARATIVE], help=f'"{SPECIES}" to analyse single species, "{COMPARATIVE}" to analyse several species')
-    gencode = st.selectbox('Genetic code', GENETIC_CODES, 1, format_func=gencode_id2title, help='Genetic code for alighning and mutations annotation')
+    level = st.radio('Level of analysis*', [SPECIES, COMPARATIVE], help=f'"{SPECIES}" to analyse single species, "{COMPARATIVE}" to analyse several species')
+    gencode = st.selectbox('Genetic code*', GENETIC_CODES, 1, format_func=gencode_id2title, help='Genetic code for alighning and mutations annotation')
     gene_db = species_name = None
-    st.divider()
-    seqs = st.file_uploader('Query fasta', help='Fasta-file with several nucleotide sequences')
-    outgrp = st.text_input("Outgroup", placeholder="OUTGRP", help="Id or header of outgroup record in query fasta (>Id)")
+    # st.divider()
+    outgrp = st.text_input("Outgroup*", placeholder="OUTGRP", help="Id or header of outgroup record in query fasta (>OUTGRP)")
+    seqs = st.file_uploader('Query fasta*', ['fasta', 'fna', 'fa'], help='Fasta-file with several nucleotide sequences')
 
 elif sampling == SAMPLING_AUTO:
-    level = st.radio('Level of analysis', [SPECIES], help=f'"{COMPARATIVE}" to analyse several species, "{SPECIES}" to analyse single species')
-    gencode = st.selectbox('Genetic code', GENETIC_CODES_MITO, format_func=gencode_id2title, help='Genetic code for blasting, alighning and mutations annotation')
-    st.divider()
+    level = st.radio('Level of analysis*', [SPECIES], help=f'"{COMPARATIVE}" to analyse several species, "{SPECIES}" to analyse single species')
+    gencode = st.selectbox('Genetic code*', GENETIC_CODES_MITO, format_func=gencode_id2title, help='Genetic code for blasting, alighning and mutations annotation')
+    # st.divider()
     # https://docs.streamlit.io/library/advanced-features/forms is shit
-    gene_db = st.selectbox('mtDNA gene', dbs, help='Select precomputed blast-db from MIDORI2 reference database of mitochondrial DNA sequences based on GenBank version 253 (GB253)')
-    species_name = st.text_input('Species name', help='For example *Canis lupus*')
-    seqs = st.text_area("Query protein sequence", max_chars=10000, placeholder="TSKHHFGFQAAAWYWHFVDVVWLFLYVSIYWWGS...", help='Single protein sequence that will be used in homoloug nucleotide sequences search using tblastn ')
+    col1, col2 = st.columns(2)
+    with col1:
+        species_name = st.text_input('Species name*',  max_chars=100, help='For example *Canis lupus*')
+    with col2:
+        gene_db = st.selectbox('mtDNA gene*', DBS, help='Select precomputed blast-db from MIDORI2 reference database of mitochondrial DNA sequences based on GenBank version 253 (GB253)')
+    seqs = st.text_area("Query protein sequence*", max_chars=5000, placeholder="TSKHHFGFQAAAWYWHFVDVVWLFLYVSIYWWGS...", help='Single protein sequence that will be used in homoloug nucleotide sequences search using tblastn ')
     outgrp = None
 
 with st.expander("**Advanced pipeline parameters**"):
@@ -115,7 +115,7 @@ with st.expander("**Advanced pipeline parameters**"):
         with col8:
             cat_cutoff = st.number_input("Category cutoff", 0, ncategories, 1, 1, help='Minimal category of sites that will be used in synonymous nucleoride frequencies calculation')
 
-email = st.text_input("email", key='email', placeholder='test@example.com')
+email = st.text_input("email", key='email', placeholder='test@example.com', help='Pipeline output will be sent to the specified email')
 
 if email:
     st.button("Send test email", on_click=send_email, 
@@ -127,40 +127,46 @@ params = {
     'email': email,
     'sampling': sampling,
     'level': level,
+    'nspecies': 'single' if level == SPECIES else 'multiple',
+    'aligned': 'TODO',
     'species_name': species_name,
     'gencode': gencode,
     'gene_db': gene_db,
     'species_name': species_name,
     'seqs': seqs,
     'outgrp': outgrp,
-    'run_iqtree': run_iqtree,
+    'run_iqtree': str(run_iqtree).lower(),
     'model_iqtree': model_iqtree,
-    'run_raxml': run_raxml,
+    'run_raxml': str(run_raxml).lower(),
     'model_raxml': model_raxml,
-    'run_shrinking': run_shrinking,
+    'run_shrinking': str(run_shrinking).lower(),
     'shrink_quantile': shrink_quantile,
-    'syn4f': syn4f,
-    'mall': mall,
-    'use_proba': use_proba,
+    'syn4f': str(syn4f).lower(),
+    'mall': str(mall).lower(),
+    'use_proba': str(use_proba).lower(),
     'proba_cutoff': proba_cutoff,
     'mnum192': mnum192,
-    'simulate': simulate,
+    'simulate': str(simulate).lower(),
     'nreplics': nreplics,
-    'scale_tree': scale_tree,
+    'scale_tree': str(scale_tree).lower(),
     'site_rates': site_rates,
     'ncategories': ncategories,
     'cat_cutoff': cat_cutoff,
-    'nspecies': 'TODO',
-    'aligned': 'TODO',
 
 }
-# button that move user to results page??? YES
 
-run_it = st.button('Run pipeline!', on_click=run_pipeline)
-if run_it:
-    print(prepare_config(params))
-    st.link_button("Go to Results page", 
-                  f"/Results/?job_id={st.session_state.job_id}&email={st.session_state.email}")
+def click_pipeline_btn():
+    ok, msg = run_pipeline(params)
+    if ok:
+        st.text(prepare_config(params))
+        st.link_button("Go to Results page", 
+                    f"/Results/?job_id={st.session_state.job_id}&email={st.session_state.email}")
+    else:
+        st.toast(msg, icon='🔥')
+
+    # TODO почему-то все идет вверх страницы, а не на текущем уровне
+
+run_it = st.button('Run pipeline!', on_click=click_pipeline_btn)
 
 # https://github.com/blackary/st_pages ????
 

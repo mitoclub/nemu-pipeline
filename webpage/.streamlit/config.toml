@@ -1,5 +1,6 @@
 [server]
 port = 8501
+maxUploadSize = 20
 
 [browser]
 gatherUsageStats = true

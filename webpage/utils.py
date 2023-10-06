@@ -1,5 +1,8 @@
 _GENETIC_CODES = [1,2,3,4,5,6,9,10,11,12,13,14,15,16,21,22,23,24,25,26,27,28,29,30,31,33]
 _GENETIC_CODES_MITO = [2,3,4,5,9,13,14,16,21,22,23,24,33]
+DBS = ['CO1','CO2','CO3','Cytb','A6','A8','ND1','ND2','ND3','ND4','ND4L','ND5','ND6']
+SAMPLING_AUTO, SAMPLING_CUSTOM = 'Auto','Custom'
+COMPARATIVE, SPECIES = 'Comparative-species', 'Species-specific'
 
 gencodes = {
     1: '1. The Standard Code',
@@ -39,8 +42,36 @@ assert GENETIC_CODES_MITO == _GENETIC_CODES_MITO
 def gencode_id2title(s: str):
     return gencodes.get(s, None)
 
-def run_pipeline():
+def is_protein(s):
     return
+
+def contain_outgroup():
+    return
+
+def is_nucl_multi_fasta():
+    return
+
+def run_pipeline(params):
+    ok = True
+    msg = ''
+    if params['sampling'] == SAMPLING_AUTO:
+        for prm, prm_name in [('species_name', 'species name'), ('seqs', 'protein sequence')]:
+            if not params[prm]:
+                ok, msg = False, f'Please specify {prm_name} in the field above'
+                break
+
+        if ok and not is_protein(params['seqs']):
+            ok, msg = False, 'Query sequence is not a protein'
+
+    if params['sampling'] == SAMPLING_CUSTOM:
+        for prm, prm_name in [('outgrp', 'outgroup name or id'), ('seqs', 'nucleotide sequences fasta file')]:
+            if not params[prm]:
+                ok = False
+                msg = f'Please specify {prm_name} in the field above'
+                break
+
+    return ok, msg
+
 
 CONFIG_NEMU_HEAD = '''
 // Process Config:
@@ -48,7 +79,7 @@ CONFIG_NEMU_HEAD = '''
 singularity.enabled = true
 
 process {
-  container = '/home/dolphin/image_pipeline.sif' // TODO check
+  container = '/home/dolphin/image_pipeline.sif'
   executor = 'local'
   cpus = '1'
   memory = '2 GB'
@@ -72,7 +103,7 @@ params.outgroup = '{outgrp}'
 params.aligned = '{aligned}'
 params.species_name = '{species_name}'
 params.Mt_DB = '/db/MIDORI2_UNIQ_NUC_SP_GB253_{gene_db}_BLAST'
-params.verbose = 'false'
+params.verbose = 'true'
 
 // Process Parameters:
 
@@ -104,7 +135,6 @@ def prepare_config(map):
     for line in CONFIG_NEMU_BODY.split('\n'):
         new_line = line.format_map(map)
         lines.append(new_line)
-        print(new_line)
     
     return CONFIG_NEMU_HEAD + '\n'.join(lines)
 
