@@ -4,4 +4,4 @@
 
 [submodule "nemu-webpage"]
 	path = nemu-webpage
-	url = https://github.com/kpotoh/nemu-webpage.git
+	url = https://github.com/mitoclub/nemu-webpage.git
