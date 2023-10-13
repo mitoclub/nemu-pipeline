@@ -1,19 +1,55 @@
 // params.outdir = params.sequence.replaceFirst(/\.fasta/, "")
 
+THREADS = params.njobs
+
 if (!params.sequence){params.sequence = ""} 
 if (!params.gencode){params.gencode = ""} 
 if (!params.nspecies){params.nspecies = ""} 
 if (!params.outgroup){params.outgroup = ""} 
 if (!params.aligned){params.aligned = ""} 
-if (!params.verbose){params.verbose = "false"} 
-if (!params.treefile){
-	params.treefile = "NO_FILE"
-	Channel.value(params.treefile).set{precalculated_tree}
-} else {
-	precalculated_tree = file(params.treefile, type: 'any') 
-} 
 
-THREADS = params.njobs
+if (!params.verbose){params.verbose = "false"} 
+if (!params.internal){params.internal = "false"} 
+if (!params.terminal){params.terminal = "false"} 
+if (!params.branch_spectra){params.branch_spectra = "false"} 
+
+if (params.verbose == 'true') {
+	println ""
+	println "PARAMETERS:"
+	println "Mode: ${params.nspecies}"
+	println "all: ${params.all}"
+	println "syn: true"
+	println "syn4f: ${params.syn4f}"
+	println "Minimal number of mutations to save 192-component spectrum (mnum192): ${params.mnum192}"
+	println "Use probabilities: ${params.use_probabilities}"
+	if (params.use_probabilities == 'true'){
+		println "Mutation probability cutoff: ${params.proba_cutoff}"
+	}
+	println "Run simulation: ${params.run_simulation}"
+	if (params.run_simulation == 'true'){
+		println "Replics in simulation: ${params.replics}"
+		println "Tree scaling coefficient: ${params.scale_tree}"
+	}
+	println "Threads: ${THREADS}"
+	println "Run treeshrink: ${params.run_shrinking}"
+	if (params.run_shrinking == 'true'){
+		println "Shrinking Quantile: ${params.quantile}"
+	}
+	println "Exclude conservative sites: ${params.exclude_cons_sites}"
+	println "internal branches spectra: ${params.internal}"
+	println "terminal branches spectra: ${params.terminal}"
+	println ""
+}
+
+params.all_arg   = params.all == "true" ? "--all" : ""
+params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
+params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
+
+if (!params.treefile || params.treefile == ''){
+	Channel.value("NO_FILE").set{precalculated_tree}
+} else {
+	precalculated_tree = file(params.treefile, type: 'any')
+} 
 
 g_2_multipleFasta_g_428 = file(params.sequence, type: 'any') 
 Channel.value(params.gencode).into{g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
@@ -40,7 +76,7 @@ input:
 
 output:
  file "sequences.fasta"  into g_428_multipleFasta_g_433
- file "species_mapping.txt" optional true  into g_428_outputFileTxt
+ file "species_mapping.txt" into g_428_outputFileTxt
  file "char_numbers.log"  into g_428_logFile
 
 """
@@ -63,7 +99,9 @@ else
 fi
 
 multifasta_coding.py -a $query -g $outgrp -o sequences.fasta -m species_mapping.txt
-
+if [ ! -f species_mapping.txt ]; then
+	echo test > species_mapping.txt
+fi
 """
 }
 
@@ -132,7 +170,7 @@ java -jar /opt/readseq.jar -a -f Phylip -o aln.phy $aln
 """
 }
 
-run_iqtree = params.phylo.run_iqtree
+run_iqtree = params.run_iqtree
 
 process iqtree_build_tree {
 
@@ -162,17 +200,18 @@ script:
 """
 # if input contains precalculated_tree
 if [ $prectree -ne "input.2" ]; then
+	echo "TODO need to correctly replace headers if needed"
 	if [ ! -f $labels_mapping ]; then 
 		echo "Something went wrong. Expected that tree must be relabeled \
 		according to relabeled alignment, but file with labels map doesn't exist"
 		exit 1
 	fi
 
-	awk '{print \$2 "\t" \$1}' species_mapping.txt > species2label.txt
+	awk '{print \$2 "\t" \$1}' $labels_mapping > species2label.txt
 	nw_rename $prectree species2label.txt > iqtree.nwk
 
 else
-	iqtree2 -s $mulal -m $params.phylo.iqtree_model -nt $THREADS --prefix phylo
+	iqtree2 -s $mulal -m $params.iqtree_model -nt $THREADS --prefix phylo
 	mv phylo.treefile iqtree.nwk
 	mv phylo.iqtree iqtree_report.log
 	mv phylo.log iqtree.log
@@ -197,14 +236,14 @@ output:
  file "*.log" optional true into g_315_logFile
 
 """
-if [ $params.phylo.run_shrinking == true ] && [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
-	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.phylo.quantile -x OUTGRP
+if [ $params.run_shrinking == true ] && [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
+	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.quantile -x OUTGRP
 	mv treeshrink.nwk ${name}_shrinked.nwk
 	mv treeshrink_summary.txt ${name}_treeshrink.log
 	mv treeshrink.txt ${name}_pruned_nodes.log
 else
 	cat $tree > ${name}_shrinked.nwk
-	if [ $params.phylo.run_shrinking == true ]; then
+	if [ $params.run_shrinking == true ]; then
 		echo "Shrinking are useless on such a small number of sequences" > ${name}_treeshrink.log
 	fi
 fi
@@ -277,7 +316,7 @@ alignment2iqtree_states.py $aln leaves_states.state
 }
 
 
-estimate_rates = params.siterates.exclude_cons_sites == "true" ? "--rate" : ""
+estimate_rates = params.exclude_cons_sites == "true" ? "--rate" : ""
 
 process iqtree_anc {
 
@@ -307,7 +346,7 @@ script:
 nw_labels -I $tree > leaves.txt
 filter_aln.py -a $mulal -l leaves.txt -o filtered_aln.phy
 
-iqtree2 -te $tree -s filtered_aln.phy -m $params.phylo.iqtree_anc_model -asr -nt $THREADS --prefix anc $estimate_rates
+iqtree2 -te $tree -s filtered_aln.phy -m $params.iqtree_anc_model -asr -nt $THREADS --prefix anc $estimate_rates
 if [ ! -f anc.rate ]; then
 	touch anc.rate
 fi
@@ -320,7 +359,7 @@ iqtree_states_add_part.py anc.state iqtree_anc.state
 }
 
 
-save_exp_muts = params.mut_processing_params.save_exp_mutations == "true" ? "--save-exp-muts" : ""
+save_exp_muts = params.save_exp_mutations == "true" ? "--save-exp-muts" : ""
 
 process mutations_iqtree {
 
@@ -346,53 +385,46 @@ output:
  file "ms*syn_${label}.txt" optional true  into g_410_outputFileTxt_g_422
 
 """
-if [ $nspecies == "single" ]; then
-	if [ $params.siterates.exclude_cons_sites == true ]; then 
-		collect_mutations.py --tree $tree --states $states1 --states $states2 \
-			--gencode $gencode --syn $params.syn4f $params.proba_arg --no-mutspec \
-			--rates $rates --cat-cutoff $params.siterates.cons_cat_cutoff \
-			--outdir mout $save_exp_muts
-	else
-		collect_mutations.py --tree $tree --states $states1 --states $states2 \
-			--gencode $gencode --syn $params.syn4f $params.proba_arg --no-mutspec \
-			--outdir mout $save_exp_muts
-	fi
-	mv mout/* .
-    mv mutations.tsv observed_mutations_${label}.tsv
-    mv run.log ${label}_mut_extraction.log
-
-    calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
-		--proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf
-    
-	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
-		--proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf --subset internal
-
-    cp ms12syn_${label}.tsv ms12syn_${label}.txt
-    if [-f ms192syn_${label}.tsv ]; then
-	    cp ms192syn_${label}.tsv ms192syn_${label}.txt
-	fi
-	
-elif [ $nspecies == "multiple" ]; then
-    collect_mutations.py --tree $tree --states $states1 --states $states2 \
-        --gencode $gencode --syn $params.syn4f $params.proba_arg \
-		--rates $rates --cat-cutoff $params.siterates.cons_cat_cutoff \
+if [ $params.exclude_cons_sites == true ]; then 
+	collect_mutations.py --tree $tree --states $states1 --states $states2 \
+		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
+		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
+		--rates $rates --cat-cutoff $params.cons_cat_cutoff \
+		--outdir mout $save_exp_muts
+else
+	collect_mutations.py --tree $tree --states $states1 --states $states2 \
+		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
 		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
 		--outdir mout $save_exp_muts
-        
-	mv mout/* .
-    mv mutations.tsv observed_mutations_${label}.tsv
-    mv run.log ${label}_mut_extraction.log
+fi
+mv mout/* .
+mv mutations.tsv observed_mutations_${label}.tsv
+mv run.log ${label}_mut_extraction.log
 
-    plot_spectra.py -s mutspec12.tsv  -o ${label}_ms12.pdf
-    plot_spectra.py -s mutspec192.tsv -o ${label}_ms192.pdf
+calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
+	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+	--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf
 
-else
-    echo "ArgumentError: nspecies"
-    exit 1
+if [ $params.internal == "true" ]; then
+	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset internal
+fi
+if [ $params.terminal == "true" ]; then
+	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset terminal
+fi
+if [ $params.branch_spectra == "true" ]; then
+	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --branches
 fi
 
+cp ms12syn_${label}.tsv ms12syn_${label}.txt
+if [-f ms192syn_${label}.tsv ]; then
+	cp ms192syn_${label}.tsv ms192syn_${label}.txt
+fi
 """
 }
 
@@ -460,7 +492,7 @@ for fasta_file in seqfile_sample-*.fasta
 do
 	echo "Processing \$fasta_file"
 	alignment2iqtree_states.py \$fasta_file  \${fasta_file}.state
-	collect_mutations.py --tree ${tree}.ingroup --states  \${fasta_file}.state --gencode $gencode --syn $params.syn4f --no-mutspec --outdir mout --force
+	collect_mutations.py --tree ${tree}.ingroup --states  \${fasta_file}.state --gencode $gencode --syn $params.syn4f_arg --no-mutspec --outdir mout --force
 	cat mout/run.log >> pyvolve_${label}.log
 	echo -e "\n\n">> pyvolve_${label}.log
 	cat mout/mutations.tsv >  \${fasta_file}.mutations
@@ -471,7 +503,7 @@ concat_mutations.py seqfile_sample-*.fasta.mutations mutations_${label}_pyvolve.
 echo "Mutations concatenation done"
 
 calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_freqs.tsv -o . \
-	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f $params.all --mnum192 $params.mnum192 --plot -x pdf \
+	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f_arg $params.all_arg --mnum192 $params.mnum192 --plot -x pdf \
 	--substract12 \$spectra12 \$substractor192
 echo "Mutational spectrum calculated"
 
@@ -480,65 +512,8 @@ echo "Mutational spectrum calculated"
 
 
 
-process mut_processing_params {
-
-
-
-syn4f = params.mut_processing_params.syn4f
-all = params.mut_processing_params.all
-mnum192 = params.mut_processing_params.mnum192
-use_probabilities = params.mut_processing_params.use_probabilities
-proba_cutoff = params.mut_processing_params.proba_cutoff
-run_simulation = params.mut_processing_params.run_simulation
-replics = params.mut_processing_params.replics
-scale_tree = params.mut_processing_params.scale_tree
-//* @style @multicolumn:{syn4f, all, mnum192}, {use_probabilities, proba_cutoff}, {run_simulation, replics, scale_tree} @condition:{run_simulation="true", replics, scale_tree}
-
-if (params.verbose == 'true') {
-	println ""
-	println "PARAMETERS:"
-	println "Mode: ${params.nspecies}"
-	println "all: ${all}"
-	println "syn: true"
-	println "syn4f: ${syn4f}"
-	println "Minimal number of mutations to save 192-component spectrum (mnum192): ${mnum192}"
-	println "Use probabilities: ${use_probabilities}"
-	if (use_probabilities == 'true'){
-		println "Mutation probability cutoff: ${proba_cutoff}"
-	}
-	println "Run simulation: ${run_simulation}"
-	if (run_simulation == 'true'){
-		println "Replics in simulation: ${replics}"
-		println "Tree scaling coefficient: ${scale_tree}"
-	}
-	println "Threads: ${THREADS}"
-	println "Run treeshrink: ${params.phylo.run_shrinking}"
-	if (params.phylo.run_shrinking == 'true'){
-		println "Shrinking Quantile: ${params.phylo.quantile}"
-	}
-	println "Exclude conservative sites: ${params.siterates.exclude_cons_sites}"
-	println ""
-}
-
-params.syn4f = syn4f == "true" ? "--syn4f" : ""
-params.all = all == "true" ? "--all" : ""
-params.mnum192 = mnum192
-params.proba_arg = use_probabilities == "true" ? "--proba" : ""
-params.proba_cutoff = proba_cutoff
-params.run_simulation = run_simulation
-params.replics = replics
-params.scale_tree = scale_tree
-
-script:
-"""
-echo Nothing
-"""
-}
-
-
-
-// run_RAXML = params.raxml_build_tree.run_RAXML
-// raxml_model = params.raxml_build_tree.raxml_model
+// run_RAXML = params.run_RAXML
+// raxml_model = params.raxml_model
 // //* @style @condition:{run_RAXML="true", raxml_model}
 
 // params.RAxML_model = raxml_model
@@ -580,7 +555,7 @@ echo Nothing
 
 // """
 // if [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
-// 	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.phylo.quantile -x OUTGRP
+// 	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.quantile -x OUTGRP
 // 	mv treeshrink.nwk ${name}_shrinked.nwk
 // 	mv treeshrink_summary.txt ${name}_treeshrink.log
 // 	mv treeshrink.txt ${name}_pruned_nodes.log
@@ -703,16 +678,16 @@ echo Nothing
 // """
 // if [ $nspecies == "single" ]; then
 //     collect_mutations.py --tree $tree --states $states1 --states $states2 \
-//         --gencode $gencode --syn $params.syn4f $params.proba_arg --no-mutspec --outdir mout
+//         --gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec --outdir mout
 	
 // 	mv mout/* .
 //     mv mutations.tsv observed_mutations_${label}.tsv
 //     mv run.log ${label}_mut_extraction.log
 
 //     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-//         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg --proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf
+//         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg --proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf
 //     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-//         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg --proba_min $params.proba_cutoff --syn $params.syn4f $params.all --plot -x pdf --subset internal
+//         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg --proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset internal
 
 //     cp ms12syn_${label}.tsv ms12syn_${label}.txt
 //     if [-f ms192syn_${label}.tsv ]; then
@@ -721,7 +696,7 @@ echo Nothing
 	
 // elif [ $nspecies == "multiple" ]; then
 //     collect_mutations.py --tree $tree --states $states1 --states $states2 \
-//         --gencode $gencode --syn $params.syn4f $params.proba_arg --outdir mout
+//         --gencode $gencode --syn $params.syn4f_arg $params.proba_arg --outdir mout
         
 // 	mv mout/* .
 //     mv mutations.tsv observed_mutations_${label}.tsv
@@ -802,7 +777,7 @@ echo Nothing
 // do
 // 	echo "Processing \$fasta_file"
 // 	alignment2iqtree_states.py \$fasta_file  \${fasta_file}.state
-// 	collect_mutations.py --tree ${tree}.ingroup --states  \${fasta_file}.state --gencode $gencode --syn $params.syn4f --no-mutspec --outdir mout --force
+// 	collect_mutations.py --tree ${tree}.ingroup --states  \${fasta_file}.state --gencode $gencode --syn $params.syn4f_arg --no-mutspec --outdir mout --force
 // 	cat mout/run.log >> pyvolve_${label}.log
 // 	echo -e "\n\n">> pyvolve_${label}.log
 // 	cat mout/mutations.tsv >  \${fasta_file}.mutations
@@ -813,7 +788,7 @@ echo Nothing
 // echo "Mutations concatenation done"
 
 // calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_freqs.tsv -o . \
-// 	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f $params.all --mnum192 $params.mnum192 --plot -x pdf \
+// 	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f_arg $params.all_arg --mnum192 $params.mnum192 --plot -x pdf \
 // 	--substract12 \$spectra12 \$substractor192
 // echo "Mutational spectrum calculated"
 

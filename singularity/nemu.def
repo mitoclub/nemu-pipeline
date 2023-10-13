@@ -60,11 +60,8 @@ From: centos:7
     cd TreeShrink-$TREESHRINK_VERSION
     python3 setup.py install
     
-    echo 'Installing mutspec-utils!'
-    cd /opt
-    git clone https://github.com/mitoclub/mutspec-utils.git
-    cd mutspec-utils
-    python3 setup.py install
+    echo 'Installing PyMutSpec!'
+    pip install pymutspec==0.0.6
 
     echo 'Installing pyvolve!'
     cd /opt
