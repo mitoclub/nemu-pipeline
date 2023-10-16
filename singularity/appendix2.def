@@ -6,7 +6,7 @@ From: image_pipeline-2.9.sif
     tools/mafft-7.505-with-extensions-src.tgz /opt
 
 %post
-    pip3 install pymutspec==0.0.6
+    pip3 install pymutspec
 
     cd /opt
     rm -rf dolphin

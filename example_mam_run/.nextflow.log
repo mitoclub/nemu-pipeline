@@ -1,0 +1,126 @@
+Oct-16 18:38:58.012 [main] DEBUG nextflow.cli.Launcher - $> nextflow -c comp-sp.config run nemu.nf --outdir outdir
+Oct-16 18:38:58.119 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 22.10.7
+Oct-16 18:38:58.143 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/home/kpotoh/.nextflow/plugins; core-plugins: nf-amazon@1.11.4,nf-azure@0.14.2,nf-codecommit@0.1.2,nf-console@1.0.4,nf-ga4gh@1.0.4,nf-google@1.4.5,nf-tower@1.5.6,nf-wave@0.5.4
+Oct-16 18:38:58.154 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Oct-16 18:38:58.156 [main] INFO  org.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Oct-16 18:38:58.159 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.4.1 in 'deployment' mode
+Oct-16 18:38:58.172 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Oct-16 18:38:58.196 [main] DEBUG nextflow.config.ConfigBuilder - User config file: /home/kpotoh/nemu-pipeline/example_mam_run/comp-sp.config
+Oct-16 18:38:58.197 [main] DEBUG nextflow.config.ConfigBuilder - Parsing config file: /home/kpotoh/nemu-pipeline/example_mam_run/comp-sp.config
+Oct-16 18:38:58.222 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `standard`
+Oct-16 18:38:59.009 [main] DEBUG nextflow.cli.CmdRun - Applied DSL=1 by probing script field
+Oct-16 18:38:59.034 [main] INFO  nextflow.cli.CmdRun - Launching `nemu.nf` [stupefied_carson] DSL1 - revision: f1a18fe0e7
+Oct-16 18:38:59.035 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[]
+Oct-16 18:38:59.035 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[]
+Oct-16 18:38:59.046 [main] DEBUG nextflow.secret.LocalSecretsProvider - Secrets store: /home/kpotoh/.nextflow/secrets/store.json
+Oct-16 18:38:59.049 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@102c577f] - activable => nextflow.secret.LocalSecretsProvider@102c577f
+Oct-16 18:38:59.114 [main] DEBUG nextflow.Session - Session UUID: 02df6477-be31-418e-86a6-bdf679e4651f
+Oct-16 18:38:59.114 [main] DEBUG nextflow.Session - Run name: stupefied_carson
+Oct-16 18:38:59.114 [main] DEBUG nextflow.Session - Executor pool size: 256
+Oct-16 18:38:59.126 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=768; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Oct-16 18:38:59.159 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 22.10.7 build 5853
+  Created: 18-02-2023 20:32 UTC (23:32 MSD)
+  System: Linux 5.19.0-45-generic
+  Runtime: Groovy 3.0.13 on OpenJDK 64-Bit Server VM 11.0.20.1+1-post-Ubuntu-0ubuntu122.04
+  Encoding: UTF-8 (UTF-8)
+  Process: 3961494@user-G482-Z51-00 [127.0.1.1]
+  CPUs: 256 - Mem: 3.9 TB (2.2 TB) - Swap: 2 GB (2 GB)
+Oct-16 18:38:59.188 [main] DEBUG nextflow.Session - Work-dir: /home/kpotoh/nemu-pipeline/example_mam_run/work [ext2/ext3]
+Oct-16 18:38:59.189 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/kpotoh/nemu-pipeline/example_mam_run/bin
+Oct-16 18:38:59.201 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[]
+Oct-16 18:38:59.213 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Oct-16 18:38:59.260 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Oct-16 18:38:59.273 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 257; maxThreads: 1000
+Oct-16 18:38:59.349 [main] DEBUG nextflow.Session - Session start
+Oct-16 18:39:00.743 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Oct-16 18:39:00.756 [main] INFO  nextflow.script.BaseScript - 
+Oct-16 18:39:00.757 [main] INFO  nextflow.script.BaseScript - PARAMETERS:
+Oct-16 18:39:00.757 [main] INFO  nextflow.script.BaseScript - Mode: multiple
+Oct-16 18:39:00.757 [main] INFO  nextflow.script.BaseScript - all: true
+Oct-16 18:39:00.758 [main] INFO  nextflow.script.BaseScript - syn: true
+Oct-16 18:39:00.758 [main] INFO  nextflow.script.BaseScript - syn4f: true
+Oct-16 18:39:00.758 [main] INFO  nextflow.script.BaseScript - Minimal number of mutations to save 192-component spectrum (mnum192): 16
+Oct-16 18:39:00.758 [main] INFO  nextflow.script.BaseScript - Use probabilities: true
+Oct-16 18:39:00.758 [main] INFO  nextflow.script.BaseScript - Mutation probability cutoff: 0.3
+Oct-16 18:39:00.759 [main] INFO  nextflow.script.BaseScript - Run simulation: false
+Oct-16 18:39:00.759 [main] INFO  nextflow.script.BaseScript - Threads: 16
+Oct-16 18:39:00.759 [main] INFO  nextflow.script.BaseScript - Run treeshrink: true
+Oct-16 18:39:00.759 [main] INFO  nextflow.script.BaseScript - Shrinking Quantile: 0.1
+Oct-16 18:39:00.759 [main] INFO  nextflow.script.BaseScript - Exclude conservative sites: true
+Oct-16 18:39:00.760 [main] INFO  nextflow.script.BaseScript - internal branches spectra: true
+Oct-16 18:39:00.761 [main] INFO  nextflow.script.BaseScript - terminal branches spectra: false
+Oct-16 18:39:00.761 [main] INFO  nextflow.script.BaseScript - 
+Oct-16 18:39:00.932 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:00.933 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:00.940 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Oct-16 18:39:00.947 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=16; memory=20 GB; capacity=256; pollInterval=100ms; dumpInterval=5m
+Oct-16 18:39:01.044 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.044 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.078 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.079 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.102 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.102 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.113 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.113 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.122 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.122 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.131 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.132 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.139 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.139 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.150 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.150 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.167 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.167 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.178 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Oct-16 18:39:01.178 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Oct-16 18:39:01.188 [main] DEBUG nextflow.Session - Workflow process names [dsl1]: iqtree_build_tree, shrink_iqtree, terminal_genomes_states, iqtree_anc, pyvolve_iqtree, extract_terminal_branch_lengths_iqtree, rooting_iqtree_tree, convert_alignment_to_phylip, macse, fasta_qc, mutations_iqtree
+Oct-16 18:39:01.189 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Oct-16 18:39:01.189 [main] DEBUG nextflow.Session - Session await
+Oct-16 18:39:01.310 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:39:01.316 [Task submitter] INFO  nextflow.Session - [8b/6cc4ba] Submitted process > fasta_qc
+Oct-16 18:39:02.886 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: fasta_qc; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/8b/6cc4ba1e4d211047925a3f73719389]
+Oct-16 18:39:02.918 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:39:02.919 [Task submitter] INFO  nextflow.Session - [5e/c70e9c] Submitted process > macse
+Oct-16 18:39:02.922 [Task monitor] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'PublishDir' minSize=10; maxSize=768; workQueue=LinkedBlockingQueue[10000]; allowCoreThreadTimeout=false
+Oct-16 18:39:03.322 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: macse; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/5e/c70e9ce1a8d985b98e39fb7dc9146f]
+Oct-16 18:39:03.329 [Task monitor] DEBUG nextflow.processor.TaskProcessor - Process `macse` is unable to find [UnixPath]: `/home/kpotoh/nemu-pipeline/example_mam_run/work/5e/c70e9ce1a8d985b98e39fb7dc9146f/aln_aa.fasta` (pattern: `aln_aa.fasta`)
+Oct-16 18:39:03.441 [Task monitor] DEBUG nextflow.processor.TaskProcessor - Process macse > Skipping output binding because one or more optional files are missing: fileoutparam<1>
+Oct-16 18:39:03.462 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:39:03.463 [Task submitter] INFO  nextflow.Session - [44/911fcc] Submitted process > terminal_genomes_states
+Oct-16 18:39:03.468 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:39:03.469 [Task submitter] INFO  nextflow.Session - [e1/75c1cd] Submitted process > convert_alignment_to_phylip
+Oct-16 18:39:04.315 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 4; name: convert_alignment_to_phylip; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/e1/75c1cdec2df12e2230a0d71e454284]
+Oct-16 18:39:04.378 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:39:04.379 [Task submitter] INFO  nextflow.Session - [79/a595d2] Submitted process > iqtree_build_tree
+Oct-16 18:39:05.217 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 3; name: terminal_genomes_states; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/44/911fcc8366f6815eccad5ca4a1f1fd]
+Oct-16 18:41:34.797 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 5; name: iqtree_build_tree; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/79/a595d2046fb5e4ee2adb3fbdcf6c03]
+Oct-16 18:41:34.845 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:41:34.846 [Task submitter] INFO  nextflow.Session - [25/537828] Submitted process > shrink_iqtree
+Oct-16 18:41:36.438 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 6; name: shrink_iqtree; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/25/53782849f01bc2a6c9cbe695245c67]
+Oct-16 18:41:36.460 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:41:36.460 [Task submitter] INFO  nextflow.Session - [32/81872f] Submitted process > rooting_iqtree_tree
+Oct-16 18:41:36.465 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:41:36.465 [Task submitter] INFO  nextflow.Session - [72/f07b31] Submitted process > extract_terminal_branch_lengths_iqtree
+Oct-16 18:41:36.725 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 7; name: rooting_iqtree_tree; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/32/81872f01c216fbfdf717ac0afe1582]
+Oct-16 18:41:36.753 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:41:36.754 [Task submitter] INFO  nextflow.Session - [47/19c77e] Submitted process > iqtree_anc
+Oct-16 18:41:36.877 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 8; name: extract_terminal_branch_lengths_iqtree; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/72/f07b31f24495c74215b8cf0d9175fa]
+Oct-16 18:42:13.680 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 9; name: iqtree_anc; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/47/19c77e55a66701a0da32469a004768]
+Oct-16 18:42:13.769 [Task submitter] DEBUG n.executor.local.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Oct-16 18:42:13.770 [Task submitter] INFO  nextflow.Session - [10/39133d] Submitted process > mutations_iqtree
+Oct-16 18:43:24.862 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 10; name: mutations_iqtree; status: COMPLETED; exit: 0; error: -; workDir: /home/kpotoh/nemu-pipeline/example_mam_run/work/10/39133deb6f843fc3ca93d37a32eb15]
+Oct-16 18:43:24.891 [main] DEBUG nextflow.Session - Session await > all processes finished
+Oct-16 18:43:24.893 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Oct-16 18:43:24.911 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'PublishDir' shutdown completed (hard=false)
+Oct-16 18:43:24.914 [main] INFO  nextflow.script.BaseScript - ##Pipeline execution summary##
+Oct-16 18:43:24.916 [main] INFO  nextflow.script.BaseScript - ---------------------------
+Oct-16 18:43:24.916 [main] INFO  nextflow.script.BaseScript - ##Completed at: 2023-10-16T18:43:24.911718+03:00
+Oct-16 18:43:24.917 [main] INFO  nextflow.script.BaseScript - ##Duration: 4m 26s
+Oct-16 18:43:24.917 [main] INFO  nextflow.script.BaseScript - ##Success: OK
+Oct-16 18:43:24.917 [main] INFO  nextflow.script.BaseScript - ##Exit status: 0
+Oct-16 18:43:24.925 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=10; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=17m 39s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=2; peakCpus=8; peakMemory=4 GB; ]
+Oct-16 18:43:25.075 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Oct-16 18:43:25.095 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+Oct-16 18:43:25.095 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

@@ -1,0 +1,7 @@
+*.state
+work
+.nextflow
+
+old_*
+*expected_mutations.tsv
+*tmp

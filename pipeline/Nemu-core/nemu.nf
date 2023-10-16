@@ -409,11 +409,13 @@ if [ $params.internal == "true" ]; then
 	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset internal
+	rm mean_expexted_mutations_internal_${label}.tsv
 fi
 if [ $params.terminal == "true" ]; then
 	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset terminal
+	rm mean_expexted_mutations_terminal_${label}.tsv
 fi
 if [ $params.branch_spectra == "true" ]; then
 	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
