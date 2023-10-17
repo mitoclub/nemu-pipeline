@@ -1,11 +1,14 @@
 import os
 import sys
 import random
+from collections import Counter
 
+from scipy.stats import entropy
+from Bio import SeqIO
 from ete3 import PhyloTree
 
-MAMMALS_TREE = "/home/kpotoh/nemu-pipeline/data/alisim/external/mam_with_outgrp.nwk"
-ROOT_SEQ = "/home/kpotoh/nemu-pipeline/data/alisim/external/human_cytb.fasta"
+MAMMALS_TREE  = "/home/kpotoh/nemu-pipeline/data/alisim/external/mam_with_outgrp.nwk"
+ROOT_SEQ      = "/home/kpotoh/nemu-pipeline/data/alisim/external/human_cytb.fasta"
 ROOT_SEQ_NAME = "human_cytb"
 LENGTH = 1140
 SEED = random.randint(0, 100000)
@@ -13,6 +16,13 @@ SEED = random.randint(0, 100000)
 debug_mode = True
 OUTDIR = "generations_mam"
 N = 50
+
+nucls = list('ACGT')
+base = 4
+human_cytb_seq = str(next(SeqIO.parse(ROOT_SEQ, 'fasta')).seq)
+human_cytb_freqs = dict(Counter(human_cytb_seq))
+human_cytb_freqs = [human_cytb_freqs[x]/len(human_cytb_seq) for x in nucls]
+human_cytb_entropy = entropy(human_cytb_freqs, base=base)
 
 
 cmd = "iqtree2 --alisim {} -m {}{}{}+G6+I{} -t {} --seed {} --write-all {} -af fasta {} -redo"
@@ -28,10 +38,17 @@ def beautify_array(lst):
     return "{" + "/".join(lst) + "}"
 
 
-def generate_f() -> list:
-    a = [random.random() for _ in range(4)]
-    s = sum(a)
-    a = [x / s for x in a]
+def generate_f(as_natural=False) -> list:
+    while True:
+        a = [random.random() for _ in range(4)]
+        s = sum(a)
+        a = [x / s for x in a]
+        if as_natural:
+            entr = entropy(a, base=base)
+            if abs(human_cytb_entropy - entr) < 0.05:
+                break
+        else:
+            break
     return a
 
 
@@ -75,50 +92,61 @@ def generate_mdl_params(mdl: str):
     return mdl_params
 
 
-# mdl = "gtr"
-for mdl in ["gtr", "12.12"]:
-    for gene in ["rnd", "cytb"]:
-        root_seq = f"--length {LENGTH}" if gene == "rnd" else f"--root-seq {ROOT_SEQ},{ROOT_SEQ_NAME}"
+def main():
+    log_file = open(f'alisim_generation_seed{SEED}.log', 'w')
 
-        # for raw_tree in [100, 1000]:
-        for raw_tree in ["mam"]:
-            if isinstance(raw_tree, int):
-                is_random_tree = True
-                tree = "RANDOM{bd{0.1/0.05}/" + str(raw_tree) + "}"
-                rlen_args = "-rlen 0 0.001 0.01"  # for intra-species trees with small branch lengths
-            elif raw_tree == "mam":
-                is_random_tree = False
-                tree = MAMMALS_TREE
-                rlen_args = ""
-            else:
-                raise NotImplementedError
+    # mdl = "gtr"
+    for mdl in ["gtr", "12.12"]:
+        # for gene in ["rnd", "cytb"]:
+        for gene in ["rnd",]:
+            root_seq = f"--length {LENGTH}" if gene == "rnd" else f"--root-seq {ROOT_SEQ},{ROOT_SEQ_NAME}"
 
-            for i in range(N):
-                prefix = f"{OUTDIR}/{mdl}_{raw_tree}_{gene}_replica_{i}"
-                # mdl_params = "{0.5/0.6/0.9/0.2/0.1/0.4/0.7/0.8/0.3/0.15/0.65}"
-                mdl_params = generate_mdl_params(mdl)
-                f_custom = "+F" + beautify_array(generate_f()) if gene == "rnd" else ""
-                inv_rate = beautify_array([random.random() * 0.5])  # A proportion of invariable sites
-                cur_cmd = cmd.format(prefix, mdl, mdl_params, f_custom, inv_rate, tree, SEED, root_seq, rlen_args)
-                if debug_mode:
-                    print(cur_cmd)
+            # for raw_tree in [100, 1000]:
+            for raw_tree in ["mam"]:
+                if isinstance(raw_tree, int):
+                    is_random_tree = True
+                    tree = "RANDOM{bd{0.1/0.05}/" + str(raw_tree) + "}"
+                    rlen_args = "-rlen 0 0.001 0.01"  # for intra-species trees with small branch lengths
+                elif raw_tree == "mam":
+                    is_random_tree = False
+                    tree = MAMMALS_TREE
+                    rlen_args = ""
                 else:
-                    os.system(cur_cmd)
+                    raise NotImplementedError
 
-                if is_random_tree and not debug_mode:
-                    tree_without_outgrp = PhyloTree(prefix + ".full.treefile", format=1)
-                    add_outgrp(tree_without_outgrp, random.randint(20, 30))
-                    tree_without_outgrp.write(outfile=prefix + ".nwk", format=1)
+                for i in range(N):
+                    prefix = f"{OUTDIR}/{mdl}_{raw_tree}_{gene}_replica_{i}"
+                    # mdl_params = "{0.5/0.6/0.9/0.2/0.1/0.4/0.7/0.8/0.3/0.15/0.65}"
+                    mdl_params = generate_mdl_params(mdl)
+                    f_custom = "+F" + beautify_array(generate_f(not is_random_tree)) if gene == "rnd" else ""
+                    inv_rate = beautify_array([random.random() * 0.5])  # A proportion of invariable sites
+                    cur_cmd  = cmd.format(prefix, mdl, mdl_params, f_custom, inv_rate, tree, SEED, root_seq, rlen_args)
+                    log_file.write(cur_cmd + '\n')
+                    if debug_mode:
+                        print(cur_cmd)
+                    else:
+                        os.system(cur_cmd)
 
-                    for suffix in (".fa", ".treefile", ".full.treefile"):
-                        os.remove(prefix + suffix)
-                    
-                    # generate again using trees with outgrp
-                    pregenerated_tree = prefix + ".nwk"
-                    cur_cmd = cmd.format(prefix, mdl, mdl_params, f_custom, inv_rate, pregenerated_tree, SEED, root_seq, "")
-                    os.system(cur_cmd)
-                    os.remove(prefix + ".full.treefile")
+                    if is_random_tree and not debug_mode:
+                        tree_without_outgrp = PhyloTree(prefix + ".full.treefile", format=1)
+                        add_outgrp(tree_without_outgrp, random.randint(20, 30))
+                        tree_without_outgrp.write(outfile=prefix + ".nwk", format=1)
 
+                        for suffix in (".fa", ".treefile", ".full.treefile"):
+                            os.remove(prefix + suffix)
+                        
+                        # generate again using trees with outgrp
+                        pregenerated_tree = prefix + ".nwk"
+                        cur_cmd = cmd.format(prefix, mdl, mdl_params, f_custom, inv_rate, pregenerated_tree, SEED, root_seq, "")
+                        os.system(cur_cmd)
+                        os.remove(prefix + ".full.treefile")
+    log_file.close()
+
+if __name__ == "__main__":
+    main()
+    # for _ in range(50):
+    #     f = beautify_array(generate_f(True))
+    #     print(f)
 
 # iqtree2 --alisim generations/gtr_100_rnd_replica_0 -m gtr{0.01/0.1/0.21/0.26/0.05/0.18}+F{0.08/0.35/0.35/0.23}+G6+I{0.48} -t RANDOM{bd{0.1/0.05}/100} --seed 96734 --write-all --length 1140 -af fasta -rlen 0 0.001 0.01
 # iqtree2 --alisim generations/gtr_1000_rnd_replica_0 -m gtr{0.11/0.32/0.26/0.94/0.23/0.25}+F{0.37/0.22/0.01/0.4}+G6+I{0.35} -t RANDOM{bd{0.1/0.05}/1000} --seed 96734 --write-all --length 1140 -af fasta -rlen 0 0.001 0.01
