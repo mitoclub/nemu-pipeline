@@ -11,7 +11,10 @@ if (!params.aligned){params.aligned = ""}
 if (!params.verbose){params.verbose = "false"} 
 if (!params.internal){params.internal = "false"} 
 if (!params.terminal){params.terminal = "false"} 
-if (!params.branch_spectra){params.branch_spectra = "false"} 
+if (!params.branch_spectra){params.branch_spectra = "false"}
+if (!params.exclude_cons_sites){params.exclude_cons_sites = "false"}
+
+// add default values for params below
 
 if (params.verbose == 'true') {
 	println ""
@@ -38,6 +41,7 @@ if (params.verbose == 'true') {
 	println "Exclude conservative sites: ${params.exclude_cons_sites}"
 	println "internal branches spectra: ${params.internal}"
 	println "terminal branches spectra: ${params.terminal}"
+	println "branch-scpecific spectra: ${params.branch_spectra}"
 	println ""
 }
 
@@ -124,12 +128,12 @@ output:
  file "aln_aa.fasta" optional true  into g_433_multipleFasta
 
 """
-if [ $aligned == "true" ]; then
+if [ $aligned = true ]; then
 	# TODO add verification of aligment and delete this useless argument!!!!
 	echo "No need to align!"
 	cp $seqs aln.fasta
-elif [ $aligned == "false" ]; then
-	if [ $nspecies == "single" ] || [ `grep -c ">" $seqs` -le 1000 ]; then
+elif [ $aligned = false ]; then
+	if [ $nspecies = single ] || [ `grep -c ">" $seqs` -le 1000 ]; then
 		java -jar /opt/macse_v2.06.jar -prog alignSequences -gc_def $gencode \
 			-out_AA aln_aa.fasta -out_NT aln.fasta -seq $seqs
 	else
@@ -196,10 +200,9 @@ errorStrategy 'retry'
 maxRetries 3
 
 script:
-
 """
 # if input contains precalculated_tree
-if [ $prectree -ne "input.2" ]; then
+if [ $prectree != "input.2" ]; then
 	echo "TODO need to correctly replace headers if needed"
 	if [ ! -f $labels_mapping ]; then 
 		echo "Something went wrong. Expected that tree must be relabeled \
@@ -236,14 +239,14 @@ output:
  file "*.log" optional true into g_315_logFile
 
 """
-if [ $params.run_shrinking == true ] && [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
+if [ $params.run_shrinking = true ] && [ `nw_stats $tree | grep leaves | cut -f 2` -gt 8 ]; then
 	run_treeshrink.py -t $tree -O treeshrink -o . -q $params.quantile -x OUTGRP
 	mv treeshrink.nwk ${name}_shrinked.nwk
 	mv treeshrink_summary.txt ${name}_treeshrink.log
 	mv treeshrink.txt ${name}_pruned_nodes.log
 else
 	cat $tree > ${name}_shrinked.nwk
-	if [ $params.run_shrinking == true ]; then
+	if [ $params.run_shrinking = true ]; then
 		echo "Shrinking are useless on such a small number of sequences" > ${name}_treeshrink.log
 	fi
 fi
@@ -267,7 +270,7 @@ output:
 """
 nw_distance -m p -s f -n $tree | sort -grk 2 1> ${name}.branches
 
-if [ `grep OUTGRP ${name}.branches | cut -f 2 | python3 -c "import sys; print(float(sys.stdin.readline().strip()) > 0)"` == False ]; then
+if [ `grep OUTGRP ${name}.branches | cut -f 2 | python3 -c "import sys; print(float(sys.stdin.readline().strip()) > 0)"` = False ]; then
 	cat "${name}.branches"
 	echo "Something went wrong: outgroup is not furthest leaf in the tree"
 	exit 1
@@ -385,7 +388,7 @@ output:
  file "ms*syn_${label}.txt" optional true  into g_410_outputFileTxt_g_422
 
 """
-if [ $params.exclude_cons_sites == true ]; then 
+if [ $params.exclude_cons_sites = true ]; then 
 	collect_mutations.py --tree $tree --states $states1 --states $states2 \
 		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
 		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
@@ -405,19 +408,19 @@ calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o
 	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
 	--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf
 
-if [ $params.internal == "true" ]; then
+if [ $params.internal = true ]; then
 	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset internal
 	rm mean_expexted_mutations_internal_${label}.tsv
 fi
-if [ $params.terminal == "true" ]; then
+if [ $params.terminal = true ]; then
 	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset terminal
 	rm mean_expexted_mutations_terminal_${label}.tsv
 fi
-if [ $params.branch_spectra == "true" ]; then
+if [ $params.branch_spectra = true ]; then
 	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --branches

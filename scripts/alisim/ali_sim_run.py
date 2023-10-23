@@ -13,8 +13,8 @@ ROOT_SEQ_NAME = "human_cytb"
 LENGTH = 1140
 SEED = random.randint(0, 100000)
 
-debug_mode = True
-OUTDIR = "generations_mam"
+debug_mode = False
+OUTDIR = "generations_mam2"
 N = 50
 
 nucls = list('ACGT')
