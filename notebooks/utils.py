@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
+from ete3 import PhyloTree
 
 from pymutspec.constants import possible_sbs192, possible_sbs12
+from pymutspec.annotation import get_farthest_leaf
 
 
 def complete_sbs192_columns(df: pd.DataFrame):
@@ -163,3 +165,11 @@ def get_eucdist(a: pd.DataFrame, b: pd.DataFrame):
 
     d = ((a - b) ** 2).sum(axis=1) ** 0.5
     return d
+
+def calc_phylocoefs(tree: PhyloTree, quantile=0.95):
+    max_dist_cytb = get_farthest_leaf(tree, quantile)
+    phylocoefs = {}
+    for node in tree.iter_descendants():
+        d = node.get_closest_leaf()[1]
+        phylocoefs[node.name] = 1 - min(0.9999, d / max_dist_cytb)
+    return phylocoefs
