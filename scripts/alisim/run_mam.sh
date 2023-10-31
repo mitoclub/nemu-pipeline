@@ -6,17 +6,17 @@ PATH_TO_NEMU=/home/kpotoh/nemu-pipeline/pipeline/Nemu-core/nemu.nf
 PATH_TO_CONFIG=/home/kpotoh/nemu-pipeline/data/alisim/nemu_mam.config
 
 INDIR=generations_mam2
-OUTDIR=spectra_reconstructed_mam2
+OUTDIR=spectra_reconstructed_mam3
 # treefile=/home/kpotoh/nemu-pipeline/data/alisim/external/mam_with_outgrp.nwk
 
 MAX_NJOBS=52
-SLEEP_TIME=4000 # secs
-WAIT_TIME=20
+SLEEP_TIME=1800 # secs
+WAIT_TIME=15
 
 COUNTER=1
 
-# for aln in $INDIR/12.12*.fa.leaves; do
-for aln in $INDIR/*.fa.leaves; do
+for aln in $INDIR/gtr*.fa.leaves; do
+#for aln in $INDIR/*.fa.leaves; do
     let COUNTER++
     bn=`basename $aln .fa.leaves`
     workdir=$OUTDIR/$bn

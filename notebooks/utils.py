@@ -16,7 +16,9 @@ def complete_sbs192_columns(df: pd.DataFrame):
 
 
 def jackknife_spectra_sampling(obs: pd.DataFrame, exp: pd.DataFrame, frac=0.5, n=1000):
-    if len(obs.columns) == 192 and (obs.columns == possible_sbs192).all() and (exp.columns == possible_sbs192).all():
+    if len(obs.columns) == 192 and \
+            (obs.columns == possible_sbs192).all() and \
+                (exp.columns == possible_sbs192).all():
         assert obs.index.names == ["RefNode", "AltNode"]
         assert exp.index.names == ["Node"]
         altnodes  = obs.index.get_level_values(1).values
@@ -28,7 +30,8 @@ def jackknife_spectra_sampling(obs: pd.DataFrame, exp: pd.DataFrame, frac=0.5, n
         altnodes = obs.AltNode.unique()
         obs_edges = obs.groupby(["AltNode", "RefNode", "Mut"]).ProbaFull.sum().unstack()
         obs_edges = complete_sbs192_columns(obs_edges)
-        freqs_nodes = exp.rename(columns={"Node": "RefNode"}).groupby(["RefNode", "Mut"]).Proba.sum().unstack()
+        freqs_nodes = exp.rename(columns={"Node": "RefNode"})\
+            .groupby(["RefNode", "Mut"]).Proba.sum().unstack()
         freqs_nodes = complete_sbs192_columns(freqs_nodes)
 
     edges_sample_size = int(len(altnodes) * frac)
@@ -65,8 +68,15 @@ def collapse_sbs192(df: pd.DataFrame, to=12):
         raise NotImplementedError()
 
 
-def calc_edgewise_spectra(obs: pd.DataFrame, exp: pd.DataFrame, nmtypes_cutoff=16, nobs_cuttof=20, collapse_to_12=False, scale=True, both_12_and_192=False):
-    if len(obs.columns) == 192 and (obs.columns == possible_sbs192).all() and (exp.columns == possible_sbs192).all():
+def calc_edgewise_spectra(
+        obs: pd.DataFrame, exp: pd.DataFrame, 
+        nmtypes_cutoff=10, nobs_cuttof=10, 
+        collapse_to_12=False, scale=True, 
+        both_12_and_192=False
+    ):
+    if len(obs.columns) == 192 and \
+            (obs.columns == possible_sbs192).all() and \
+                (exp.columns == possible_sbs192).all():
         assert obs.index.names == ["RefNode", "AltNode"]
         assert exp.index.names == ["Node"]
         obs_edges = obs
@@ -80,14 +90,14 @@ def calc_edgewise_spectra(obs: pd.DataFrame, exp: pd.DataFrame, nmtypes_cutoff=1
         freqs_nodes = complete_sbs192_columns(freqs_nodes)
 
     if not collapse_to_12:
-        obs_edges = obs_edges[((obs_edges > 0).sum(axis=1) >= nmtypes_cutoff) & (obs_edges.sum(axis=1) > nobs_cuttof)]
+        obs_edges = obs_edges[((obs_edges > 0).sum(axis=1) >= nmtypes_cutoff) & \
+                               (obs_edges.sum(axis=1) >= nobs_cuttof)]
     
     edges_df = obs_edges.index.to_frame(False)
 
     freqs_edges = edges_df.merge(freqs_nodes, on="RefNode")\
         .set_index(["RefNode", "AltNode"])[possible_sbs192]
-    
-    
+
     assert (obs_edges.columns == freqs_edges.columns).all()
     assert (obs_edges.index == freqs_edges.index).all()
 
@@ -165,6 +175,7 @@ def get_eucdist(a: pd.DataFrame, b: pd.DataFrame):
 
     d = ((a - b) ** 2).sum(axis=1) ** 0.5
     return d
+
 
 def calc_phylocoefs(tree: PhyloTree, quantile=0.95):
     max_dist_cytb = get_farthest_leaf(tree, quantile)
