@@ -98,6 +98,9 @@ def calc_edgewise_spectra(
     freqs_edges = edges_df.merge(freqs_nodes, on="RefNode")\
         .set_index(["RefNode", "AltNode"])[possible_sbs192]
 
+    # some indexes can be deleted from freqs, so we must delete them from obs
+    obs_edges = obs_edges.loc[freqs_edges.index]
+
     assert (obs_edges.columns == freqs_edges.columns).all()
     assert (obs_edges.index == freqs_edges.index).all()
 
