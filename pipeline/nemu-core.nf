@@ -1,8 +1,9 @@
 // params.outdir = params.sequence.replaceFirst(/\.fasta/, "")
 
+if (!params.njobs){params.njobs = "1"}
 THREADS = params.njobs
 
-if (!params.sequence){params.sequence = ""} 
+if (!params.sequence){params.sequence = ""}
 if (!params.gencode){params.gencode = ""} 
 if (!params.nspecies){params.nspecies = ""} 
 if (!params.outgroup){params.outgroup = ""} 
@@ -13,8 +14,9 @@ if (!params.internal){params.internal = "false"}
 if (!params.terminal){params.terminal = "false"} 
 if (!params.branch_spectra){params.branch_spectra = "false"}
 if (!params.exclude_cons_sites){params.exclude_cons_sites = "false"}
+if (!params.uncertainty_coef){params.uncertainty_coef = "false"}
 
-// add default values for params below
+// TODO add default values for params below
 
 if (params.verbose == 'true') {
 	println ""
@@ -363,6 +365,7 @@ iqtree_states_add_part.py anc.state iqtree_anc.state
 
 
 save_exp_muts = params.save_exp_mutations == "true" ? "--save-exp-muts" : ""
+use_uncertainty_coef = params.uncertainty_coef == "true" ? "--phylocoef" : "--no-phylocoef"
 
 process mutations_iqtree {
 
@@ -393,12 +396,12 @@ if [ $params.exclude_cons_sites = true ]; then
 		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
 		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
 		--rates $rates --cat-cutoff $params.cons_cat_cutoff \
-		--outdir mout $save_exp_muts
+		--outdir mout $save_exp_muts $use_uncertainty_coef
 else
 	collect_mutations.py --tree $tree --states $states1 --states $states2 \
 		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
 		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
-		--outdir mout $save_exp_muts
+		--outdir mout $save_exp_muts $use_uncertainty_coef
 fi
 mv mout/* .
 mv mutations.tsv observed_mutations_${label}.tsv

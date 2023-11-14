@@ -1,9 +1,54 @@
-THREADS = 16
+// params.outdir = params.sequence.replaceFirst(/\.fasta/, "")
 
-if (!params.species_name){params.species_name = ""} 
-if (!params.sequence){params.sequence = ""} 
-if (!params.Mt_DB){params.Mt_DB = ""} 
+if (!params.njobs){params.njobs = "1"}
+THREADS = params.njobs
+
+if (!params.sequence){params.sequence = ""}
 if (!params.gencode){params.gencode = ""} 
+if (!params.nspecies){params.nspecies = ""} 
+if (!params.outgroup){params.outgroup = ""} 
+if (!params.aligned){params.aligned = ""} 
+
+if (!params.verbose){params.verbose = "false"} 
+if (!params.internal){params.internal = "false"} 
+if (!params.terminal){params.terminal = "false"} 
+if (!params.branch_spectra){params.branch_spectra = "false"}
+if (!params.exclude_cons_sites){params.exclude_cons_sites = "false"}
+if (!params.uncertainty_coef){params.uncertainty_coef = "false"}
+
+// TODO add specific params logs
+if (params.verbose == 'true') {
+	println ""
+	println "PARAMETERS:"
+	println "Mode: ${params.nspecies}"
+	println "all: ${params.all}"
+	println "syn: true"
+	println "syn4f: ${params.syn4f}"
+	println "Minimal number of mutations to save 192-component spectrum (mnum192): ${params.mnum192}"
+	println "Use probabilities: ${params.use_probabilities}"
+	if (params.use_probabilities == 'true'){
+		println "Mutation probability cutoff: ${params.proba_cutoff}"
+	}
+	println "Run simulation: ${params.run_simulation}"
+	if (params.run_simulation == 'true'){
+		println "Replics in simulation: ${params.replics}"
+		println "Tree scaling coefficient: ${params.scale_tree}"
+	}
+	println "Threads: ${THREADS}"
+	println "Run treeshrink: ${params.run_shrinking}"
+	if (params.run_shrinking == 'true'){
+		println "Shrinking Quantile: ${params.quantile}"
+	}
+	println "Exclude conservative sites: ${params.exclude_cons_sites}"
+	println "internal branches spectra: ${params.internal}"
+	println "terminal branches spectra: ${params.terminal}"
+	println "branch-scpecific spectra: ${params.branch_spectra}"
+	println ""
+}
+
+params.all_arg   = params.all == "true" ? "--all" : ""
+params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
+params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
 
 Channel.value(params.species_name).set{g_1_species_name_g_414}
 g_2_multipleFasta_g_398 = file(params.sequence, type: 'any') 
@@ -903,61 +948,6 @@ output:
 /opt/dolphin/scripts/mutnumbers.pl $seqs 1>mutnumbers.tsv
 
 """
-}
-
-
-process Nemu_tail_mut_processing_params {
-
-
-
-syn4f = params.Nemu_tail_mut_processing_params.syn4f
-all = params.Nemu_tail_mut_processing_params.all
-mnum192 = params.Nemu_tail_mut_processing_params.mnum192
-use_probabilities = params.Nemu_tail_mut_processing_params.use_probabilities
-proba_min = params.Nemu_tail_mut_processing_params.proba_min
-simulation = params.Nemu_tail_mut_processing_params.simulation
-replics = params.Nemu_tail_mut_processing_params.replics
-scale_tree = params.Nemu_tail_mut_processing_params.scale_tree
-site_rates = params.Nemu_tail_mut_processing_params.site_rates
-categories = params.Nemu_tail_mut_processing_params.categories
-cat_cutoff = params.Nemu_tail_mut_processing_params.cat_cutoff
-
-//* @style @multicolumn:{syn4f, all, mnum192}, {use_probabilities, proba_min}, {simulation, replics, scale_tree}, {site_rates, categories, cat_cutoff} @condition:{simulation="true", replics, scale_tree}, {site_rates="true", categories, cat_cutoff}
-
-println ""
-println "Arguments:"
-println "syn4f: ${syn4f}"
-println "all: ${all}"
-println "mnum192: ${mnum192}"
-println "use_probabilities: ${use_probabilities}"
-println "proba_min: ${proba_min}"
-println "simulation: ${simulation}"
-println "replics: ${replics}"
-println "scale_tree: ${scale_tree}"
-println "site_rates: ${site_rates}"
-println "categories: ${categories}"
-println "cat_cutoff: ${cat_cutoff}"
-println "threads: ${THREADS}"
-println ""
-
-params.syn4f = syn4f == "true" ? "--syn4f" : ""
-params.all = all == "true" ? "--all" : ""
-params.mnum192 = mnum192
-params.proba = use_probabilities == "true" ? "--proba" : ""
-params.proba_min = proba_min
-params.run_pyvolve = simulation
-params.replics = replics
-params.scale_tree = scale_tree
-params.site_rates = site_rates
-params.categories = categories
-params.cat_cutoff = cat_cutoff
-
-script:
-"""
-echo Nothing
-"""
-
-
 }
 
 

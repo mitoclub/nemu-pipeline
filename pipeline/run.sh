@@ -14,7 +14,7 @@ for file in *.fasta; do
         mkdir $outdir
         cd $outdir
         mv ../$file .
-        nextflow -q -bg -c ../nextflow.config run ../main.nf -with-trace --sequence $file --outdir .
+        nextflow -q -bg -c ../nextflow.config run ../nemu-core.nf -with-trace --sequence $file --outdir .
         cd -
     fi
     
