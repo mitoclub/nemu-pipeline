@@ -1,10 +1,25 @@
 // params.outdir = params.sequence.replaceFirst(/\.fasta/, "")
 
-if (!params.njobs){params.njobs = "1"}
-THREADS = params.njobs
-
-if (!params.sequence){params.sequence = ""}
-if (!params.gencode){params.gencode = ""} 
+if (!params.sequence){
+	println "ERROR: Specify input nucleotide multifasta file"
+	exit 1
+}
+if (!params.gencode){
+	println "ERROR: Specify gencode number (e.g. 1,2,3 etc.)"
+	exit 1
+}
+if (!params.nspecies){
+	println "ERROR: Specify nspecies argument: multiple or single"
+	exit 1
+}
+if (!params.outgrp){
+	println "ERROR: Specify outgroup name of Id in input fasta file"
+	exit 1
+}
+if (!params.aligned){
+	println "ERROR: Specify if sequences are aligned or not"
+	exit 1
+}
 if (!params.nspecies){params.nspecies = ""} 
 if (!params.outgroup){params.outgroup = ""} 
 if (!params.aligned){params.aligned = ""} 
@@ -15,6 +30,8 @@ if (!params.terminal){params.terminal = "false"}
 if (!params.branch_spectra){params.branch_spectra = "false"}
 if (!params.exclude_cons_sites){params.exclude_cons_sites = "false"}
 if (!params.uncertainty_coef){params.uncertainty_coef = "false"}
+if (!params.njobs){params.njobs = "1"}
+THREADS = params.njobs
 
 // TODO add default values for params below
 
@@ -112,7 +129,7 @@ fi
 }
 
 
-process macse {
+process MSA {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -176,7 +193,6 @@ java -jar /opt/readseq.jar -a -f Phylip -o aln.phy $aln
 """
 }
 
-run_iqtree = params.run_iqtree
 
 process iqtree_build_tree {
 
@@ -196,7 +212,7 @@ output:
  file "*.log" optional true  into g_409_logFile
 
 when:
-run_iqtree == "true"
+params.run_iqtree == "true"
 
 errorStrategy 'retry'
 maxRetries 3
@@ -825,11 +841,13 @@ echo "Mutational spectrum calculated"
 
 
 
-workflow.onComplete {
-println "##Pipeline execution summary##"
-println "---------------------------"
-println "##Completed at: $workflow.complete"
-println "##Duration: ${workflow.duration}"
-println "##Success: ${workflow.success ? 'OK' : 'failed' }"
-println "##Exit status: ${workflow.exitStatus}"
+if (params.verbose == 'true') {
+	workflow.onComplete {
+	println "##Pipeline execution summary##"
+	println "---------------------------"
+	println "##Completed at: $workflow.complete"
+	println "##Duration: ${workflow.duration}"
+	println "##Success: ${workflow.success ? 'OK' : 'failed' }"
+	println "##Exit status: ${workflow.exitStatus}"
+	}
 }
