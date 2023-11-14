@@ -86,7 +86,7 @@ Channel.value(params.aligned).set{g_431_type_g_433}
 
 min_input_nseqs = 4
 
-process fasta_qc {
+process nucleotide_fasta_qc {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -179,7 +179,7 @@ echo "Do quality control"
 }
 
 
-process convert_alignment_to_phylip {
+process fasta2phylip {
 
 input:
  file aln from g_433_multipleFasta_g_424
@@ -242,7 +242,7 @@ fi
 }
 
 
-process shrink_iqtree {
+process shrink_tree_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -298,7 +298,7 @@ fi
 }
 
 
-process rooting_iqtree_tree {
+process tree_rooting_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -318,7 +318,7 @@ nw_reroot -l $tree OUTGRP 1>${name}_rooted.nwk
 }
 
 
-process terminal_genomes_states {
+process fasta2states_table {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -339,7 +339,7 @@ alignment2iqtree_states.py $aln leaves_states.state
 
 estimate_rates = params.exclude_cons_sites == "true" ? "--rate" : ""
 
-process iqtree_anc {
+process anc_reconstruction_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -383,7 +383,7 @@ iqtree_states_add_part.py anc.state iqtree_anc.state
 save_exp_muts = params.save_exp_mutations == "true" ? "--save-exp-muts" : ""
 use_uncertainty_coef = params.uncertainty_coef == "true" ? "--phylocoef" : "--no-phylocoef"
 
-process mutations_iqtree {
+process mutations_extraction_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -453,7 +453,7 @@ fi
 }
 
 
-process pyvolve_iqtree {
+process neutral_evol_simuation_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->

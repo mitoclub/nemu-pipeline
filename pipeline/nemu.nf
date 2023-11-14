@@ -53,7 +53,7 @@ params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
 params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
 
 g_2_multipleFasta_g_398 = file(params.sequence, type: 'any') 
-Channel.value(params.species_name).set{g_1_species_name_g_414}
+Channel.value(params.species_name).into{g_1_species_name_g_414;g_1_species_name_g_415}
 Channel.value(params.Mt_DB).into{g_15_commondb_path_g_406;g_15_commondb_path_g_415}
 Channel.value(params.gencode).into{g_220_gencode_g_406;g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
 
@@ -63,7 +63,6 @@ Channel.value(aligned).set{g_431_type_g_433}
 Channel.value(nspecies).into{g_397_mode_g_410;g_397_mode_g_411;g_397_mode_g_422;g_397_mode_g_423;g_397_mode_g_424}
 Channel.value("OUTGRP").set{g_398_outgroup_g_428}
 Channel.value("NO_FILE").set{precalculated_tree}
-
 
 
 process query_qc {
@@ -99,8 +98,8 @@ mv $query query_single.fasta
 """
 }
 
-nseqs = params.tblastn.nseqs
 
+NSEQS_LIMIT=33000
 
 process tblastn {
 
@@ -114,6 +113,7 @@ input:
  val gencode from g_220_gencode_g_406
  file query from g_398_multipleFasta_g_406
  val DB from g_15_commondb_path_g_406
+ val species from g_1_species_name_g_415
 
 output:
  file "report.blast"  into g_406_blast_output_g_412
@@ -121,21 +121,39 @@ output:
 
 script:
 """
-tblastn -db $DB -db_gencode $gencode -num_descriptions $nseqs -num_alignments $nseqs -query $query -out report.blast -num_threads $THREADS
+report=report.blast
+nseqs=500
 
-if [ `grep -c "No hits found" report.blast` -eq 0 ]; then 
-	echo "Found hits in the database for given query"
-else
-	echo "There are no hits in the database for given query" > no_hits.log
-	cat no_hits.log
-	exit 1
-fi
+while true
+do   
+    echo "INFO: run blasting; nseqs=\$nseqs"
+    tblastn -db $DB -db_gencode $gencode -num_descriptions \$nseqs -num_alignments \$nseqs -query $query -out \$report -num_threads $THREADS
+    if [ `grep -c "No hits found" \$report` -eq 0 ]; then 
+        echo "SUCCESS: hits found in the database for given query"
+    else
+        echo "ERROR: there are no hits in the database for given query" > no_hits.log
+        cat no_hits.log
+        exit 1
+    fi
+
+    if [ `grep -c "$species" \$report` -ge \$((nseqs * 2 - 10)) ]; then
+        nseqs=\$((nseqs * 4))
+        if [ \$nseqs -gt $NSEQS_LIMIT ]; then
+            echo "UNEXPECTED ERROR: database cannot contain more than $NSEQS_LIMIT sequences of one species"
+            exit 1
+        fi
+        echo "INFO: run blasting again due to abcence of different species; nseqs=\$nseqs"
+    else
+        echo "SUCCESS: other species for outgroup selection is in hits"
+        break
+    fi
+done
 """
 
 }
 
 
-process mview {
+process blast2fasta {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -155,7 +173,7 @@ mview -in blast -out fasta $blast_report 1>raw_sequences.fasta
 }
 
 
-process extract_outgroup {
+process outgroup_extraction {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -173,12 +191,11 @@ output:
 
 """
 /opt/dolphin/scripts/header_sel_mod3.pl $query_out_fasta "$SPNAME" 1>useless_seqs.fasta 2>headers_mapping.txt
-
 """
 }
 
 
-process extract_sequences {
+process seqs_extraction {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -199,7 +216,7 @@ output:
 }
 
 
-process drop_dublicates {
+process duplicates_filtration {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -212,7 +229,7 @@ input:
 
 output:
  file "seqs_unique.fasta"  into g_409_multipleFasta_g418_428
- file "report_{yes,no}.log"  into g_409_logFile
+ file "report_{yes,no}.log"  into g_499_logFile
 
 """
 /opt/dolphin/scripts/codon_alig_unique.pl $seqs 1>seqs_unique.fasta
@@ -231,7 +248,7 @@ fi
 
 min_input_nseqs = 4
 
-process fasta_qc {
+process nucleotide_fasta_qc {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -324,7 +341,7 @@ echo "Do quality control"
 }
 
 
-process convert_alignment_to_phylip {
+process fasta2phylip {
 
 input:
  file aln from g_433_multipleFasta_g_424
@@ -387,7 +404,7 @@ fi
 }
 
 
-process shrink_iqtree {
+process shrink_tree_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -443,7 +460,7 @@ fi
 }
 
 
-process rooting_iqtree_tree {
+process tree_rooting_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -463,7 +480,7 @@ nw_reroot -l $tree OUTGRP 1>${name}_rooted.nwk
 }
 
 
-process terminal_genomes_states {
+process fasta2states_table {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -484,7 +501,7 @@ alignment2iqtree_states.py $aln leaves_states.state
 
 estimate_rates = params.exclude_cons_sites == "true" ? "--rate" : ""
 
-process iqtree_anc {
+process anc_reconstruction_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -528,7 +545,7 @@ iqtree_states_add_part.py anc.state iqtree_anc.state
 save_exp_muts = params.save_exp_mutations == "true" ? "--save-exp-muts" : ""
 use_uncertainty_coef = params.uncertainty_coef == "true" ? "--phylocoef" : "--no-phylocoef"
 
-process mutations_iqtree {
+process mutations_extraction_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -598,7 +615,7 @@ fi
 }
 
 
-process pyvolve_iqtree {
+process neutral_evol_simuation_iqtree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
