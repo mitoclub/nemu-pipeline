@@ -12,7 +12,7 @@ if (!params.nspecies){
 	println "ERROR: Specify nspecies argument: multiple or single"
 	exit 1
 }
-if (!params.outgrp){
+if (!params.outgroup){
 	println "ERROR: Specify outgroup name of Id in input fasta file"
 	exit 1
 }
