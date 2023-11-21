@@ -190,7 +190,7 @@ output:
  file "headers_mapping.txt"  into g_414_outputFileTxt_g_415
 
 """
-/opt/dolphin/scripts/header_sel_mod3.pl $query_out_fasta "$SPNAME" 1>useless_seqs.fasta 2>headers_mapping.txt
+/opt/scripts_latest/header_sel_mod3.pl $query_out_fasta "$SPNAME" 1>useless_seqs.fasta 2>headers_mapping.txt
 """
 }
 
@@ -210,7 +210,7 @@ output:
  file "sequences.fasta"  into g_415_multipleFasta_g_409
 
 """
-/opt/dolphin/scripts/nuc_coding_mod.pl $hash $DB 1>sequences.fasta
+/opt/scripts_latest/nuc_coding_mod.pl $hash $DB 1>sequences.fasta
 
 """
 }
@@ -232,10 +232,10 @@ output:
  file "report_{yes,no}.log"  into g_499_logFile
 
 """
-/opt/dolphin/scripts/codon_alig_unique.pl $seqs 1>seqs_unique.fasta
+/opt/scripts_latest/codon_alig_unique.pl $seqs 1>seqs_unique.fasta
 if [ -f report_no.txt ]; then
 	mv report_no.txt report_no.log
-	echo "ERROR! Cannot find in the database required number of sequsences (10) for given species!"
+	echo "ERROR: Cannot find in the database required number of sequsences (10) for given species!"
 	cat report_no.log
 	exit 1
 else
@@ -335,7 +335,7 @@ else
 fi
 
 echo "Do quality control"
-/opt/dolphin/scripts/macse2.pl aln.fasta alignment_checked.fasta
+/opt/scripts_latest/macse2.pl aln.fasta alignment_checked.fasta
 
 """
 }
@@ -996,7 +996,7 @@ echo "Mutational spectrum calculated"
 //  file "mutnumbers.tsv"  into g_420_outputFileTSV
 
 // """
-// /opt/dolphin/scripts/mutnumbers.pl $seqs 1>mutnumbers.tsv
+// /opt/scripts_latest/mutnumbers.pl $seqs 1>mutnumbers.tsv
 
 // """
 // }

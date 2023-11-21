@@ -7,12 +7,12 @@ From: centos:7
     https://github.com/kpotoh/dolphin
 
 %files
-    tools/* /opt
+    tools_nemu/* /opt
 
 %post
     ls /opt
     yum --assumeyes update
-    yum install --assumeyes openjdk-11-jre-headless wget which ncbi-blast perl-App-cpanminus openssl-devel perl-LWP-Protocol-https ant git libxml2 zlib-devel gcc automake autoconf
+    yum install --assumeyes openjdk-11-jre-headless wget which perl-App-cpanminus openssl-devel perl-LWP-Protocol-https ant git libxml2 zlib-devel gcc automake autoconf
     cpanm LWP::Simple
     cpanm LWP::UserAgent
     cpanm --force LWP::Protocol::https
@@ -53,15 +53,20 @@ From: centos:7
     make altinstall
     ln -s /usr/local/bin/python3.8 /usr/local/bin/python3
     ln -s /usr/local/bin/pip3.8 /usr/local/bin/pip3
+    cd ..
+    rm Python-$PYTHON_VERSION.tgz
+    pip3 install --upgrade pip
 
     echo 'Installing TreeShrink!'
     cd /opt
     tar -xvzf TreeShrink-$TREESHRINK_VERSION.tar.gz
     cd TreeShrink-$TREESHRINK_VERSION
     python3 setup.py install
+    cd ..
+    rm TreeShrink-$TREESHRINK_VERSION.tar.gz
     
     echo 'Installing PyMutSpec!'
-    pip install pymutspec==0.0.6
+    pip3 install pymutspec
 
     echo 'Installing pyvolve!'
     cd /opt
@@ -77,6 +82,9 @@ From: centos:7
 
     echo 'Installing latest version of Pipeline scripts!'
     git clone https://github.com/mitoclub/nemu-pipeline.git /opt/dolphin
+    mv /opt/dolphin/scripts /opt/scripts_latest
+    rm -r /opt/dolphin
+    ##final scripts in /opt/scripts_latest
 
     echo 'Installing mview-1.67! '
     cd /opt
@@ -84,12 +92,12 @@ From: centos:7
     cd mview-1.67
     perl Makefile.PL
     make install
-    #final binaries in /opt/mview-1.67/bin
 
     echo 'Installing ncbi-blast-2.13.0! '
     cd /opt
     tar -xvzf ncbi-blast-2.13.0+-x64-linux.tar.gz
     mv ncbi-blast-2.13.0+ ncbi-blast
+    rm ncbi-blast-2.13.0+-x64-linux.tar.gz
     #final binaries in /opt/ncbi-blast/bin
 
     echo 'Installing newick-utils-1.6! '
@@ -102,14 +110,6 @@ From: centos:7
     ls
     #final binaries in /opt/newick-utils-1.6/build/bin
     
-    echo 'Installing standard-RAxML-8.2.12! '
-    cd /opt
-    tar -xvzf RAxML-8.2.12.tar.gz
-    cd standard-RAxML-8.2.12
-    make -f Makefile.SSE3.PTHREADS.gcc
-    ls
-    #final binaries in /opt/standard-RAxML-8.2.12
-    
     echo 'Installing phylip-3.697! '
     cd /opt
     tar -xvzf phylip-3.697.tar.gz
@@ -118,53 +118,34 @@ From: centos:7
     cd ../exe
     ls
     #final binaries in /opt/phylip-3.697/exe
-    
-    echo 'Installing iqtree-1.6.12! '
-    cd /opt
-    tar -xvzf iqtree-1.6.12-Linux.tar.gz
-    #final binaries in /opt/iqtree-1.6.12-Linux/bin
 
     echo 'Installing iqtree-2.2.0! '
     cd /opt
     tar -xvzf iqtree-2.2.0-Linux.tar.gz
     #final binaries in /opt/iqtree-2.2.0-Linux/bin
 
-    echo 'Installing EMBOSS-6.6.0! '
+    echo "Installing mafft 7.505"
     cd /opt
-    tar -xvzf EMBOSS-6.6.0.tar.gz
-    cd EMBOSS-6.6.0
-    ./configure --without-x --prefix=/opt/EMBOSS-6.6.0/build
-    make install 
-    cd build/bin
-    ls
-    #final binaries in /opt/EMBOSS-6.6.0/build/bin
-	
-    echo 'Installing PhyML v3.3! '
-    cd /opt
-    tar -xvzf PhyML-3.3.tag.gz
-    cd phyml-3.3.20200621
-    ./autogen.sh
-    ./configure --enable-XXXX
+    tar xzf mafft-7.505-with-extensions-src.tgz
+    cd mafft-7.505-with-extensions/core
+    make clean
     make
-    ls
-    #final binaries in /opt/phyml-3.3.20200621/src
-        
+    make install
+
 %environment
     export LC_ALL=C
-    export PATH=$PATH:/opt/scripts
-    export PATH=$PATH:/opt/dolphin/scripts
-    # export PATH=$PATH:/opt/mview-1.67/bin
     export PATH=$PATH:/opt
+    export PATH=$PATH:/opt/scripts_latest
     export PATH=$PATH:/opt/newick-utils-1.6/build/bin
-    export PATH=$PATH:/opt/standard-RAxML-8.2.12
     export PATH=$PATH:/opt/phylip-3.697/exe
-    export PATH=$PATH:/opt/iqtree-1.6.12-Linux/bin
     export PATH=$PATH:/opt/iqtree-2.2.0-Linux/bin
-    export PATH=$PATH:/opt/EMBOSS-6.6.0/build/bin
-    export PATH=$PATH:/opt/phyml-3.3.20200621/src
     export PATH=$PATH:/opt/ncbi-blast/bin
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
+
+    export MKL_NUM_THREADS=1
+    export NUMEXPR_NUM_THREADS=1
+    export OMP_NUM_THREADS=1
 
 %test
     test_command () {
@@ -177,23 +158,21 @@ From: centos:7
     test_command bash
     test_command perl
     test_command python3
+    test_command R
     test_command run_treeshrink.py
     test_command java
     test_command mview
     test_command tblastn
-    test_command iqtree
     test_command iqtree2
     test_command blastdbcmd
     test_command nw_distance
-    test_command raxmlHPC-PTHREADS-SSE3
-    test_command R
     test_command calculate_mutspec.py
     test_command pyvolve_process.py
+    test_command mafft
 
     if [ -n "$FAILED_TESTS" ]; then
         exit 1
     fi
 
 %labels
-    Maintainer MutSpec
-    Version v2.8
+    Version v3.1
