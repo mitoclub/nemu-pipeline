@@ -2,7 +2,7 @@ Bootstrap: docker
 From: centos:7
 
 %help
-    This container provides portable & reproducible components for MutSpec.
+    This container provides portable & reproducible components for NeMu pipeline.
     The container made by K.V. Gunbin aka GenKVG and B.E. Efimenko aka kpotoh
     https://github.com/kpotoh/dolphin
 
@@ -19,9 +19,10 @@ From: centos:7
     cpanm File::Temp
     cpanm Cwd
 
-    cd /opt
     PYTHON_VERSION=3.8.12
     TREESHRINK_VERSION=1.3.9
+    PYVOLVE_VERSION=1.1.0
+    PYMUTSPEC_VERSION=TODO
     # echo 'Downloading packages!'
     # wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
     # wget https://github.com/uym2/TreeShrink/archive/refs/tags/v$TREESHRINK_VERSION.tar.gz -O TreeShrink-$TREESHRINK_VERSION.tar.gz
@@ -68,17 +69,9 @@ From: centos:7
     echo 'Installing PyMutSpec!'
     pip3 install pymutspec
 
-    echo 'Installing pyvolve!'
-    cd /opt
-    git clone https://github.com/kpotoh/pyvolve.git
-    cd pyvolve
-    python3 setup.py install
+    echo 'Installing Pyvolve!'
+    pip3 install pyvolve==$PYVOLVE_VERSION
     ####### PYTHON #######
-
-    #echo 'Installing Pipeline scripts v.2.2! '
-    #cd /opt
-    #tar -xvzf pipeline-2.2.tar.gz
-    ##final scripts in /opt/scripts
 
     echo 'Installing latest version of Pipeline scripts!'
     git clone https://github.com/mitoclub/nemu-pipeline.git /opt/dolphin
@@ -159,8 +152,8 @@ From: centos:7
     test_command perl
     test_command python3
     test_command R
-    test_command run_treeshrink.py
     test_command java
+    test_command run_treeshrink.py
     test_command mview
     test_command tblastn
     test_command iqtree2
