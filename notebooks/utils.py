@@ -7,7 +7,7 @@ from pymutspec.constants import possible_sbs192, possible_sbs12
 from pymutspec.annotation.tree import get_ingroup_root, get_tree_len, calc_phylocoefs
 from pymutspec.annotation.spectra import (
     jackknife_spectra_sampling, calc_edgewise_spectra,
-    complete_sbs192_columns, collapse_sbs192, get_cossim,
+    complete_sbs192_columns, collapse_sbs192, get_cossim, get_eucdist,
 )
 
 def assign_cat(p: float, interval=0.1):

@@ -2,6 +2,5 @@
 *.zip
 *.tar*
 old
-tools
 export
 *nohup.out

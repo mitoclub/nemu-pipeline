@@ -173,7 +173,7 @@ else
 fi
 
 echo "Do quality control"
-/opt/dolphin/scripts/macse2.pl aln.fasta alignment_checked.fasta
+/opt/scripts_latest/macse2.pl aln.fasta alignment_checked.fasta
 
 """
 }
@@ -834,7 +834,7 @@ echo "Mutational spectrum calculated"
 //  file "mutnumbers.tsv"  into g_420_outputFileTSV
 
 // """
-// /opt/dolphin/scripts/mutnumbers.pl $seqs 1>mutnumbers.tsv
+// /opt/scripts_latest/mutnumbers.pl $seqs 1>mutnumbers.tsv
 
 // """
 // }

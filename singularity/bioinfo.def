@@ -2,7 +2,7 @@ Bootstrap: docker
 From: centos:7
 
 %help
-    This container provides portable & reproducible components for MutSpec.
+    This container provides portable & reproducible components for NeMu pipeline.
     The container made by K.V. Gunbin aka GenKVG and B.E. Efimenko aka kpotoh
     https://github.com/kpotoh/dolphin
 
@@ -12,16 +12,17 @@ From: centos:7
 %post
     ls /opt
     yum --assumeyes update
-    yum install --assumeyes openjdk-11-jre-headless wget which ncbi-blast perl-App-cpanminus openssl-devel perl-LWP-Protocol-https ant git libxml2 zlib-devel gcc automake autoconf
+    yum install --assumeyes openjdk-11-jre-headless wget which perl-App-cpanminus openssl-devel perl-LWP-Protocol-https ant git libxml2 zlib-devel gcc automake autoconf
     cpanm LWP::Simple
     cpanm LWP::UserAgent
     cpanm --force LWP::Protocol::https
     cpanm File::Temp
     cpanm Cwd
 
-    cd /opt
     PYTHON_VERSION=3.8.12
     TREESHRINK_VERSION=1.3.9
+    PYVOLVE_VERSION=1.1.0
+    PYMUTSPEC_VERSION=TODO
     # echo 'Downloading packages!'
     # wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz
     # wget https://github.com/uym2/TreeShrink/archive/refs/tags/v$TREESHRINK_VERSION.tar.gz -O TreeShrink-$TREESHRINK_VERSION.tar.gz
@@ -53,7 +54,8 @@ From: centos:7
     make altinstall
     ln -s /usr/local/bin/python3.8 /usr/local/bin/python3
     ln -s /usr/local/bin/pip3.8 /usr/local/bin/pip3
-
+    pip3 install --upgrade pip
+    
     echo 'Installing TreeShrink!'
     cd /opt
     tar -xvzf TreeShrink-$TREESHRINK_VERSION.tar.gz
@@ -61,22 +63,17 @@ From: centos:7
     python3 setup.py install
     
     echo 'Installing PyMutSpec!'
-    pip install pymutspec==0.0.6
+    pip3 install pymutspec
 
-    echo 'Installing pyvolve!'
-    cd /opt
-    git clone https://github.com/kpotoh/pyvolve.git
-    cd pyvolve
-    python3 setup.py install
+    echo 'Installing Pyvolve!'
+    pip3 install pyvolve==$PYVOLVE_VERSION
     ####### PYTHON #######
-
-    #echo 'Installing Pipeline scripts v.2.2! '
-    #cd /opt
-    #tar -xvzf pipeline-2.2.tar.gz
-    ##final scripts in /opt/scripts
 
     echo 'Installing latest version of Pipeline scripts!'
     git clone https://github.com/mitoclub/nemu-pipeline.git /opt/dolphin
+    mv /opt/dolphin/scripts /opt/scripts_latest
+    rm -r /opt/dolphin
+    ##final scripts in /opt/scripts_latest
 
     echo 'Installing mview-1.67! '
     cd /opt
@@ -84,7 +81,6 @@ From: centos:7
     cd mview-1.67
     perl Makefile.PL
     make install
-    #final binaries in /opt/mview-1.67/bin
 
     echo 'Installing ncbi-blast-2.13.0! '
     cd /opt
@@ -148,13 +144,19 @@ From: centos:7
     make
     ls
     #final binaries in /opt/phyml-3.3.20200621/src
-        
+
+    echo "Installing mafft 7.505"
+    cd /opt
+    tar xzf mafft-7.505-with-extensions-src.tgz
+    cd mafft-7.505-with-extensions/core
+    make clean
+    make
+    make install
+
 %environment
     export LC_ALL=C
-    export PATH=$PATH:/opt/scripts
-    export PATH=$PATH:/opt/dolphin/scripts
-    # export PATH=$PATH:/opt/mview-1.67/bin
     export PATH=$PATH:/opt
+    export PATH=$PATH:/opt/scripts_latest
     export PATH=$PATH:/opt/newick-utils-1.6/build/bin
     export PATH=$PATH:/opt/standard-RAxML-8.2.12
     export PATH=$PATH:/opt/phylip-3.697/exe
@@ -166,7 +168,11 @@ From: centos:7
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
 
-%test
+    export MKL_NUM_THREADS=1
+    export NUMEXPR_NUM_THREADS=1
+    export OMP_NUM_THREADS=1
+    
+    %test
     test_command () {
     if ! command -v "${1}"; then
         echo "!!!command ${1} not found!!!"
@@ -177,8 +183,9 @@ From: centos:7
     test_command bash
     test_command perl
     test_command python3
-    test_command run_treeshrink.py
+    test_command R
     test_command java
+    test_command run_treeshrink.py
     test_command mview
     test_command tblastn
     test_command iqtree
@@ -186,14 +193,13 @@ From: centos:7
     test_command blastdbcmd
     test_command nw_distance
     test_command raxmlHPC-PTHREADS-SSE3
-    test_command R
     test_command calculate_mutspec.py
     test_command pyvolve_process.py
+    test_command mafft
 
     if [ -n "$FAILED_TESTS" ]; then
         exit 1
     fi
 
 %labels
-    Maintainer MutSpec
-    Version v2.8
+    Version v2.12
