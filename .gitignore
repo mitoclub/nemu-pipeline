@@ -4,3 +4,6 @@
 old
 export
 *nohup.out
+.devcontainer
+nemu-webpage
+nemu-pipeline.wiki
