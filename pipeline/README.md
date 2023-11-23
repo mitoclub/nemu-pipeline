@@ -1,37 +1,13 @@
 # The pipeline for neutral mutation spectra evaluation based on evolutionary data
 
-## How to run it on custom dataset
+## 2 pipeline versions
 
-### Prepare dataset
+1. [NeMu-pipeline including tblastn-head](./nemu.nf) - input is single protein sequence that will be used by tblastn to search homologous nucleotide sequences in selected database. After this step NeMu-core executes with phylogeny and spectra inference
+2. [NeMu-core pipeline](./nemu-core.nf) - input is multifasta of nucleotide sequences, that used for phylogeny and spectra inference
 
-1. Each gene of each species must be in separate fasta file
-2. Each fasta file must contain one outgroup sequence (most closest gene sequence from another species) with header ">OUTGRP"
-3. Fasta files must have standard extension ".fasta". ".fna", ".fa" and other forms are not appropriate
-4. Files must be in one directory
+## Config examples
 
-### Run pipeline on prepared dataset
+1. [Config for comparative species analysis](./comp_sp.config) - on many species
+2. [Config for intraspecies analysis](./single_sp.config) - on single species
 
-1. Copy [pipeline file](../Nemutail/main.nf) and [config file](../Nemutail/nextflow.config) to dataset directory
-2. Modify config file according to your computer resources
-3. Run `parallel nextflow -q -log {\.}.log run main.nf --sequence {} ::: *.fasta` inside dataset directory
-4. Pipeline will create directories for each run
-
-Dataset directory after execution will looks like:
-```
-$ cd dataset/
-$ nextflow main.nf --sequence *.fasta
-$ ls
-A6__Dascyllus_aruanus
-A6__Dascyllus_reticulatus
-A6__Dawkinsia_denisonii
-A6__Delphinapterus_leucas
-A6__Dendrocoptes_medius
-A6__Dascyllus_aruanus.fasta
-A6__Dascyllus_reticulatus.fasta
-A6__Dawkinsia_denisonii.fasta
-A6__Delphinapterus_leucas.fasta
-A6__Dendrocoptes_medius.fasta
-main.nf
-nextflow.config
-work
-```
+    - Don't forget to change process.container and singularity.runOptions parameters according to execution environment
