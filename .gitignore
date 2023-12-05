@@ -7,3 +7,6 @@ export
 .devcontainer
 nemu-webpage
 nemu-pipeline.wiki
+.nextflow*
+work
+test_output*
