@@ -543,11 +543,12 @@ echo "Mutational spectrum calculated"
 
 if (params.verbose == 'true') {
 	workflow.onComplete {
-	println "##Pipeline execution summary##"
-	println "---------------------------"
-	println "##Completed at: $workflow.complete"
-	println "##Duration: ${workflow.duration}"
-	println "##Success: ${workflow.success ? 'OK' : 'failed' }"
-	println "##Exit status: ${workflow.exitStatus}"
+	// println "##Pipeline execution summary##"
+	// println "---------------------------"
+	println "##Completed at: ${workflow.complete}; Duration: ${workflow.duration}; Success: ${workflow.success ? 'OK' : 'failed' }"
+	// println "##Completed at: $workflow.complete"
+	// println "##Duration: ${workflow.duration}"
+	// println "##Success: ${workflow.success ? 'OK' : 'failed' }"
+	// println "##Exit status: ${workflow.exitStatus}"
 	}
 }

@@ -2,7 +2,7 @@
 
 ## 2 pipeline versions
 
-1. [NeMu-pipeline including tblastn-head](./nemu.nf) - input is single protein sequence that will be used by tblastn to search homologous nucleotide sequences in selected database. After this step NeMu-core executes with phylogeny and spectra inference
+1. [NeMu pipeline including tblastn-head](./nemu.nf) - input is single protein sequence that will be used by tblastn to search homologous nucleotide sequences in selected database. After this step NeMu-core executes with phylogeny and spectra inference
 2. [NeMu-core pipeline](./nemu-core.nf) - input is multifasta of nucleotide sequences, that used for phylogeny and spectra inference
 
 ## Config examples

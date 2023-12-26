@@ -5,13 +5,16 @@ cd /home/kpotoh/nemu-pipeline/data/bacteria
 PATH_TO_NEMU=/home/kpotoh/nemu-pipeline/pipeline/nemu-core.nf
 PATH_TO_CONFIG=/home/kpotoh/nemu-pipeline/data/bacteria/nemu_bacteria.config
 PATH_TO_INPUT=/scratch/genkvg/bacteria/askudnov
-PATH_TO_OUTPUT=/scratch/bacteria/spectra/
+PATH_TO_OUTPUT=/scratch/bacteria/spectra
 
+# _output1: 1786
+# _output2: 6377
+# _output3: 5045
 CLADES=("_output1" "_output2" "_output3")
 
-MAX_NJOBS=16
-SLEEP_TIME=5 # secs
-RUNLIMIT=10
+MAX_NJOBS=60
+SLEEP_TIME=120 # secs
+RUNLIMIT=12000
 COUNTER=1
 
 for clade in ${CLADES[@]}; do
@@ -22,7 +25,7 @@ for clade in ${CLADES[@]}; do
 
         for aln in $INDIR/*.fasta; do
             if [ $COUNTER -gt $RUNLIMIT ]; then
-                break
+                exit 0
             fi
 
             workdir=$OUTDIR/$(basename $aln .fasta)
@@ -33,8 +36,8 @@ for clade in ${CLADES[@]}; do
             let COUNTER++
 
             aln_abs=`realpath $aln`
-            echo -e "workdir: $workdir"
 
+            echo -e "workdir: $workdir"
             mkdir -p $workdir
             cd $workdir
 
@@ -42,6 +45,7 @@ for clade in ${CLADES[@]}; do
             # -q -bg
             nextflow -bg -q -c $PATH_TO_CONFIG run $PATH_TO_NEMU -with-trace --sequence $aln_abs --outdir .
             cd - >/dev/null
+            sleep 0.5
 
             if [ `expr $COUNTER % $MAX_NJOBS` -eq 0 ]; then
                 echo sleep $SLEEP_TIME secs
