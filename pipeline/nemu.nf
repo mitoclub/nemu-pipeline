@@ -15,6 +15,7 @@ if (!params.verbose){params.verbose = "false"}
 if (!params.internal){params.internal = "false"} 
 if (!params.terminal){params.terminal = "false"} 
 if (!params.branch_spectra){params.branch_spectra = "false"}
+if (!params.save_exp_mutations){params.save_exp_mutations = "false"}
 if (!params.exclude_cons_sites){params.exclude_cons_sites = "false"}
 if (!params.uncertainty_coef){params.uncertainty_coef = "false"}
 if (!params.njobs){params.njobs = "1"}
@@ -53,17 +54,14 @@ params.all_arg   = params.all == "true" ? "--all" : ""
 params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
 params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
 
-g_2_multipleFasta_g_398 = file(params.sequence, type: 'any') 
-Channel.value(params.gencode).into{g_220_gencode_g_406;g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
-Channel.value(params.species_name).into{g_1_species_name_g_414;g_1_species_name_g_415}
 Channel.value(params.Mt_DB).into{g_15_commondb_path_g_406;g_15_commondb_path_g_415}
+query_protein_sequence = file(params.sequence, type: 'any') 
+Channel.value(params.gencode).into{g_220_gencode_g_406;g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
+Channel.value("false").set{aligned_param}
+Channel.value(params.species_name).into{g_1_species_name_g_414;g_1_species_name_g_415}
 
-aligned = "false"
-nspecies = "single"
-Channel.value(aligned).set{g_431_type_g_433}
-Channel.value(nspecies).into{g_397_mode_g_422} // TODO drop this useless param
-Channel.value("OUTGRP").set{g_398_outgroup_g_428}
-Channel.value(params.use_macse).set{global_use_macse}
+Channel.value("OUTGRP").set{outgroup_param}
+Channel.value(params.use_macse).set{use_macse_param}
 Channel.value("NO_FILE").set{precalculated_tree}
 
 
@@ -75,7 +73,7 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 }
 
 input:
- file query from g_2_multipleFasta_g_398
+ file query from query_protein_sequence
 
 output:
  file "query_single.fasta"  into g_398_multipleFasta_g_406
@@ -167,7 +165,6 @@ output:
 
 """
 mview -in blast -out fasta $blast_report 1>raw_sequences.fasta
-
 """
 }
 
@@ -204,7 +201,6 @@ output:
 
 """
 /opt/scripts_latest/nuc_coding_mod.pl $hash $DB 1>sequences.fasta
-
 """
 }
 
@@ -234,7 +230,6 @@ if [ -f report_no.txt ]; then
 else
 	mv report_yes.txt report_yes.log
 fi
-
 """
 }
 
@@ -250,7 +245,7 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 
 input:
  file query from g_409_multipleFasta_g418_428
- val outgrp from g_398_outgroup_g_428
+ val outgrp from outgroup_param
 
 output:
  file "sequences.fasta"  into g_428_multipleFasta_g_433
@@ -278,7 +273,7 @@ fi
 
 multifasta_coding.py -a $query -g $outgrp -o sequences.fasta -m species_mapping.txt
 if [ ! -f species_mapping.txt ]; then
-	echo test > species_mapping.txt
+	echo 'required for compatibility reasons' > species_mapping.txt
 fi
 """
 }
@@ -292,14 +287,14 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 }
 
 input:
- val aligned from g_431_type_g_433
+ val aligned from aligned_param
  file seqs from g_428_multipleFasta_g_433
  val gencode from g_396_gencode_g_433
- val use_macse from global_use_macse
+ val use_macse from use_macse_param
 
 output:
- file "msa_nuc.fasta"  into g_433_multipleFasta_g_420, g_433_multipleFasta_g_421, g_433_multipleFasta_g_423, g_433_multipleFasta_g_422, g_433_multipleFasta_g_424
- file "aln_aa.fasta" optional true  into g_433_multipleFasta
+ file "msa_nuc.fasta"  into g_433_multipleFasta_g_420, g_433_multipleFasta_g_421, g_433_multipleFasta_g_422, g_433_multipleFasta_g_424, g_433_multipleFasta_g_425
+ file "aln_aa.fasta" optional true  into g_433_multipleFasta_lol
 
 """
 if [ $aligned = true ]; then
@@ -330,22 +325,68 @@ fi
 
 echo "Do quality control"
 /opt/scripts_latest/macse2.pl aln.fasta msa_nuc.fasta
-
 """
 }
 
 
-process fasta2phylip {
+process write_files_description {
+
+publishDir params.outdir, overwrite: true, mode: 'copy',
+	saveAs: {filename ->
+	if (filename =~ /readme.txt$/) "$filename"
+}
 
 input:
- file aln from g_433_multipleFasta_g_424
-
+ file something from g_433_multipleFasta_g_425
 output:
- set val("aln"), file("aln.phy")  into g_424_phylip_g_130, g_424_phylip_g_326, g_424_phylip_g_409, g_424_phylip_g_430
+ file "readme.txt"
 
 """
-java -jar /opt/readseq.jar -a -f Phylip -o aln.phy $aln
+cat > readme.txt <<- EOM
+Output structure:
 
+.
+├── final_tree.nwk						# Final phylogenetic tree
+├── seqs_unique.fasta					# Filtered orthologous sequences
+├── msa_nuc.fasta						# Verified multiple sequence alignment
+├── headers_mapping.txt					# Encoded headers of sequences
+├── species_mapping.txt					# Encoded headers of sequences (v2 for different version of pipeline)
+├── logs/
+│   ├── char_numbers.log				# Character composition of input sequence (used in query QC)
+│   ├── report.blast					# Tblastn output during orthologs search
+│   ├── iqtree.log						# IQ-TREE logs during phylogenetic tree inference
+│   ├── iqtree_report.log				# IQ-TREE report during phylogenetic tree inference
+│   ├── iqtree_treeshrink.log			# TreeShrink logs
+│   ├── iqtree_pruned_nodes.log			# Nodes pruned from tree by TreeShrink
+│   ├── iqtree_anc.log					# IQ-TREE logs during ancestral reconstrution
+│   ├── iqtree_anc_report.log			# IQ-TREE report during ancestral reconstrution
+│   ├── iqtree_mut_extraction.log		# Logs during mutation extraction process
+│   └── branches.txt					# Tree branch lenghts
+├── figures
+│   ├── ms12syn.pdf						# Barplot with  12-component spectrum on synonymous mutations
+│   └── ms192syn.pdf					# Barplot with 192-component spectrum on synonymous mutations
+├── tables
+│   ├── rates.tsv						# Site rates categories for an alignment
+│   ├── expected_freqs.tsv				# Frequencies of substitutions for each tree node genome
+│   ├── mean_expexted_mutations.tsv		# Averaged frequencies of substitutions for entire tree
+│   ├── ms12syn.tsv						# table with 12-component spectrum on synonymous mutations
+│   ├── ms192syn.tsv					# table with 192-component spectrum on synonymous mutations
+│   └── observed_mutations.tsv			# Recontructed mutations
+EOM
+"""
+}
+
+
+process fasta2states_table {
+
+input:
+ file aln from g_433_multipleFasta_g_421
+
+output:
+ file "leaves_states.state"  into g_421_state_g_410
+
+"""
+alignment2iqtree_states.py $aln leaves_states.state
 """
 }
 
@@ -358,7 +399,7 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 }
 
 input:
- set val(name), file(mulal) from g_424_phylip_g_409
+ file mulal from g_433_multipleFasta_g_420
  file prectree from precalculated_tree
  file labels_mapping from g_428_outputFileTxt
 
@@ -390,7 +431,6 @@ else
 	mv phylo.log iqtree.log
 fi
 """
-
 }
 
 
@@ -445,7 +485,6 @@ if [ `grep OUTGRP branches.txt | cut -f 2 | python3 -c "import sys; print(float(
 	echo "Something went wrong: outgroup is not furthest leaf in the tree"
 	exit 1
 fi
-
 """
 }
 
@@ -460,22 +499,6 @@ output:
 
 """
 nw_reroot -l $tree OUTGRP 1>${name}_rooted.nwk
-
-"""
-}
-
-
-// TODO drop this process
-process fasta2states_table {
-
-input:
- file aln from g_433_multipleFasta_g_421
-
-output:
- set val("leaves_states"), file("leaves_states.state")  into g_421_state_g_410, g_421_state_g_411
-
-"""
-alignment2iqtree_states.py $aln leaves_states.state
 """
 }
 
@@ -492,7 +515,7 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 }
 
 input:
- set val(name), file(mulal) from g_424_phylip_g_326
+ file mulal from g_433_multipleFasta_g_424
  set val(namet), file(tree) from g_302_tree_g_326
 
 output:
@@ -506,10 +529,10 @@ maxRetries 3
 
 script:
 """
-nw_labels -I $tree > leaves.txt
-filter_aln.py -a $mulal -l leaves.txt -o filtered_aln.phy
+nw_labels -I $tree | sed 's/\$/\$/' > leaves.txt
+select_records.py -f leaves.txt --fmt fasta $mulal msa_filtered.fasta
 
-iqtree2 -te $tree -s filtered_aln.phy -m $params.iqtree_anc_model -asr -nt $THREADS --prefix anc $estimate_rates
+iqtree2 -te $tree -s msa_filtered.fasta -m $params.iqtree_anc_model -asr -nt $THREADS --prefix anc $estimate_rates
 if [ ! -f anc.rate ]; then
 	touch anc.rate
 fi
@@ -539,7 +562,7 @@ input:
  set val(namet), file(tree) from g_326_tree_g_410
  set val(label), file(states1) from g_326_state_g_410
  path rates from g_326_ratefile
- set val(names2), file(states2) from g_421_state_g_410
+ file states2 from g_421_state_g_410
  val gencode from g_396_gencode_g_410
 
 output:
