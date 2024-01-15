@@ -61,7 +61,7 @@ Channel.value(params.Mt_DB).into{g_15_commondb_path_g_406;g_15_commondb_path_g_4
 aligned = "false"
 nspecies = "single"
 Channel.value(aligned).set{g_431_type_g_433}
-Channel.value(nspecies).into{g_397_mode_g_410;g_397_mode_g_411;g_397_mode_g_422;g_397_mode_g_423;g_397_mode_g_424}
+Channel.value(nspecies).into{g_397_mode_g_422} // TODO drop this useless param
 Channel.value("OUTGRP").set{g_398_outgroup_g_428}
 Channel.value(params.use_macse).set{global_use_macse}
 Channel.value("NO_FILE").set{precalculated_tree}
@@ -71,7 +71,7 @@ process query_qc {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /char_numbers.log$/) "logs/$filename"
+	if (filename =~ /input_seq_char_counts.log$/) "logs/$filename"
 }
 
 input:
@@ -79,7 +79,7 @@ input:
 
 output:
  file "query_single.fasta"  into g_398_multipleFasta_g_406
- file "char_numbers.log" optional true  into g_398_logFile
+ file "input_seq_char_counts.log" optional true  into g_398_logFile
 
 """
 if [ `grep -c ">" $query` -ne 1 ]; then
@@ -89,8 +89,8 @@ else
 	echo Number of sequences: `grep -c ">" $query`
 fi
 
-grep -v  ">" $query | grep -o . | sort | uniq -c | sort -nr > char_numbers.log
-if [ `head -n 4 char_numbers.log | grep -Ec "[ACGT]"` -lt 4 ] || [ `grep -Ec "[EFILPQU]" char_numbers.log` -ne 0 ]; then
+grep -v  ">" $query | grep -o . | sort | uniq -c | sort -nr > input_seq_char_counts.log
+if [ `head -n 4 input_seq_char_counts.log | grep -Ec "[ACGT]"` -lt 4 ] || [ `grep -Ec "[EFILPQU]" input_seq_char_counts.log` -ne 0 ]; then
 	echo "It's probably amino asid sequence"
 else
 	echo "Query fasta must contain single amino acid sequence"
@@ -157,12 +157,7 @@ done
 }
 
 
-process blast2fasta {
-
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /raw_sequences.fasta$/) "tmp/$filename"
-}
+process blast_report2fasta {
 
 input:
  file blast_report from g_406_blast_output_g_412
@@ -181,8 +176,7 @@ process outgroup_extraction {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /useless_seqs.fasta$/) "tmp/$filename"
-	else if (filename =~ /headers_mapping.txt$/) "sequences/$filename"
+	if (filename =~ /headers_mapping.txt$/) "$filename"
 }
 
 input:
@@ -200,11 +194,6 @@ output:
 
 
 process seqs_extraction {
-
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /sequences.fasta$/) "tmp/$filename"
-}
 
 input:
  file hash from g_414_outputFileTxt_g_415
@@ -224,7 +213,7 @@ process duplicates_filtration {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /seqs_unique.fasta$/) "sequences/$filename"
+	if (filename =~ /seqs_unique.fasta$/) "$filename"
 	else if (filename =~ /report_(yes|no).log$/) "logs/$filename"
 }
 
@@ -256,7 +245,7 @@ process nucleotide_fasta_qc {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /species_mapping.txt$/) "sequences/$filename"
+	if (filename =~ /species_mapping.txt$/) "$filename"
 }
 
 input:
@@ -299,7 +288,7 @@ process MSA {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /alignment_checked.fasta$/) "sequences/$filename"
+	if (filename =~ /msa_nuc.fasta$/) "$filename"
 }
 
 input:
@@ -309,7 +298,7 @@ input:
  val use_macse from global_use_macse
 
 output:
- file "alignment_checked.fasta"  into g_433_multipleFasta_g_420, g_433_multipleFasta_g_421, g_433_multipleFasta_g_423, g_433_multipleFasta_g_422, g_433_multipleFasta_g_424
+ file "msa_nuc.fasta"  into g_433_multipleFasta_g_420, g_433_multipleFasta_g_421, g_433_multipleFasta_g_423, g_433_multipleFasta_g_422, g_433_multipleFasta_g_424
  file "aln_aa.fasta" optional true  into g_433_multipleFasta
 
 """
@@ -319,7 +308,7 @@ if [ $aligned = true ]; then
 	cp $seqs aln.fasta
 elif [ $aligned = false ]; then
 	if [ $use_macse = true ]; then
-echo "Use macse as aligner"
+		echo "Use macse as aligner"
 		java -jar /opt/macse_v2.06.jar -prog alignSequences -gc_def $gencode \
 			-out_AA aln_aa.fasta -out_NT aln.fasta -seq $seqs
 	else
@@ -340,7 +329,7 @@ else
 fi
 
 echo "Do quality control"
-/opt/scripts_latest/macse2.pl aln.fasta alignment_checked.fasta
+/opt/scripts_latest/macse2.pl aln.fasta msa_nuc.fasta
 
 """
 }
@@ -361,12 +350,11 @@ java -jar /opt/readseq.jar -a -f Phylip -o aln.phy $aln
 }
 
 
-process iqtree_build_tree {
+process ML_tree_inference {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /.*.log$/) "logs/$filename"
-	else if (filename =~ /.*.nwk$/) "tmp/$filename"
 }
 
 input:
@@ -406,7 +394,7 @@ fi
 }
 
 
-process shrink_tree_iqtree {
+process shrink_tree {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
@@ -436,24 +424,24 @@ fi
 }
 
 
-process extract_terminal_branch_lengths_iqtree {
+process terminal_branch_lengths_qc {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /${name}.branches$/) "IQTREE/$filename"
+	if (filename =~ /branches.txt$/) "logs/$filename"
 }
 
 input:
  set val(name), file(tree) from g_315_tree_g_132
 
 output:
- set val(name), file("${name}.branches")  into g_132_branches
+ set val(name), file("branches.txt")  into g_132_branches
 
 """
-nw_distance -m p -s f -n $tree | sort -grk 2 1> ${name}.branches
+nw_distance -m p -s f -n $tree | sort -grk 2 1> branches.txt
 
-if [ `grep OUTGRP ${name}.branches | cut -f 2 | python3 -c "import sys; print(float(sys.stdin.readline().strip()) > 0)"` = False ]; then
-	cat "${name}.branches"
+if [ `grep OUTGRP branches.txt | cut -f 2 | python3 -c "import sys; print(float(sys.stdin.readline().strip()) > 0)"` = False ]; then
+	cat "branches.txt"
 	echo "Something went wrong: outgroup is not furthest leaf in the tree"
 	exit 1
 fi
@@ -463,11 +451,6 @@ fi
 
 
 process tree_rooting_iqtree {
-
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /.*.nwk$/) "tmp/$filename"
-}
 
 input:
  set val(name), file(tree) from g_315_tree_g_302
@@ -482,12 +465,8 @@ nw_reroot -l $tree OUTGRP 1>${name}_rooted.nwk
 }
 
 
+// TODO drop this process
 process fasta2states_table {
-
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /leaves_states.state$/) "tmp/$filename"
-}
 
 input:
  file aln from g_433_multipleFasta_g_421
@@ -503,13 +482,12 @@ alignment2iqtree_states.py $aln leaves_states.state
 
 estimate_rates = params.exclude_cons_sites == "true" ? "--rate" : ""
 
-process anc_reconstruction_iqtree {
+process ASR {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /iqtree_anc_tree.nwk$/) "IQTREE/$filename"
-	else if (filename =~ /iqtree_anc.state$/) "IQTREE/$filename"
-	else if (filename =~ /.*.rate$/) "IQTREE/$filename"
+	if (filename =~ /final_tree.nwk$/) "$filename"
+	else if (filename =~ /rates.tsv$/) "tables/$filename"
 	else if (filename =~ /.*.log$/) "logs/$filename"
 }
 
@@ -518,9 +496,9 @@ input:
  set val(namet), file(tree) from g_302_tree_g_326
 
 output:
- set val("iqtree"), file("iqtree_anc_tree.nwk")  into g_326_tree_g_410, g_326_tree_g_422
+ set val("iqtree"), file("final_tree.nwk")  into g_326_tree_g_410, g_326_tree_g_422
  set val("iqtree"), file("iqtree_anc.state")  into g_326_state_g_410
- path "anc.rate" into g_326_ratefile
+ path "rates.tsv" into g_326_ratefile
  file "*.log"  into g_326_logFile
 
 errorStrategy 'retry'
@@ -535,9 +513,10 @@ iqtree2 -te $tree -s filtered_aln.phy -m $params.iqtree_anc_model -asr -nt $THRE
 if [ ! -f anc.rate ]; then
 	touch anc.rate
 fi
+mv anc.rate rates.tsv
 mv anc.iqtree iqtree_anc_report.log
 mv anc.log iqtree_anc.log
-nw_reroot anc.treefile OUTGRP | sed 's/;/ROOT;/' > iqtree_anc_tree.nwk
+nw_reroot anc.treefile OUTGRP | sed 's/;/ROOT;/' > final_tree.nwk
 
 iqtree_states_add_part.py anc.state iqtree_anc.state
 """
@@ -547,13 +526,13 @@ iqtree_states_add_part.py anc.state iqtree_anc.state
 save_exp_muts = params.save_exp_mutations == "true" ? "--save-exp-muts" : ""
 use_uncertainty_coef = params.uncertainty_coef == "true" ? "--phylocoef" : "--no-phylocoef"
 
-process mutations_extraction_iqtree {
+process mutations_extraction {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /.*.tsv$/) "mutspec_tables/$filename"
+	if (filename =~ /.*.tsv$/) "tables/$filename"
 	else if (filename =~ /.*.log$/) "logs/$filename"
-	else if (filename =~ /.*.pdf$/) "mutspec_images/$filename"
+	else if (filename =~ /.*.pdf$/) "figures/$filename"
 }
 
 input:
@@ -561,14 +540,13 @@ input:
  set val(label), file(states1) from g_326_state_g_410
  path rates from g_326_ratefile
  set val(names2), file(states2) from g_421_state_g_410
- val nspecies from g_397_mode_g_410
  val gencode from g_396_gencode_g_410
 
 output:
  file "*.tsv"  into g_410_outputFileTSV
  file "*.log"  into g_410_logFile
  file "*.pdf"  into g_410_outputFilePdf
- file "ms*syn_${label}.txt" optional true  into g_410_outputFileTxt_g_422
+ file "ms*syn.txt" optional true  into g_410_outputFileTxt_g_422
 
 """
 if [ $params.exclude_cons_sites = true ]; then 
@@ -584,129 +562,123 @@ else
 		--outdir mout $save_exp_muts $use_uncertainty_coef
 fi
 mv mout/* .
-mv mutations.tsv observed_mutations_${label}.tsv
-mv run.log ${label}_mut_extraction.log
+mv mutations.tsv observed_mutations.tsv
+mv run.log mut_extraction.log
 
-calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 	--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf
 
 if [ $params.internal = true ]; then
-	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset internal
-	rm mean_expexted_mutations_internal_${label}.tsv
+	rm mean_expexted_mutations_internal.tsv
 fi
 if [ $params.terminal = true ]; then
-	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset terminal
-	rm mean_expexted_mutations_terminal_${label}.tsv
+	rm mean_expexted_mutations_terminal.tsv
 fi
 if [ $params.branch_spectra = true ]; then
-	calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_freqs.tsv -o . \
-        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 -l $label $params.proba_arg \
+	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+        --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --branches
 fi
 
-cp ms12syn_${label}.tsv ms12syn_${label}.txt
-if [-f ms192syn_${label}.tsv ]; then
-	cp ms192syn_${label}.tsv ms192syn_${label}.txt
+cp ms12syn.tsv ms12syn.txt
+if [-f ms192syn.tsv ]; then
+	cp ms192syn.tsv ms192syn.txt
 fi
 """
 }
 
 
-process neutral_evol_simuation_iqtree {
+// process neutral_evol_simuation {
 
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /.*.tsv$/) "mutspec_tables/$filename"
-	else if (filename =~ /.*.pdf$/) "mutspec_images/$filename"
-	else if (filename =~ /.*.log$/) "logs/$filename"
-}
+// publishDir params.outdir, overwrite: true, mode: 'copy',
+// 	saveAs: {filename ->
+// 	if (filename =~ /.*.tsv$/) "mutspec_tables/$filename"
+// 	else if (filename =~ /.*.pdf$/) "mutspec_images/$filename"
+// 	else if (filename =~ /.*.log$/) "logs/$filename"
+// }
 
-input:
- file spectra from g_410_outputFileTxt_g_422
- set val(label), file(tree) from g_326_tree_g_422
- file mulal from g_433_multipleFasta_g_422
- val gencode from g_396_gencode_g_422
- val nspecies from g_397_mode_g_422
+// input:
+//  file spectra from g_410_outputFileTxt_g_422
+//  set val(label), file(tree) from g_326_tree_g_422
+//  file mulal from g_433_multipleFasta_g_422
+//  val gencode from g_396_gencode_g_422
+//  val nspecies from g_397_mode_g_422
 
-output:
- file "*.tsv"  into g_422_outputFileTSV
- file "*.pdf"  into g_422_outputFilePdf
- file "*.log"  into g_422_logFile
+// output:
+//  file "*.tsv"  into g_422_outputFileTSV
+//  file "*.pdf"  into g_422_outputFilePdf
+//  file "*.log"  into g_422_logFile
 
-when:
-params.run_simulation == "true" && nspecies == "single"
+// when:
+// params.run_simulation == "true" && nspecies == "single"
 
-script:
-"""
-arrray=($spectra)
+// script:
+// """
+// arrray=($spectra)
 
-spectra12=\${arrray[0]}
-spectra192=\${arrray[1]}
+// spectra12=\${arrray[0]}
+// spectra192=\${arrray[1]}
 
-if [-f \$spectra192 ]; then
-	substractor192="--substract192 \${spectra192}"
-else
-	substractor192=""
-fi
+// if [-f \$spectra192 ]; then
+// 	substractor192="--substract192 \${spectra192}"
+// else
+// 	substractor192=""
+// fi
 
-nw_prune $tree OUTGRP | python3 /home/dolphin/dolphin/scripts/resci.py > ${tree}.ingroup
-echo "Tree outgroup pruned"
-awk '/^>/ {P=index(\$1, "OUTGRP")==0} {if(P) print}' $mulal > ${mulal}.ingroup
-echo "Tree outgroup sequence filtered out"
+// nw_prune $tree OUTGRP | python3 /home/dolphin/dolphin/scripts/resci.py > ${tree}.ingroup
+// echo "Tree outgroup pruned"
+// awk '/^>/ {P=index(\$1, "OUTGRP")==0} {if(P) print}' $mulal > ${mulal}.ingroup
+// echo "Tree outgroup sequence filtered out"
 
-nw_labels -L ${tree}.ingroup | grep -v ROOT | xargs -I{} echo -e "{}\tNode{}" > map.txt
-if [ `grep -c NodeNode map.txt` -eq 0 ]; then
-	nw_rename ${tree}.ingroup map.txt > ${tree}.tmp
-	cat ${tree}.tmp > ${tree}.ingroup
-	echo "Internal nodes renamed"
-fi
+// nw_labels -L ${tree}.ingroup | grep -v ROOT | xargs -I{} echo -e "{}\tNode{}" > map.txt
+// if [ `grep -c NodeNode map.txt` -eq 0 ]; then
+// 	nw_rename ${tree}.ingroup map.txt > ${tree}.tmp
+// 	cat ${tree}.tmp > ${tree}.ingroup
+// 	echo "Internal nodes renamed"
+// fi
 
-#filter out sequences with ambigous nucleotides
-cat ${mulal}.ingroup | perl -e '\$p=\$s="777"; while (<STDIN>) {chomp; if (\$_=~/^>/) {\$h=\$_; if (\$s!~/[^ACGT]/i) {print "\$p\n\$s\n"} \$p=\$h; \$s="777"} else {\$s=\$_}} if (\$s!~/[^ACGT]/i) {print "\$p\n\$s\n"}' > ${mulal}.clean
-if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
-	echo -e "There are no sequences without ambigous nucleotides in the alignment.\nInterrupted" > pyvolve_${label}.log
-	exit 0
-fi
+// #filter out sequences with ambigous nucleotides
+// cat ${mulal}.ingroup | perl -e '\$p=\$s="777"; while (<STDIN>) {chomp; if (\$_=~/^>/) {\$h=\$_; if (\$s!~/[^ACGT]/i) {print "\$p\n\$s\n"} \$p=\$h; \$s="777"} else {\$s=\$_}} if (\$s!~/[^ACGT]/i) {print "\$p\n\$s\n"}' > ${mulal}.clean
+// if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
+// 	echo -e "There are no sequences without ambigous nucleotides in the alignment.\nInterrupted" > pyvolve_${label}.log
+// 	exit 0
+// fi
 
-pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s \$spectra12 -o seqfile.fasta -r $params.replics -c $gencode -l $params.scale_tree --write_anc
-echo "Mutation samples generated"
+// pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s \$spectra12 -o seqfile.fasta -r $params.replics -c $gencode -l $params.scale_tree --write_anc
+// echo "Mutation samples generated"
 
-for fasta_file in seqfile_sample-*.fasta
-do
-	echo "Processing \$fasta_file"
-	alignment2iqtree_states.py \$fasta_file  \${fasta_file}.state
-	collect_mutations.py --tree ${tree}.ingroup --states  \${fasta_file}.state --gencode $gencode --syn $params.syn4f_arg --no-mutspec --outdir mout --force
-	cat mout/run.log >> pyvolve_${label}.log
-	echo -e "\n\n">> pyvolve_${label}.log
-	cat mout/mutations.tsv >  \${fasta_file}.mutations
-done
-echo "Mutations extraction done"
+// for fasta_file in seqfile_sample-*.fasta
+// do
+// 	echo "Processing \$fasta_file"
+// 	alignment2iqtree_states.py \$fasta_file  \${fasta_file}.state
+// 	collect_mutations.py --tree ${tree}.ingroup --states  \${fasta_file}.state --gencode $gencode --syn $params.syn4f_arg --no-mutspec --outdir mout --force
+// 	cat mout/run.log >> pyvolve_${label}.log
+// 	echo -e "\n\n">> pyvolve_${label}.log
+// 	cat mout/mutations.tsv >  \${fasta_file}.mutations
+// done
+// echo "Mutations extraction done"
 
-concat_mutations.py seqfile_sample-*.fasta.mutations mutations_${label}_pyvolve.tsv
-echo "Mutations concatenation done"
+// concat_mutations.py seqfile_sample-*.fasta.mutations mutations_${label}_pyvolve.tsv
+// echo "Mutations concatenation done"
 
-calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_freqs.tsv -o . \
-	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f_arg $params.all_arg --mnum192 $params.mnum192 --plot -x pdf \
-	--substract12 \$spectra12 \$substractor192
-echo "Mutational spectrum calculated"
+// calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_freqs.tsv -o . \
+// 	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f_arg $params.all_arg --mnum192 $params.mnum192 --plot -x pdf \
+// 	--substract12 \$spectra12 \$substractor192
+// echo "Mutational spectrum calculated"
 
-"""
-}
-
+// """
+// }
 
 
 if (params.verbose == 'true') {
 	workflow.onComplete {
-	println "##Pipeline execution summary##"
-	println "---------------------------"
-	println "##Completed at: $workflow.complete"
-	println "##Duration: ${workflow.duration}"
-	println "##Success: ${workflow.success ? 'OK' : 'failed' }"
-	println "##Exit status: ${workflow.exitStatus}"
+	println "##Completed at: ${workflow.complete}; Duration: ${workflow.duration}; Success: ${workflow.success ? 'OK' : 'failed' }"
 	}
 }
