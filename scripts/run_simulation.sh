@@ -17,7 +17,6 @@ echo -e "\nInput directory: $indir"
 
 mkdir -p $indir/ms $indir/pyvolve/out
 
-method=iqtree
 replics=100
 GENCODE=2
 
@@ -69,34 +68,34 @@ if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
 	exit 0
 fi
 
-pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup \
+scripts/simulate_alignments.py -a ${mulal}.clean -t ${tree}.ingroup \
 	-s $indir/ms/ms12syn_internal_${organism}_${gene}.tsv \
 	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE \
-	-l 1 --write_anc --rates $rates
+	-l 1 --write_anc --rates $ > $indir/pyvolve_$(date -Is).log
 echo -e "Mutation samples generated\n"
 
 parallel --jobs $THREADS alignment2iqtree_states.py {} {}.state ::: $indir/pyvolve/seqfile_sample-*.fasta
 
-# HERE I DIDN'T USE RATES, BECAUSE EXP DON'T USED IN SEQUENTIAL ANALYSIS AND OBS FILTERED IN NB.
+# HERE I DIDN'T USE RATES, BECAUSE EXP DON'T USED IN SEQUENTIAL ANALYSIS AND OBS FILTERED IN NOTEBOOK.
 # BUT IN COMMON CASE WE MUST USE RATES HERE 
 parallel --jobs $THREADS collect_mutations.py --tree ${tree}.ingroup --states {} --gencode $GENCODE --syn --no-mutspec \
 			 --outdir $indir/pyvolve/mout/{#} --force --quiet ::: $indir/pyvolve/seqfile_sample-*.fasta.state
 
 rm $indir/pyvolve/seqfile_sample-*.fasta $indir/pyvolve/seqfile_sample-*.fasta.state
 
-concat_mutations.py $indir/pyvolve/mout/*/mutations.tsv $indir/pyvolve/mutations_${method}_pyvolve.tsv
+scripts/concat_mutations.py $indir/pyvolve/mout/*/mutations.tsv $indir/pyvolve/replics_mutations_pyvolve.tsv
 echo "Mutations concatenation done"
 
 
 # ALL BRANCHES
-calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $exp_mutations \
+calculate_mutspec.py -b $indir/pyvolve/replics_mutations_pyvolve.tsv -e $exp_mutations \
 	-o $indir/pyvolve/out --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
 	-l ${organism}_${gene}_simulated \
 	--substract12 $indir/ms/ms12syn_${organism}_${gene}.tsv \
     --substract192 $indir/ms/ms192syn_${organism}_${gene}.tsv \
 
 # INTERNAL BRANCHES ONLY
-calculate_mutspec.py -b $indir/pyvolve/mutations_${method}_pyvolve.tsv -e $exp_mutations \
+calculate_mutspec.py -b $indir/pyvolve/replics_mutations_pyvolve.tsv -e $exp_mutations \
 	-o $indir/pyvolve/out  --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
 	-l ${organism}_${gene}_internal_simulated --subset internal \
 	--substract12 $indir/ms/ms12syn_internal_${organism}_${gene}.tsv \

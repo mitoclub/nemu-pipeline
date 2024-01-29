@@ -130,11 +130,9 @@ def main(path_to_mulal, path_to_tree, path_to_mutspec, out, outcount, nreplics, 
         scale_tree_factor = scale_tree * len(mask) / (len(codons) * 3)
         print("Tree scaling factor = {:.2f}".format(scale_tree_factor))
 
-    tree = pyvolve.read_tree(file=path_to_tree)
-    # custom_mutation_asym = get_rates(path_to_mutspec)
-    uniform_mutation_rate = np.ones(12) / 12
-    codon_freqs = pyvolve.ReadFrequencies("codon", file=path_to_mulal, gencode=gencode, columns=columns)\
-        .compute_frequencies(type="codon")
+    tree = pyvolve.read_tree(file=path_to_tree, scale_tree=scale_tree_factor)
+    custom_mutation_asym = get_rates(path_to_mutspec)
+    codon_freqs = pyvolve.ReadFrequencies("codon", file=path_to_mulal, gencode=gencode, columns=columns).compute_frequencies(type="codon")
     model = pyvolve.Model("mutsel", {"state_freqs": codon_freqs, "mu": custom_mutation_asym}, gencode=gencode)
     root_seq = get_root_seq(path_to_mulal)
     root_seq_masked = root_seq if codons is None else codon_masking(root_seq, codons)
