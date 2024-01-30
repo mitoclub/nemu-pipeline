@@ -17,7 +17,7 @@ echo -e "\nInput directory: $indir"
 
 mkdir -p $indir/ms $indir/pyvolve/out
 
-replics=10
+replics=2
 GENCODE=2
 
 raw_tree=$indir/IQTREE/iqtree_anc_tree.nwk
@@ -48,7 +48,8 @@ calculate_mutspec.py -b $obs_mutations -e $exp_mutations -o $indir/ms \
 echo Reconstructed mutational spectrum calculated
 
 # tree processing
-nw_prune $raw_tree OUTGRP | python3 -c "import sys,re; print(re.sub('\d+\.\d+e-\d+', lambda m: '{:.10f}'.format(float(m.group())), sys.stdin.read().strip()))" > ${tree}.ingroup
+cp $raw_tree $tree
+nw_prune $tree OUTGRP | python3 -c "import sys,re; print(re.sub('\d+\.\d+e-\d+', lambda m: '{:.10f}'.format(float(m.group())), sys.stdin.read().strip()))" > ${tree}.ingroup
 echo "Tree outgroup pruned"
 ## replace digit-named nodes from RAxML
 nw_labels -L ${tree}.ingroup | grep -v ROOT | xargs -I{} echo -e "{}\tNode{}" > $indir/pyvolve/map.txt

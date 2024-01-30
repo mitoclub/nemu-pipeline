@@ -4,8 +4,9 @@ Simulation of multiple nucleotide alignments based on
 nucleotide alignment, tree file, 12-comp spectrum (rates) and site rates
 '''
 
-from collections import defaultdict
+import sys
 import random
+from collections import defaultdict
 from typing import Dict
 
 import click
@@ -18,9 +19,6 @@ from Bio.SeqRecord import SeqRecord
 
 from pymutspec.io import read_rates
 
-DEFAULT_REPLICS = 10
-DEFAULT_GENCODE = 2
-DEFAULT_RATECATCUTOFF = 1
 EPSILON = 1e-10
 
 
@@ -155,75 +153,89 @@ def get_consensus(path_to_msa, gencode):
     return ''.join(consensus)
         
 
+def read_codon_specific_trees(path_to_tree, path_to_rec_mut, msa_len: int):
+    mut = pd.read_csv(path_to_rec_mut, sep='\t')
+    mut = mut[mut.Label > 0]  # only syn
+    assert mut.PosInGene.max() <= msa_len
+    codons = range(1, msa_len // 3 + 1) # 1-based
+    mean_mut_rate = len(mut) / msa_len
+    trees = dict()
+    for pos in codons:
+        nuc_start = (pos - 1) * 3 + 1 # 1-based
+        nuc_end = nuc_start + 3
+        muts_in_codon = mut[mut.PosInGene.between(nuc_start, nuc_end, 'left')]
+        cdn_site_mut_rate = len(muts_in_codon) / 3
+        scale_tree_factor = cdn_site_mut_rate / mean_mut_rate + EPSILON
+        tree = pyvolve.read_tree(file=path_to_tree, scale_tree=scale_tree_factor)
+        trees[pos] = tree
+    return trees
+
+
+def run_simulation(trees, freqs, mutation_rates, codons, gencode=2):
+    msa_dct = defaultdict(str)
+    for pos in codons:
+        mutsel_params = {"state_freqs": freqs[pos], "mu": mutation_rates}
+        model = pyvolve.Model("mutsel", mutsel_params, gencode=gencode)
+        part = pyvolve.Partition(models=model, size=1)
+        evolver = pyvolve.Evolver(partitions=part, tree=trees[pos], gencode=gencode)
+        
+        # run simulation
+        evolver(
+            seqfile=None, countfile=None,
+            ratefile=None, infofile=None, write_anc=True,
+        )
+        cdn = evolver.get_sequences(True)
+        for node, x in cdn.items():
+            msa_dct[node] += x
+    
+    return msa_dct
+
+
 @click.command("simulation", help="")
 @click.option("-a", "--alignment", "path_to_msa", type=click.Path(True), help="")
 @click.option("-t", "--tree", "path_to_tree", type=click.Path(True), help="")
 @click.option("-s", "--spectra", "path_to_mutspec", type=click.Path(True), help="")
-@click.option("--rates", type=click.Path(True), default=None, help="path to rates from iqtree that will be used for positions masking")
 @click.option("-o", "--outseqs", type=click.Path(writable=True), help="Output sequences alignment (fasta)")
-@click.option("--outcount", type=click.Path(writable=True), default=None, help="")
-@click.option("-r", "--replics", "nreplics", default=DEFAULT_REPLICS, show_default=True, type=int, help="")
-@click.option("-w", "--write_anc", is_flag=True, help="")
-@click.option("-c", "--gencode", default=DEFAULT_GENCODE, show_default=True, help="")
-@click.option("--ratecat_cutoff", default=DEFAULT_RATECATCUTOFF, show_default=True, help="")
-# @click.option("-l", "--scale_tree", default=1., show_default=True, help="")
-def main(path_to_msa, path_to_tree, path_to_mutspec, outseqs, outcount, nreplics, write_anc, gencode, ratecat_cutoff, rates):
-    tree = pyvolve.read_tree(file=path_to_tree)  # scale_tree=scale_tree_factor
+@click.option("--rates", type=click.Path(True), default=None, help="path to rates from iqtree that will be used for positions masking")
+@click.option("--rec", "path_to_rec", type=click.Path(True), help='path to table with reconstructed (observed) mutations')
+@click.option("-r", "--replics", default=10, show_default=True, type=int, help="")
+@click.option("-c", "--gencode", default=2, show_default=True, help="")
+@click.option("--ratecat_cutoff", default=1, show_default=True, help="")
+def main(path_to_msa, path_to_tree, path_to_mutspec, rates, path_to_rec, outseqs, replics, gencode, ratecat_cutoff):
     custom_mutation_asym = read_spectrum(path_to_mutspec)
     codons = get_variable_codon_positions(rates, ratecat_cutoff) if rates else None
-    print(f'rates: {custom_mutation_asym}')
-    print(f'#variable codons: {len(codons)}')
-    freqs = get_codon_freqs(path_to_msa, codons, 2)
     consensus = get_consensus(path_to_msa, gencode)
+    used_codons_share = len(codons) * 3 / len(consensus) * 100
+    print(f'rates: {custom_mutation_asym}\n#variable codons: {len(codons)}\nused codons share: {used_codons_share:.2f}%', file=sys.stderr)
+    freqs = get_codon_freqs(path_to_msa, codons, 2)
+    trees = read_codon_specific_trees(path_to_tree, path_to_rec, len(consensus))
 
-    partitions = []
-    for pos in codons:
-        mutsel_params = {
-            "state_freqs": freqs[pos], 
-            "mu": custom_mutation_asym
-        }
-        model = pyvolve.Model("mutsel", mutsel_params, gencode=gencode)
-        part = pyvolve.Partition(models=model, size=1)
-        partitions.append(part)
-
-    evolver = pyvolve.Evolver(partitions=partitions, tree=tree, gencode=gencode)
-
-    for i in range(nreplics):
-        print("Generating replica {}".format(i))
+    for i in range(replics):
+        print(f"Generating replica {i}", file=sys.stderr)
         seqfile = outseqs.replace(".fasta", f"_sample-{i:04}.fasta")
-        cur_outcount = outcount + f"_sample-{i:04}" if outcount else None
-        if codons is None:
-            evolver(
-                seqfile=seqfile, 
-                countfile=cur_outcount,
-                ratefile=None, infofile=None,
-                write_anc=write_anc,
-            )
-        else:
-            evolver(
-                seqfile=None,
-                countfile=cur_outcount,
-                ratefile=None, infofile=None,
-                write_anc=write_anc,
-            )
-            msa_dct = evolver.get_sequences(True)
-            unmasked_aln = msa_unmasking(consensus, codons, msa_dct)
-            write_seqs(unmasked_aln, seqfile)
-    print('Done')
+        msa_dct = run_simulation(trees, freqs, custom_mutation_asym, codons, gencode)
+        unmasked_aln = msa_unmasking(consensus, codons, msa_dct)
+        write_seqs(unmasked_aln, seqfile)
+    print('Done', file=sys.stderr)
+
+
+'''Надо будет ещё пересмотреть последующий анализ мутаций. 
+Мы сравниваем конкретные количества мутаций без нормировки, но чтобы так делать, нужно получить хотя бы похожие количества мутаций в реконструкции и симуляции. 
+Нам ещё не удалось приблизиться к такому,'''
 
 
 if __name__ == "__main__":
-    main()
-    # gene = 'mouse_cytb'
-    # folder = f'./data/selection_search/{gene}'
+    # main()
+    gene = 'mouse_cytb'
+    folder = f'./data/selection_search/{gene}'
 
-    # msa = f'{folder}/pyvolve/mulal.fasta.clean'
-    # tree = f'{folder}/pyvolve/tree.nwk.ingroup'
-    # sp = f'{folder}/ms/ms12syn_internal_{gene}.tsv'
-    # sr = f'./data/selection_search/rates/{gene}.rate'
-    # out = f'test_simulation/{gene}.fasta'
-    # outcount='test_simulation/outcount'
-    # main(f"-a {msa} -t {tree} -s {sp} -o {out} --rates {sr} -w -r 2 -c 2 --outcount {outcount}".split())
+    msa = f'{folder}/pyvolve/mulal.fasta.clean'
+    tree = f'{folder}/pyvolve/tree.nwk.ingroup'
+    sp = f'{folder}/ms/ms12syn_internal_{gene}.tsv'
+    sr = f'./data/selection_search/rates/{gene}.rate'
+    rec = f'{folder}/tables/observed_mutations_iqtree.tsv'
+    out = f'test_simulation/{gene}.fasta'
+    main(f"-a {msa} -t {tree} -s {sp} -o {out} --rates {sr} --rec {rec} -r 2 -c 2".split())
     
 
     # import json
@@ -270,3 +282,6 @@ if __name__ == "__main__":
     # print(f'#variable codons: {len(codons)}')
     # freqs = get_codon_freqs(path_to_msa, codons, 2)
     # print(freqs)
+
+
+# collect_mutations.py --tree data/selection_search/mouse_cytb/pyvolve/tree.nwk --states test_simulation/mouse_cytb_sample-0000.fasta --states-fmt fasta --gencode 2 --syn --no-mutspec --outdir test_simulation/out0 --proba
