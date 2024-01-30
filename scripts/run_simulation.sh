@@ -17,7 +17,7 @@ echo -e "\nInput directory: $indir"
 
 mkdir -p $indir/ms $indir/pyvolve/out
 
-replics=100
+replics=10
 GENCODE=2
 
 raw_tree=$indir/IQTREE/iqtree_anc_tree.nwk
@@ -42,10 +42,10 @@ mulal=$indir/pyvolve/mulal.fasta
 
 echo "Processing spectra calculation..."
 calculate_mutspec.py -b $obs_mutations -e $exp_mutations -o $indir/ms \
-    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} --mnum192 0
+    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} --mnum192 0 2>/dev/null
 calculate_mutspec.py -b $obs_mutations -e $exp_mutations -o $indir/ms \
-    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} --subset internal --mnum192 0
-echo "Reconstructed mutational spectrum calculated"
+    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} --subset internal --mnum192 0 2>/dev/null
+echo Reconstructed mutational spectrum calculated
 
 # tree processing
 nw_prune $raw_tree OUTGRP | python3 -c "import sys,re; print(re.sub('\d+\.\d+e-\d+', lambda m: '{:.10f}'.format(float(m.group())), sys.stdin.read().strip()))" > ${tree}.ingroup
@@ -68,10 +68,11 @@ if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
 	exit 0
 fi
 
-scripts/simulate_alignments.py -a ${mulal}.clean -t ${tree}.ingroup \
+echo -e "Simulate alignment"
+python3 scripts/simulate_alignments.py -a ${mulal}.clean -t ${tree}.ingroup \
 	-s $indir/ms/ms12syn_internal_${organism}_${gene}.tsv \
 	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE \
-	-l 1 --write_anc --rates $ > $indir/pyvolve_$(date -Is).log
+	--write_anc --rates $rates > $indir/pyvolve_$(date -Is).log
 echo -e "Mutation samples generated\n"
 
 parallel --jobs $THREADS alignment2iqtree_states.py {} {}.state ::: $indir/pyvolve/seqfile_sample-*.fasta
@@ -83,7 +84,7 @@ parallel --jobs $THREADS collect_mutations.py --tree ${tree}.ingroup --states {}
 
 rm $indir/pyvolve/seqfile_sample-*.fasta $indir/pyvolve/seqfile_sample-*.fasta.state
 
-scripts/concat_mutations.py $indir/pyvolve/mout/*/mutations.tsv $indir/pyvolve/replics_mutations_pyvolve.tsv
+python3 scripts/concat_mutations.py $indir/pyvolve/mout/*/mutations.tsv $indir/pyvolve/replics_mutations_pyvolve.tsv
 echo "Mutations concatenation done"
 
 
@@ -92,14 +93,14 @@ calculate_mutspec.py -b $indir/pyvolve/replics_mutations_pyvolve.tsv -e $exp_mut
 	-o $indir/pyvolve/out --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
 	-l ${organism}_${gene}_simulated \
 	--substract12 $indir/ms/ms12syn_${organism}_${gene}.tsv \
-    --substract192 $indir/ms/ms192syn_${organism}_${gene}.tsv \
+    --substract192 $indir/ms/ms192syn_${organism}_${gene}.tsv 2>/dev/null
 
 # INTERNAL BRANCHES ONLY
 calculate_mutspec.py -b $indir/pyvolve/replics_mutations_pyvolve.tsv -e $exp_mutations \
 	-o $indir/pyvolve/out  --exclude OUTGRP,ROOT --syn --mnum192 0 --plot -x pdf \
 	-l ${organism}_${gene}_internal_simulated --subset internal \
 	--substract12 $indir/ms/ms12syn_internal_${organism}_${gene}.tsv \
-    --substract192 $indir/ms/ms192syn_internal_${organism}_${gene}.tsv \
+    --substract192 $indir/ms/ms192syn_internal_${organism}_${gene}.tsv 2>/dev/null
 
 echo "Simulated mutational spectrum calculated"
 
