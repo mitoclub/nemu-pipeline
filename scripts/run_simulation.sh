@@ -17,7 +17,7 @@ echo -e "\nInput directory: $indir"
 
 mkdir -p $indir/ms $indir/pyvolve/out
 
-replics=2
+replics=100
 GENCODE=2
 
 raw_tree=$indir/IQTREE/iqtree_anc_tree.nwk
@@ -25,6 +25,7 @@ raw_mulal=$indir/sequences/alignment_checked.fasta
 obs_mutations=$indir/tables/observed_mutations_iqtree.tsv
 exp_mutations=$indir/exp_muts_invariant.tsv  # TODO create
 rates=data/selection_search/rates/${organism}_${gene}.rate
+iqtree_logs=$indir/logs/iqtree_anc_report.log
 
 if [ ! -f $obs_mutations ] || [ ! -f $exp_mutations ] || 
 	   [ ! -f $raw_mulal ] || [ ! -f $raw_tree ] || [ ! -f $rates ]; then
@@ -42,9 +43,11 @@ mulal=$indir/pyvolve/mulal.fasta
 
 echo "Processing spectra calculation..."
 calculate_mutspec.py -b $obs_mutations -e $exp_mutations -o $indir/ms \
-    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} --mnum192 0 2>/dev/null
+    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} \
+	--mnum192 0 2>/dev/null
 calculate_mutspec.py -b $obs_mutations -e $exp_mutations -o $indir/ms \
-    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} --subset internal --mnum192 0 2>/dev/null
+    --exclude OUTGRP,ROOT --proba --syn --plot -x pdf -l ${organism}_${gene} \
+	--subset internal --mnum192 0 2>/dev/null
 echo Reconstructed mutational spectrum calculated
 
 # tree processing
@@ -70,22 +73,31 @@ if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
 fi
 
 echo -e "Simulate alignment"
-python3 scripts/simulate_alignments.py -a ${mulal}.clean -t ${tree}.ingroup \
-	-s $indir/ms/ms12syn_internal_${organism}_${gene}.tsv \
-	-o $indir/pyvolve/seqfile.fasta -r $replics -c $GENCODE \
-	--write_anc --rates $rates > $indir/pyvolve_$(date -Is).log
+python3 scripts/simulate_alignments.py \
+	-a ${mulal}.clean -t ${tree}.ingroup \
+	-s $indir/ms/ms12syn_${organism}_${gene}.tsv \
+	-o $indir/pyvolve/seqfile.fasta \
+	--rates $rates --rec $obs_mutations --iqtree-log $iqtree_logs \
+	-r $replics -c $GENCODE > $indir/pyvolve/simulation_$(date -Is).log
 echo -e "Mutation samples generated\n"
 
-parallel --jobs $THREADS alignment2iqtree_states.py {} {}.state ::: $indir/pyvolve/seqfile_sample-*.fasta
+# useless step, TODO drop it and read states as fasta in collect_mutaitons.py
+parallel --jobs $THREADS alignment2iqtree_states.py {} {}.state \
+	::: $indir/pyvolve/seqfile_sample-*.fasta
 
 # HERE I DIDN'T USE RATES, BECAUSE EXP DON'T USED IN SEQUENTIAL ANALYSIS AND OBS FILTERED IN NOTEBOOK.
 # BUT IN COMMON CASE WE MUST USE RATES HERE 
-parallel --jobs $THREADS collect_mutations.py --tree ${tree}.ingroup --states {} --gencode $GENCODE --syn --no-mutspec \
-			 --outdir $indir/pyvolve/mout/{#} --force --quiet ::: $indir/pyvolve/seqfile_sample-*.fasta.state
+parallel --jobs $THREADS collect_mutations.py --tree $tree --states {} \
+	--gencode $GENCODE --syn --no-mutspec --outdir $indir/pyvolve/mout/{#} \
+	--force --quiet ::: $indir/pyvolve/seqfile_sample-*.fasta.state
+echo "Mutations collected"
 
-rm $indir/pyvolve/seqfile_sample-*.fasta $indir/pyvolve/seqfile_sample-*.fasta.state
+# TODO drop
+# rm $indir/pyvolve/seqfile_sample-*.fasta $indir/pyvolve/seqfile_sample-*.fasta.state
+rm $indir/pyvolve/seqfile_sample-*.fasta.state
 
-python3 scripts/concat_mutations.py $indir/pyvolve/mout/*/mutations.tsv $indir/pyvolve/replics_mutations_pyvolve.tsv
+python3 scripts/concat_mutations.py \
+	$indir/pyvolve/mout/*/mutations.tsv $indir/pyvolve/replics_mutations_pyvolve.tsv
 echo "Mutations concatenation done"
 
 
@@ -107,3 +119,10 @@ echo "Simulated mutational spectrum calculated"
 
 done
 done
+
+# mouse nd1  - 00:12 min per 1 replic
+# mouse cytb - 01:25 min per 1 replic
+# mouse cox1 - 00:22 min per 1 replic
+# human nd1  - 14:35 min per 1 replic
+# human cytb - 25:11 min per 1 replic
+# human cox1 - 27:35 min per 1 replic

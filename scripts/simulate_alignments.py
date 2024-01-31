@@ -4,6 +4,7 @@ Simulation of multiple nucleotide alignments based on
 nucleotide alignment, tree file, 12-comp spectrum (rates) and site rates
 '''
 
+import copy
 import sys
 import random
 from collections import defaultdict
@@ -11,6 +12,7 @@ from typing import Dict
 
 import click
 import pyvolve
+import tqdm
 import numpy as np
 import pandas as pd
 from Bio import SeqIO
@@ -18,6 +20,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from pymutspec.io import read_rates
+from traitlets import default
 
 EPSILON = 1e-10
 
@@ -151,29 +154,59 @@ def get_consensus(path_to_msa, gencode):
         cdn = g.codons[pos_max]
         consensus.append(cdn)
     return ''.join(consensus)
-        
 
-def read_codon_specific_trees(path_to_tree, path_to_rec_mut, msa_len: int):
+
+def scale_tree(t: pyvolve.newick.Node, factor=1):
+    if isinstance(t.branch_length, (int, float)):
+        t.branch_length *= factor
+    if len(t.children) == 2:
+        c1, c2 = t.children
+        scale_tree(c1, factor)
+        scale_tree(c2, factor)
+    elif len(t.children) == 0:
+        return
+    else:
+        raise Exception('Not a binary tree!')
+
+
+def read_codon_specific_trees(path_to_tree, path_to_rec_mut, msa_len: int, par_factor):
     mut = pd.read_csv(path_to_rec_mut, sep='\t')
+    print(f'nmut (all): {len(mut)}', file=sys.stderr)
     mut = mut[mut.Label > 0]  # only syn
+    print(f'nmut (syn): {len(mut)}', file=sys.stderr)
     assert mut.PosInGene.max() <= msa_len
     codons = range(1, msa_len // 3 + 1) # 1-based
     mean_mut_rate = len(mut) / msa_len
+    tree_base = pyvolve.read_tree(file=path_to_tree)
     trees = dict()
-    for pos in codons:
+    for pos in tqdm.tqdm(codons, 'Scale trees'):
         nuc_start = (pos - 1) * 3 + 1 # 1-based
         nuc_end = nuc_start + 3
         muts_in_codon = mut[mut.PosInGene.between(nuc_start, nuc_end, 'left')]
         cdn_site_mut_rate = len(muts_in_codon) / 3
-        scale_tree_factor = cdn_site_mut_rate / mean_mut_rate + EPSILON
-        tree = pyvolve.read_tree(file=path_to_tree, scale_tree=scale_tree_factor)
+        scale_tree_factor = cdn_site_mut_rate / mean_mut_rate * par_factor + EPSILON
+        tree = copy.deepcopy(tree_base)
+        scale_tree(tree, scale_tree_factor)
         trees[pos] = tree
     return trees
 
 
+def read_parsimony_informative_sites_num(path_to_log):
+    with open(path_to_log, 'r') as fin:
+        for line in fin:
+            if 'Number of parsimony informative sites:' in line:
+                n = line.strip().split()[-1]
+                try:
+                    n = int(n)
+                except Exception as e:
+                    raise e
+                break
+    return n
+
+
 def run_simulation(trees, freqs, mutation_rates, codons, gencode=2):
     msa_dct = defaultdict(str)
-    for pos in codons:
+    for pos in tqdm.tqdm(codons, 'Simulate codons'):
         mutsel_params = {"state_freqs": freqs[pos], "mu": mutation_rates}
         model = pyvolve.Model("mutsel", mutsel_params, gencode=gencode)
         part = pyvolve.Partition(models=model, size=1)
@@ -191,24 +224,27 @@ def run_simulation(trees, freqs, mutation_rates, codons, gencode=2):
     return msa_dct
 
 
-@click.command("simulation", help="")
+@click.command("Simulation", help="")
 @click.option("-a", "--alignment", "path_to_msa", type=click.Path(True), help="")
 @click.option("-t", "--tree", "path_to_tree", type=click.Path(True), help="")
 @click.option("-s", "--spectra", "path_to_mutspec", type=click.Path(True), help="")
 @click.option("-o", "--outseqs", type=click.Path(writable=True), help="Output sequences alignment (fasta)")
 @click.option("--rates", type=click.Path(True), default=None, help="path to rates from iqtree that will be used for positions masking")
 @click.option("--rec", "path_to_rec", type=click.Path(True), help='path to table with reconstructed (observed) mutations')
+@click.option("--iqtree-log", type=click.Path(True), default=None, help='path to iqtree_anc_report.log')
 @click.option("-r", "--replics", default=10, show_default=True, type=int, help="")
 @click.option("-c", "--gencode", default=2, show_default=True, help="")
 @click.option("--ratecat_cutoff", default=1, show_default=True, help="")
-def main(path_to_msa, path_to_tree, path_to_mutspec, rates, path_to_rec, outseqs, replics, gencode, ratecat_cutoff):
+def main(path_to_msa, path_to_tree, path_to_mutspec, rates, path_to_rec, iqtree_log, outseqs, replics, gencode, ratecat_cutoff):
     custom_mutation_asym = read_spectrum(path_to_mutspec)
     codons = get_variable_codon_positions(rates, ratecat_cutoff) if rates else None
     consensus = get_consensus(path_to_msa, gencode)
     used_codons_share = len(codons) * 3 / len(consensus) * 100
     print(f'rates: {custom_mutation_asym}\n#variable codons: {len(codons)}\nused codons share: {used_codons_share:.2f}%', file=sys.stderr)
     freqs = get_codon_freqs(path_to_msa, codons, 2)
-    trees = read_codon_specific_trees(path_to_tree, path_to_rec, len(consensus))
+    n_par_sites = read_parsimony_informative_sites_num(iqtree_log) if iqtree_log else len(codons)
+    par_factor = n_par_sites // 3
+    trees = read_codon_specific_trees(path_to_tree, path_to_rec, len(consensus), par_factor)
 
     for i in range(replics):
         print(f"Generating replica {i}", file=sys.stderr)
@@ -225,63 +261,20 @@ def main(path_to_msa, path_to_tree, path_to_mutspec, rates, path_to_rec, outseqs
 
 
 if __name__ == "__main__":
-    # main()
-    gene = 'mouse_cytb'
-    folder = f'./data/selection_search/{gene}'
+    main()
+    # gene = 'mouse_cytb'
+    # folder = f'./data/selection_search/{gene}'
 
-    msa = f'{folder}/pyvolve/mulal.fasta.clean'
-    tree = f'{folder}/pyvolve/tree.nwk.ingroup'
-    sp = f'{folder}/ms/ms12syn_internal_{gene}.tsv'
-    sr = f'./data/selection_search/rates/{gene}.rate'
-    rec = f'{folder}/tables/observed_mutations_iqtree.tsv'
-    out = f'test_simulation/{gene}.fasta'
-    main(f"-a {msa} -t {tree} -s {sp} -o {out} --rates {sr} --rec {rec} -r 2 -c 2".split())
-    
-
-    # import json
-    # a = open('consensus.txt')
-    # consensus = json.load(a)
-    # a.close()
-    # a = open('codons.txt')
-    # codons = json.load(a)
-    # a.close()
-    # a = open('aln_dct.txt')
-    # msa_dct = json.load(a)
-    # a.close()
-
-    # codons = get_variable_codon_positions(sr, 1)
-    # freqs = get_codon_freqs(msa, codons, 2)
-    # consensus = get_consensus(msa, 2)
-    
-    # seqs = {x.id: str(x.seq) for x in SeqIO.parse(msa, 'fasta')}
-    # seqs_masked = {k: seq_masking(v, codons) for k,v in seqs.items()}
-    # seqs_unmasked = {k: seq_unmasking(v, codons, consensus) for k,v in seqs_masked.items()}
-    # seqs_unmasked2 = msa_unmasking(consensus, codons, seqs_masked)
-
-    # seqs_unmasked == seqs_unmasked2
-
-    # codons = [1,3,5]
-    # seqs={'seq': 'ACAAACATACGAAAA'}
-    # consensus =  'XXXXXXXXXXXXXXX'
-    # print(codons)
+    # msa = f'{folder}/pyvolve/mulal.fasta.clean'
+    # tree = f'{folder}/pyvolve/tree.nwk.ingroup'
+    # sp = f'{folder}/ms/ms12syn_internal_{gene}.tsv'
+    # sr = f'./data/selection_search/rates/{gene}.rate'
+    # rec = f'{folder}/tables/observed_mutations_iqtree.tsv'
+    # llog = f'{folder}/logs/iqtree_anc_report.log'
+    # out = f'test_simulation/{gene}.fasta'
+    # main(f"-a {msa} -t {tree} -s {sp} -o {out} --rates {sr} --rec {rec} --iqtree-log {llog} -r 2 -c 2".split())
 
 
-    # for i, seq in enumerate(seqs):
-    #     seq_unmasked = codonify(seqs_unmasked[i])
-    #     seq = codonify(seq)
-    #     for j, cdn in enumerate(seq):
-    #         cdn_unmasked = seq_unmasked[j]
-    #         if cdn != cdn_unmasked:
-    #             print(f'{i}, {j}, {cdn}, {cdn_unmasked}')
-        # break
-    
-    # assert seqs == seqs_unmasked
-
-    # main()
-    # codons = get_variable_codon_positions(path_to_rates, 1)
-    # print(f'#variable codons: {len(codons)}')
-    # freqs = get_codon_freqs(path_to_msa, codons, 2)
-    # print(freqs)
-
-
-# collect_mutations.py --tree data/selection_search/mouse_cytb/pyvolve/tree.nwk --states test_simulation/mouse_cytb_sample-0000.fasta --states-fmt fasta --gencode 2 --syn --no-mutspec --outdir test_simulation/out0 --proba
+# collect_mutations.py --tree data/selection_search/mouse_cytb/pyvolve/tree.nwk \
+# --states test_simulation/mouse_cytb_sample-0000.fasta --states-fmt fasta \
+# --gencode 2 --syn --no-mutspec --outdir test_simulation/out0 --force
