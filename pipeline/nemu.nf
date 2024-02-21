@@ -80,6 +80,7 @@ output:
  file "input_seq_char_counts.log" optional true  into g_398_logFile
 
 """
+echo init init QC
 if [ `grep -c ">" $query` -ne 1 ]; then
 	echo "Query fasta must contain single amino acid sequence"
 	exit 1
