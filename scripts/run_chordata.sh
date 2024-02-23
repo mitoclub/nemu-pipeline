@@ -7,9 +7,9 @@ PATH_TO_OUTPUT=/home/kpotoh/nemu-pipeline/data/chordata2/output
 
 GENES=("Cytb" "CO1" "CO2" "CO3" "ND1" "ND2" "ND3" "ND4" "ND4L" "ND5" "ND6" "A6" "A8")
 
-MAX_NJOBS=60
+MAX_NJOBS=100
 SLEEP_TIME=200  # secs
-RUNLIMIT=5000
+RUNLIMIT=20000
 COUNTER=1
 echo "Execute $RUNLIMIT genes"
 
@@ -28,7 +28,7 @@ for gene in ${GENES[@]}; do
 
         workdir=$OUTDIR/$gene_species
         if [ -e $workdir ]; then 
-            echo "'$workdir' already exist: pass"
+            # echo "'$workdir' already exist: pass"
             continue
         fi
         let COUNTER++
