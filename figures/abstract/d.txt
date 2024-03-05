@@ -1,0 +1,208 @@
+
+1_V_first
+gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 1.00
+a 0.00
+T 0.00
+C 0.00
+1_V_second
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 1.00
+C 0.00
+1_V_third
+ggggggggggggggggggggggggggggggggggggg 0.36
+aaaaaaaaaaaaaaaa 0.16
+TTTTTTTTTTTTTTTTTTTTTTTTTTTT 0.27
+CCCCCCCCCCCCCCCCCCCCCC 0.21
+
+2_A_first
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 1.00
+a 0.00
+T 0.00
+C 0.00
+2_A_second
+g 0.00
+a 0.00
+T 0.00
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 1.00
+2_A_third
+ggggggggggggggggggggggggggggggggggg 0.34
+aaaaaaaaaaaaaaaaaaaaaa 0.22
+TTTTTTTTTTTTTTTTTT 0.17
+CCCCCCCCCCCCCCCCCCCCCCCCCCC 0.27
+
+3_S_first
+g 0.00
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0.42
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 0.58
+C 0.00
+3_S_second
+gggggggggggggggggggggggggggggggggggggggggg 0.42
+a 0.00
+T 0.00
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0.58
+3_S_third
+ggggggggggggggg 0.15
+aaaaaaaaaaaaaa 0.13
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 0.31
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0.41
+
+4_A_first
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 1.00
+a 0.00
+T 0.00
+C 0.00
+4_A_second
+g 0.00
+a 0.00
+T 0.00
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 1.00
+4_A_third
+ggggggggggggggggggggggggggggggggggg 0.34
+aaaaaaaaaaaaaaaaaaaaaa 0.22
+TTTTTTTTTTTTTTTTTT 0.17
+CCCCCCCCCCCCCCCCCCCCCCCCCCC 0.27
+
+5_E_first
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 1.00
+a 0.00
+T 0.00
+C 0.00
+5_E_second
+g 0.00
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1.00
+T 0.00
+C 0.00
+5_E_third
+gggggggggggggggggggggggggggggggg 0.32
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0.68
+T 0.00
+C 0.00
+
+6_K_first
+g 0.00
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1.00
+T 0.00
+C 0.00
+6_K_second
+g 0.00
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1.00
+T 0.00
+C 0.00
+6_K_third
+ggggggggggggggggggggggggg 0.25
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0.75
+T 0.00
+C 0.00
+
+7_N_first
+g 0.00
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1.00
+T 0.00
+C 0.00
+7_N_second
+g 0.00
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1.00
+T 0.00
+C 0.00
+7_N_third
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 0.46
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0.54
+
+8_L_first
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTT 0.26
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0.74
+8_L_second
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 1.00
+C 0.00
+8_L_third
+gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 0.62
+aaaaaaaaaaaaaaaaaa 0.17
+TTTTTTTTTTT 0.11
+CCCCCCCCCCC 0.10
+
+9_F_first
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 1.00
+C 0.00
+9_F_second
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 1.00
+C 0.00
+9_F_third
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 0.57
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0.43
+
+10_A_first
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 1.00
+a 0.00
+T 0.00
+C 0.00
+10_A_second
+g 0.00
+a 0.00
+T 0.00
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 1.00
+10_A_third
+ggggggggggggggggggggggggggggggggggg 0.34
+aaaaaaaaaaaaaaaaaaaaaa 0.22
+TTTTTTTTTTTTTTTTTT 0.17
+CCCCCCCCCCCCCCCCCCCCCCCCCCC 0.27
+
+11_L_first
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTT 0.26
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0.74
+11_L_second
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 1.00
+C 0.00
+11_L_third
+gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 0.62
+aaaaaaaaaaaaaaaaaa 0.17
+TTTTTTTTTTT 0.11
+CCCCCCCCCCC 0.10
+
+12_E_first
+ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg 1.00
+a 0.00
+T 0.00
+C 0.00
+12_E_second
+g 0.00
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1.00
+T 0.00
+C 0.00
+12_E_third
+gggggggggggggggggggggggggggggggg 0.32
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0.68
+T 0.00
+C 0.00
+
+13_I_first
+g 0.00
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 1.00
+T 0.00
+C 0.00
+13_I_second
+g 0.00
+a 0.00
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 1.00
+C 0.00
+13_I_third
+g 0.00
+aaaaaaaaa 0.09
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT 0.50
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0.41
