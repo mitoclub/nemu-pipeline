@@ -21,6 +21,14 @@ if (!params.uncertainty_coef){params.uncertainty_coef = "false"}
 if (!params.njobs){params.njobs = "1"}
 THREADS = params.njobs
 
+// if DB is NT, check that genus taxid specified
+if (params.DB.endsWith("nt")){
+	if (!params.genus_taxid){
+		println "ERROR: Specify genus taxid when run pipeline on NT database"
+		exit 1
+	}
+}
+
 // TODO add specific params logs
 if (params.verbose == 'true') {
 	println ""
@@ -54,7 +62,8 @@ params.all_arg   = params.all == "true" ? "--all" : ""
 params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
 params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
 
-Channel.value(params.Mt_DB).into{g_15_commondb_path_g_406;g_15_commondb_path_g_415}
+Channel.value(params.DB).into{g_15_commondb_path_g_406;g_15_commondb_path_g_415}
+Channel.value(params.genus_taxid).set{genus_taxid_value}
 query_protein_sequence = file(params.sequence, type: 'any') 
 Channel.value(params.gencode).into{g_220_gencode_g_406;g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
 Channel.value("false").set{aligned_param}
@@ -110,6 +119,7 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /report.blast$/) "logs/$filename"
 	else if (filename =~ /no_hits.log$/) "logs/$filename"
+	else if (filename =~ /genus_species_taxids.txt$/) "logs/$filename"
 }
 
 input:
@@ -117,20 +127,34 @@ input:
  file query from g_398_multipleFasta_g_406
  val DB from g_15_commondb_path_g_406
  val species from g_1_species_name_g_415
+ val GENUS_TAXID from genus_taxid_value
 
 output:
  file "report.blast"  into g_406_blast_output_g_412
  file "no_hits.log" optional true  into g_406_logFile
+ file "genus_species_taxids.txt" optional true  into taxids_logFile
 
 script:
 """
 report=report.blast
 nseqs=500
 
+if [[ $DB == *nt ]]; then
+	get_species_taxids.sh -t $GENUS_TAXID > genus_species_taxids.txt
+	TAXIDS=`cat genus_species_taxids.txt | paste -sd,`
+	echo -e "Search in these taxids:\n\$TAXIDS\n"
+fi
+
 while true
 do   
     echo "INFO: run blasting; nseqs=\$nseqs"
-    tblastn -db $DB -db_gencode $gencode -num_descriptions \$nseqs -num_alignments \$nseqs -query $query -out \$report -num_threads $THREADS
+    if [[ $DB == *nt ]]; then
+        tblastn -db $DB -db_gencode $gencode -num_descriptions \$nseqs -num_alignments \$nseqs \
+                -query $query -out \$report -evalue 0.001 -num_threads $THREADS -taxids \$TAXIDS
+	else
+		tblastn -db $DB -db_gencode $gencode -num_descriptions \$nseqs -num_alignments \$nseqs \
+				-query $query -out \$report -num_threads $THREADS
+	fi		
     if [ `grep -c "No hits found" \$report` -eq 0 ]; then 
         echo "SUCCESS: hits found in the database for given query"
     else
@@ -142,7 +166,7 @@ do
     if [ `grep -c "$species" \$report` -ge \$((nseqs * 2 - 10)) ]; then
         nseqs=\$((nseqs * 4))
         if [ \$nseqs -gt $NSEQS_LIMIT ]; then
-            echo "UNEXPECTED ERROR: database cannot contain more than $NSEQS_LIMIT sequences of one species"
+            echo "UNEXPECTED ERROR: database cannot contain more than $NSEQS_LIMIT sequences of one gene of some species"
             exit 1
         fi
         echo "INFO: run blasting again due to abcence of different species; nseqs=\$nseqs"
@@ -330,7 +354,7 @@ echo "Do quality control"
 }
 
 
-process write_files_description {
+process write_readme {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->

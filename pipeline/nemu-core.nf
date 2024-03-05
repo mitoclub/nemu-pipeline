@@ -176,7 +176,7 @@ echo "Do quality control"
 }
 
 
-process write_files_description {
+process write_readme {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
