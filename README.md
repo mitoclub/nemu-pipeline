@@ -16,12 +16,14 @@ NeMu pipeline developed using Nextflow. Available [here](./pipeline/).
 
 ## Singularity container
 
-The pipeline relies on a diverse set of dependencies. To simplify execution, ensure compatibility across different operating systems, all these dependencies have been packaged within a [Singularity container](./singularity/).
+The pipeline relies on a diverse set of dependencies. To simplify execution, ensure compatibility across different operating systems, all these dependencies have been packaged within a [Singularity container](./singularity/). We used Singularity 3.10.2.
 
 ### Used software
 
-Here listed all languages, programs and packages used in the NeMu pipeline during mutatoinal spectra calculations:
+Here listed all dependencies used in the NeMu pipeline during mutatoinal spectra calculations:
 
+- Linux (e.g. Ubuntu)
+- Nextflow 22.10.1.5828
 - Python 3.8.12
 - Perl v5.16.3
 - R 3.6.0

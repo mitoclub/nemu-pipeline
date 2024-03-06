@@ -4,6 +4,7 @@
         "**/data/chordata2/output/**": true,
         "**/data/MIDORI2/**": true,
         "**/env_*/**": true,
-        "**/nemu_webpage/**": true
+        "**/nemu_webpage/**": true,
+        "**/nemu_data/**": true
     }
 }
