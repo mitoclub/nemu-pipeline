@@ -1,0 +1,214 @@
+1
+https://doi.org/10.1093/gbe/evab104
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8743035
+>Mutational Signatures of Replication Timing and Epigenetic Modification Persist through the Global Divergence of Mutation Spectra across the Great Ape Phylogeny.</
+
+2
+https://doi.org/10.1073/pnas.2013798118
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8166128
+>Nonparametric coalescent inference of mutation spectrum history and demography.</
+
+3
+https://doi.org/10.1038/nature12477
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3776390
+>Signatures of mutational processes in human cancer.</
+
+4
+https://doi.org/10.1073/pnas.2119720119
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8851560
+>Mutation bias shapes the spectrum of adaptive substitutions.</
+
+5
+https://doi.org/10.1073/pnas.2207355120
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10235995
+>Shifts in mutation spectra enhance access to beneficial mutations.</
+
+6
+https://doi.org/10.1126/science.1212986
+https://www.ncbi.nlm.nih.gov/pubmed/22282810
+>The molecular diversity of adaptive convergence.</
+
+7
+https://doi.org/10.1038/s41598-022-19928-5
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9475022
+>Selection in a growing colony biases results of mutation accumulation experiments.</
+
+8
+https://doi.org/10.1093/gbe/evy252
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6330053
+>Old Trade, New Tricks: Insights into the Spontaneous Mutation Process from the Partnering of Classical Mutation Accumulation Experiments with High-Throughput Genomic Approaches.</
+
+9
+https://doi.org/10.1093/molbev/msx180
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5850294
+>Mutational Biases Influence Parallel Adaptation.</
+
+10
+https://doi.org/10.1093/molbev/msaa200
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7783172
+>Are Nonsynonymous Transversions Generally More Deleterious than Nonsynonymous Transitions?</
+
+11
+https://doi.org/10.1093/molbev/msv274
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7107541
+>On the Causes of Evolutionary Transition:Transversion Bias.</
+
+12
+https://doi.org/10.1073/pnas.1418652112
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4371947
+>Evidence for recent, population-specific evolution of the human mutation rate.</
+
+13
+https://doi.org/10.7554/eLife.24284
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5435464
+>Rapid evolution of the human mutation spectrum.</
+
+14
+https://doi.org/10.1101/2023.12.02.569698
+missing
+>Gene Therapy-Mediated Partial Reprogramming Extends Lifespan and Reverses Age-Related Changes in Aged Mice.</
+
+15
+https://doi.org/10.1093/molbev/msad213
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10566577
+>Evolution of the Mutation Spectrum Across a Mammalian Phylogeny.</
+
+16
+https://doi.org/10.1093/nar/gkac779
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9561281
+>A mitochondria-specific mutational signature of aging: increased rate of A&#xa0;&amp;gt;&#xa0;G substitutions on the&#xa0;heavy strand.</
+
+17
+https://doi.org/10.1101/2020.07.25.221184
+missing
+>Gene Therapy-Mediated Partial Reprogramming Extends Lifespan and Reverses Age-Related Changes in Aged Mice.</
+
+18
+https://doi.org/10.1101/2023.12.08.570826
+missing
+>Gene Therapy-Mediated Partial Reprogramming Extends Lifespan and Reverses Age-Related Changes in Aged Mice.</
+
+19
+https://doi.org/10.1186/1471-2105-10-421
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2803857
+>BLAST+: architecture and applications.</
+
+20
+https://doi.org/10.1093/molbev/mst010
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3603318
+>MAFFT multiple sequence alignment software version 7: improvements in performance and usability.</
+
+21
+https://doi.org/10.1093/nar/gkf436
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC135756
+>MAFFT: a novel method for rapid multiple sequence alignment based on fast Fourier transform.</
+
+22
+https://doi.org/10.1093/molbev/msy159
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6188553
+>MACSE v2: Toolkit for the Alignment of Coding Sequences Accounting for Frameshifts and Stop Codons.</
+
+23
+https://doi.org/10.1093/molbev/msu300
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4271533
+>IQ-TREE: a fast and effective stochastic algorithm for estimating maximum-likelihood phylogenies.</
+
+24
+https://doi.org/10.1038/nmeth.4285
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5453245
+>ModelFinder: fast model selection for accurate phylogenetic estimates.</
+
+25
+https://doi.org/10.1093/gbe/evz193
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6893154
+>The Prevalence and Impact of Model Violations in Phylogenetic Analysis.</
+
+26
+https://doi.org/10.1093/sysbio/syz051
+https://www.ncbi.nlm.nih.gov/pubmed/31364711
+>GHOST: Recovering Historical Signal from Heterotachously Evolved Sequence Alignments.</
+
+27
+https://doi.org/10.1186/s12864-018-4620-2
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5998883
+>TreeShrink: fast and accurate detection of outlier long branches in collections of phylogenetic trees.</
+
+28
+https://doi.org/10.1093/bioinformatics/btq243
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2887050
+>The Newick utilities: high-throughput phylogenetic tree processing in the UNIX shell.</
+
+29
+https://doi.org/10.1093/sysbio/syz054
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7188465
+>A Darwinian Uncertainty Principle.</
+
+30
+https://doi.org/10.7554/eLife.45952
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6692132
+>The distribution of fitness effects among synonymous mutations in a gene under directional selection.</
+
+31
+https://doi.org/10.1016/j.ajhg.2020.05.011
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7332603
+>Natural Selection Shapes Codon Usage in the Human Genome.</
+
+32
+https://doi.org/10.1073/pnas.2023575118
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8157954
+>Weak selection on synonymous codons substantially inflates <i>dN/dS</i> estimates in bacteria.</
+
+33
+https://doi.org/10.1038/nbt.3820
+https://www.ncbi.nlm.nih.gov/pubmed/28398311
+>Nextflow enables reproducible computational workflows.</
+
+34
+https://doi.org/10.1371/journal.pone.0177459
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5426675
+>Singularity: Scientific containers for mobility of compute.</
+
+35
+https://doi.org/10.1002/edn3.303
+missing
+>Corrigendum: Darbepoetin alfa injection versus epoetin alfa injection for treating anemia of Chinese hemodialysis patients with chronic kidney failure: A randomized, open-label, parallel-group, non-inferiority phase III trail.</
+
+36
+https://doi.org/10.1093/molbev/msac092
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9113491
+>AliSim: A Fast and Versatile Phylogenetic Sequence Simulator for the Genomic Era.</
+
+37
+https://doi.org/10.1038/s41586-021-04341-1
+https://www.ncbi.nlm.nih.gov/pubmed/34937052
+>A species-level timeline of mammal evolution integrating phylogenomic data.</
+
+38
+https://doi.org/10.1038/s41588-019-0557-x
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7058535
+>Comprehensive molecular characterization of mitochondrial genomes in human cancers.</
+
+39
+https://doi.org/10.1093/genetics/161.4.1589
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1462211
+>Mutation patterns of mitochondrial H- and L-strand DNA in closely related Cyprinid fishes.</
+
+40
+https://doi.org/10.1101/2023.02.19.526140
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9949150
+>Single-strand mismatch and damage patterns revealed by single-molecule DNA sequencing.</
+
+41
+https://doi.org/10.1093/molbev/msz131
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6735705
+>A Fast Likelihood Method to Reconstruct and Visualize Ancestral Scenarios.</
+
+42
+https://doi.org/10.1093/sysbio/syv021
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4468350
+>A New Hierarchy of Phylogenetic Models Consistent with Heterogeneous Substitution Rates.</
+
+43
+https://doi.org/10.1093/nar/gkab901
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8565317
+>A replication-linked mutational gradient drives somatic mutation accumulation and influences germline polymorphisms and genome composition in mitochondrial DNA.</
