@@ -1,0 +1,10 @@
+{
+    "include": [
+      "scripts",
+      "notebooks"
+    ],
+
+    "exclude": [
+        "**/__pycache__",
+      ],
+}
