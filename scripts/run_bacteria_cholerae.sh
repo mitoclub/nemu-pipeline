@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PATH_TO_NEMU=/home/kpotoh/nemu-pipeline/pipeline/nemu-core.nf
-PATH_TO_INPUT=/home/askudnov/Updater_Outputs/s__Vibrio_cholerae3/output/result
+PATH_TO_INPUT=/home/kpotoh/nemu-pipeline/data/cholerae/input
 PATH_TO_OUTPUT=/home/kpotoh/nemu-pipeline/data/cholerae/output
 PATH_TO_CONFIG=/home/kpotoh/nemu-pipeline/data/cholerae/nemu_cholerae.config
 
@@ -27,8 +27,8 @@ then
 fi
 
 
-MAX_NJOBS=60
-SLEEP_TIME=120 # secs
+MAX_NJOBS=64
+SLEEP_TIME=900 # secs
 RUNLIMIT=2000
 COUNTER=1
 
