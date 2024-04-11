@@ -62,16 +62,13 @@ params.all_arg   = params.all == "true" ? "--all" : ""
 params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
 params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
 
-Channel.value(params.DB).into{g_15_commondb_path_g_406;g_15_commondb_path_g_415}
+Channel.value(params.DB).set{g_15_commondb_path_g_406}
 Channel.value(params.genus_taxid).set{genus_taxid_value}
 query_protein_sequence = file(params.sequence, type: 'any') 
 Channel.value(params.gencode).into{g_220_gencode_g_406;g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
 Channel.value("false").set{aligned_param}
-Channel.value(params.species_name).into{g_1_species_name_g_414;g_1_species_name_g_415}
-
-Channel.value("OUTGRP").set{outgroup_param}
+Channel.value(params.species_name).set{g_1_species_name_g_415}
 Channel.value(params.use_macse).set{use_macse_param}
-Channel.value("NO_FILE").set{precalculated_tree}
 
 
 process query_qc {
@@ -89,19 +86,19 @@ output:
  file "input_seq_char_counts.log" optional true  into g_398_logFile
 
 """
-echo init init QC
+echo "Init query QC" >&2
 if [ `grep -c ">" $query` -ne 1 ]; then
-	echo "Query fasta must contain single amino acid sequence"
+	echo "ERROR: Query fasta must contain single amino acid sequence" >&2
 	exit 1
 else
-	echo Number of sequences: `grep -c ">" $query`
+	echo "INFO: Number of sequences: `grep -c '>' $query`" >&2
 fi
 
 grep -v  ">" $query | grep -o . | sort | uniq -c | sort -nr > input_seq_char_counts.log
 if [ `head -n 4 input_seq_char_counts.log | grep -Ec "[ACGT]"` -lt 4 ] || [ `grep -Ec "[EFILPQU]" input_seq_char_counts.log` -ne 0 ]; then
-	echo "It's probably amino asid sequence"
+	echo "INFO: It's probably amino asid sequence" >&2
 else
-	echo "Query fasta must contain single amino acid sequence"
+	echo "ERROR: Query fasta must contain single amino acid sequence" >&2
 	exit 1
 fi
 
@@ -113,119 +110,162 @@ mv $query query_single.fasta
 
 NSEQS_LIMIT=33000
 
-process tblastn {
+process tblastn_and_seqs_extraction {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /report.blast$/) "logs/$filename"
-	else if (filename =~ /no_hits.log$/) "logs/$filename"
-	else if (filename =~ /genus_species_taxids.txt$/) "logs/$filename"
+	if (filename =~ /sampled_sequences.fasta$/) "$filename"
+	else if (filename =~ /report.blast$/) "logs/$filename"
+	else if (filename =~ /.blast_output_*_filtered.tsv$/) "logs/$filename"
+	else if (filename =~ /headers_mapping.txt$/) "$filename"
+	else if (filename =~ /encoded_headers.txt$/) "$filename"
+	else if (filename =~ /.*.taxids$/) "logs/$filename"
 }
 
 input:
- val gencode from g_220_gencode_g_406
  file query from g_398_multipleFasta_g_406
+ val species_name from g_1_species_name_g_415
+ val genus_taxid from genus_taxid_value
+ val gencode from g_220_gencode_g_406
  val DB from g_15_commondb_path_g_406
- val species from g_1_species_name_g_415
- val GENUS_TAXID from genus_taxid_value
 
 output:
- file "report.blast"  into g_406_blast_output_g_412
- file "no_hits.log" optional true  into g_406_logFile
- file "genus_species_taxids.txt" optional true  into taxids_logFile
+ file "sampled_sequences.fasta" into g_415_multipleFasta_g_409
+ file "report.blast" optional true
+ file "blast_output_*_filtered.tsv" optional true
+ file "headers_mapping.txt" optional true
+ file "encoded_headers.txt" optional true
+ file "*.taxids" optional true
 
 script:
 """
-report=report.blast
 nseqs=500
+outfmt="6 saccver pident length qlen gapopen sstart send evalue bitscore sframe"
 
 if [[ $DB == *nt ]]; then
-	get_species_taxids.sh -t $GENUS_TAXID > genus_species_taxids.txt
-	TAXIDS=`cat genus_species_taxids.txt | paste -sd,`
-	echo -e "Search in these taxids:\n\$TAXIDS\n"
-fi
-
-while true
-do   
-    echo "INFO: run blasting; nseqs=\$nseqs"
-    if [[ $DB == *nt ]]; then
-        tblastn -db $DB -db_gencode $gencode -num_descriptions \$nseqs -num_alignments \$nseqs \
-                -query $query -out \$report -evalue 0.001 -num_threads $THREADS -taxids \$TAXIDS
+	echo "INFO: Collecting taxids" >&2
+	if [[ "$species_name" == Homo* ]]; then
+		get_species_taxids.sh -t 9604 > genus.taxids
 	else
+		get_species_taxids.sh -t $genus_taxid  > genus.taxids
+	fi
+	sleep 2
+	get_species_taxids.sh -n "$species_name" | head -n 5 > sp_tax.info
+	if [[ `grep "rank : species" sp_tax.info` ]]; then 
+		raw_sp_taxid=`grep Taxid sp_tax.info`
+		species_taxid="\${raw_sp_taxid#*Taxid : }"
+	fi
+	sleep 1
+	get_species_taxids.sh -t \$species_taxid > species.taxids
+
+	grep -v -f species.taxids genus.taxids > relatives.taxids
+
+	echo "INFO: Checking number of taxids for outgroup" >&2
+	if [ `wc -l relatives.taxids | cut -f 1 -d ' '` -eq 0 ]; then
+		echo "ERROR: there are no taxids that can be used as outgroup." >&2
+		echo "Maybe this species is single in the genus, so pipeline can build incorrect phylogeneti tree" >&2
+		echo "due to potential incorrect tree rooting. You can select sequences and outgroup manually and" >&2
+		echo "run pipeline on your nucleotide sequences" >&2
+		exit 1
+	fi
+
+	echo "INFO: Blasting species sequences in the nt" >&2
+	tblastn -db $DB -db_gencode $gencode -max_target_seqs \$nseqs \
+			-query $query -out blast_output_species.tsv -evalue 0.00001 \
+			-num_threads $THREADS -taxidlist species.taxids \
+			-outfmt "\$outfmt"
+
+	echo "INFO: Filtering out bad hits: ident < 80, coverage < 0.8, gap_opened > 0" >&2
+	awk '\$5 == 0 && \$2 > 80 && \$3 / \$4 > 0.8' blast_output_species.tsv > blast_output_species_filtered.tsv
+
+	echo "INFO: Checking required number of hits" >&2
+	nhits=`wc -l blast_output_species_filtered.tsv | cut -f 1 -d ' '`
+	if [ \$nhits -lt 10 ]; then
+		echo "ERROR: there are only \$nhits valuable hits in the database for given query," >&2
+		echo "but needed at least 10" >&2
+		exit 1
+	fi
+
+	echo "INFO: Preparing coords for nucleotide sequences extraction" >&2
+	# entry|range|strand, e.g. ID09 x-y minus
+	awk '{print \$1, \$6, \$7, (\$NF ~ /^-/) ? "minus" : "plus"}' blast_output_species_filtered.tsv > raw_coords.txt
+	awk '\$2 > \$3 {print \$1, \$3 "-" \$2, \$4}' raw_coords.txt > coords.txt
+	awk '\$3 > \$2 {print \$1, \$2 "-" \$3, \$4}' raw_coords.txt >> coords.txt
+
+	echo "INFO: Getting nucleotide sequences" >&2
+	blastdbcmd -db $DB -entry_batch coords.txt -outfmt %f -out nucleotide_sequences.fasta
+
+	echo "INFO: Checking required number of extracted seqs" >&2
+	nseqs=`grep -c '>' nucleotide_sequences.fasta`
+	if [ \$nseqs -lt 10 ]; then
+		echo "ERROR: cannot extract more than \$nseqs seqs from the database for given query, but needed at least 10" >&2
+		exit 1
+	fi
+
+	echo -e "INFO: Blasting for outgroup search" >&2
+	tblastn -db $DB -db_gencode $gencode -max_target_seqs 10 \
+			-query $query -out blast_output_genus.tsv -evalue 0.00001 \
+			-num_threads $THREADS -taxidlist relatives.taxids \
+			-outfmt "\$outfmt"
+	
+	echo "INFO: Filtering out bad hits: ident > 80, coverage > 0.8, gap_opened == 0" >&2
+	awk '\$5 == 0 && \$2 > 80 && \$3 / \$4 > 0.8' blast_output_genus.tsv | sort -rk 9 > blast_output_genus_filtered.tsv
+
+	echo "INFO: Checking required number of hits for outgroup" >&2
+	if [ `wc -l blast_output_genus_filtered.tsv | cut -f 1 -d ' '` -eq 0 ]; then
+		echo "ERROR: there are no hits in the database that could be used as outgroup" >&2
+		exit 1
+	fi
+
+	echo "INFO: Preparing genus coords for nucleotide sequences extraction" >&2
+	# entry|range|strand, e.g. ID09 x-y minus
+	head -n 1 blast_output_genus_filtered.tsv | awk '{print \$1, \$6, \$7, (\$NF ~ /^-/) ? "minus" : "plus"}' > raw_coords_genus.txt
+	awk '\$2 > \$3 {print \$1, \$3 "-" \$2, \$4}' raw_coords_genus.txt >  coords_genus.txt
+	awk '\$3 > \$2 {print \$1, \$2 "-" \$3, \$4}' raw_coords_genus.txt >> coords_genus.txt
+
+	echo "INFO: Getting nucleotide sequences of potential outgroups" >&2
+	blastdbcmd -db $DB -entry_batch coords_genus.txt -outfmt %f -out outgroup_sequence.fasta
+	
+	echo "INFO: Sequences headers encoding" >&2
+	ohead=`head -n 1 outgroup_sequence.fasta`
+	cat outgroup_sequence.fasta nucleotide_sequences.fasta > sample.fasta
+	multifasta_coding.py -a sample.fasta -g "\${ohead:1}" -o sampled_sequences.fasta -m encoded_headers.txt
+
+else
+	report=report.blast
+	while true
+	do   
+		echo "INFO: Blasting in midori2 database; nseqs=\$nseqs" >&2
 		tblastn -db $DB -db_gencode $gencode -num_descriptions \$nseqs -num_alignments \$nseqs \
 				-query $query -out \$report -num_threads $THREADS
-	fi		
-    if [ `grep -c "No hits found" \$report` -eq 0 ]; then 
-        echo "SUCCESS: hits found in the database for given query"
-    else
-        echo "ERROR: there are no hits in the database for given query" > no_hits.log
-        cat no_hits.log
-        exit 1
-    fi
+		
+		if [ `grep -c "No hits found" \$report` -eq 0 ]; then 
+			echo "INFO: some hits found in the database for given query" >&2
+		else
+			echo "ERROR: there are no hits in the database for given query" >&2
+			exit 1
+		fi
 
-    if [ `grep -c "$species" \$report` -ge \$((nseqs * 2 - 10)) ]; then
-        nseqs=\$((nseqs * 4))
-        if [ \$nseqs -gt $NSEQS_LIMIT ]; then
-            echo "UNEXPECTED ERROR: database cannot contain more than $NSEQS_LIMIT sequences of one gene of some species"
-            exit 1
-        fi
-        echo "INFO: run blasting again due to abcence of different species; nseqs=\$nseqs"
-    else
-        echo "SUCCESS: other species for outgroup selection is in hits"
-        break
-    fi
-done
-"""
+		if [ `grep -c "$species_name" \$report` -ge \$((nseqs * 2 - 10)) ]; then
+			nseqs=\$((nseqs * 4))
+			if [ \$nseqs -gt $NSEQS_LIMIT ]; then
+				echo "UNEXPECTED ERROR: database cannot contain more than $NSEQS_LIMIT sequences of one gene of some species" >&2
+				exit 1
+			fi
+			echo "INFO: run blasting again due to abcence of different species; nseqs=\$nseqs" >&2
+		else
+			echo "SUCCESS: other species for outgroup selection is in hits" >&2
+			break
+		fi
+	done
 
-}
+	mview -in blast -out fasta \$report 1>raw_sequences.fasta
 
+	/opt/scripts_latest/header_sel_mod3.pl raw_sequences.fasta "$species_name" 1>useless_seqs.fasta 2>headers_mapping.txt
 
-process blast_report2fasta {
+	/opt/scripts_latest/nuc_coding_mod.pl headers_mapping.txt $DB 1>sampled_sequences.fasta
 
-input:
- file blast_report from g_406_blast_output_g_412
-
-output:
- file "raw_sequences.fasta"  into g_412_multipleFasta_g_414
-
-"""
-mview -in blast -out fasta $blast_report 1>raw_sequences.fasta
-"""
-}
-
-
-process outgroup_extraction {
-
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /headers_mapping.txt$/) "$filename"
-}
-
-input:
- val SPNAME from g_1_species_name_g_414
- file query_out_fasta from g_412_multipleFasta_g_414
-
-output:
- file "useless_seqs.fasta"  into g_414_multipleFasta
- file "headers_mapping.txt"  into g_414_outputFileTxt_g_415
-
-"""
-/opt/scripts_latest/header_sel_mod3.pl $query_out_fasta "$SPNAME" 1>useless_seqs.fasta 2>headers_mapping.txt
-"""
-}
-
-
-process seqs_extraction {
-
-input:
- file hash from g_414_outputFileTxt_g_415
- val DB from g_15_commondb_path_g_415
-
-output:
- file "sequences.fasta"  into g_415_multipleFasta_g_409
-
-"""
-/opt/scripts_latest/nuc_coding_mod.pl $hash $DB 1>sequences.fasta
+fi
 """
 }
 
@@ -249,8 +289,9 @@ output:
 /opt/scripts_latest/codon_alig_unique.pl $seqs 1>seqs_unique.fasta
 if [ -f report_no.txt ]; then
 	mv report_no.txt report_no.log
-	echo "ERROR: Cannot find in the database required number of sequences (10) for given species!"
-	cat report_no.log
+	echo "ERROR: Cannot find in the database required number of sequences" >&2
+	echo "(10) for given gene of the species!" >&2
+	cat report_no.log >&2
 	exit 1
 else
 	mv report_yes.txt report_yes.log
@@ -259,47 +300,40 @@ fi
 }
 
 
-min_input_nseqs = 4
+outgrp = "OUTGRP"
+min_input_nseqs = 10
 
 process nucleotide_fasta_qc {
 
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /species_mapping.txt$/) "$filename"
-}
-
 input:
  file query from g_409_multipleFasta_g418_428
- val outgrp from outgroup_param
 
 output:
  file "sequences.fasta"  into g_428_multipleFasta_g_433
- file "species_mapping.txt" into g_428_outputFileTxt
- file "char_numbers.log"  into g_428_logFile
+ file "char_numbers.log"
 
 """
 if [ `grep -c ">" $query` -lt $min_input_nseqs ]; then
-	echo "Number of sequences must be >= $min_input_nseqs"
+	echo "Number of sequences must be >= $min_input_nseqs" >&2
 	exit 1
 fi
 
 if [ `grep -E -c ">$outgrp" $query` -ne 1 ]; then
-	echo "Cannot fing outgroup header in the alignment"
+	echo "Cannot find outgroup header in the alignment." >&2
+	echo "Probably outgroup sequence for this gene cannot be found in the database." >&2
 	exit 1
 fi
 
 grep -v  ">" $query | grep -o . | sort | uniq -c | sort -nr > char_numbers.log
 if [ `head -n 5 char_numbers.log | grep -Ec "[ACGTacgt]"` -ge 3 ] && [ `grep -Ec "[EFILPQU]" char_numbers.log` -eq 0 ]; then
-	echo "All right"
+	echo "All right" >&2
 else
-	echo "Query fasta must contain nucleotides"
+	echo "Query fasta must contain nucleotides" >&2
 	exit 1
 fi
 
-multifasta_coding.py -a $query -g $outgrp -o sequences.fasta -m species_mapping.txt
-if [ ! -f species_mapping.txt ]; then
-	echo 'required for compatibility reasons' > species_mapping.txt
-fi
+# this script do nothing, TODO drop it. This version of pipeline is for single protein!
+multifasta_coding.py -a $query -g $outgrp -o sequences.fasta -m nothing.txt
 """
 }
 
@@ -324,15 +358,15 @@ output:
 """
 if [ $aligned = true ]; then
 	# TODO add verification of aligment and delete this useless argument!!!!
-	echo "No need to align!"
+	echo "No need to align!" >&2
 	cp $seqs aln.fasta
 elif [ $aligned = false ]; then
 	if [ $use_macse = true ]; then
-		echo "Use macse as aligner"
+		echo "Use macse as aligner" >&2
 		java -jar /opt/macse_v2.06.jar -prog alignSequences -gc_def $gencode \
 			-out_AA aln_aa.fasta -out_NT aln.fasta -seq $seqs
 	else
-		echo "Use mafft as aligner"
+		echo "Use mafft as aligner" >&2
 		# NT2AA
 		java -jar /opt/macse_v2.06.jar -prog translateNT2AA -seq $seqs \
 			-gc_def $gencode -out_AA translated.faa
@@ -344,11 +378,11 @@ elif [ $aligned = false ]; then
 
 	fi
 else
-	echo "Inappropriate value for 'aligned' parameter; must be 'true' or 'false'"
+	echo "ERROR: Inappropriate value for 'aligned' parameter; must be 'true' or 'false'" >&2
 	exit 1
 fi
 
-echo "Do quality control"
+echo "Do quality control" >&2
 /opt/scripts_latest/macse2.pl aln.fasta msa_nuc.fasta
 """
 }
@@ -375,10 +409,12 @@ Output structure:
 ├── seqs_unique.fasta					# Filtered orthologous sequences
 ├── msa_nuc.fasta						# Verified multiple sequence alignment
 ├── headers_mapping.txt					# Encoded headers of sequences
-├── species_mapping.txt					# Encoded headers of sequences (v2 for different version of pipeline)
+├── encoded_headers.txt					# Encoded headers of sequences (v2 for different versions of input)
 ├── logs/
 │   ├── char_numbers.log				# Character composition of input sequence (used in query QC)
 │   ├── report.blast					# Tblastn output during orthologs search
+│   ├── *.taxids						# Taxids used in taxa-specific blasing in nt; relatives.taxids contains 
+│	│									# 	other species from the genus of query and used for outgroup selection
 │   ├── iqtree.log						# IQ-TREE logs during phylogenetic tree inference
 │   ├── iqtree_report.log				# IQ-TREE report during phylogenetic tree inference
 │   ├── iqtree_treeshrink.log			# TreeShrink logs
@@ -425,8 +461,6 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 
 input:
  file mulal from g_433_multipleFasta_g_420
- file prectree from precalculated_tree
- file labels_mapping from g_428_outputFileTxt
 
 output:
  set val("iqtree"), file("iqtree.nwk")  into g_409_tree_g_315
@@ -437,24 +471,10 @@ maxRetries 3
 
 script:
 """
-# if input contains precalculated_tree
-if [ $prectree != "input.2" ]; then
-	echo "TODO need to correctly replace headers if needed"
-	if [ ! -f $labels_mapping ]; then 
-		echo "Something went wrong. Expected that tree must be relabeled \
-		according to relabeled alignment, but file with labels map doesn't exist"
-		exit 1
-	fi
-
-	awk '{print \$2 "\t" \$1}' $labels_mapping > species2label.txt
-	nw_rename $prectree species2label.txt > iqtree.nwk
-
-else
-	iqtree2 -s $mulal -m $params.iqtree_model -nt $THREADS --prefix phylo
-	mv phylo.treefile iqtree.nwk
-	mv phylo.iqtree iqtree_report.log
-	mv phylo.log iqtree.log
-fi
+iqtree2 -s $mulal -m $params.iqtree_model -nt $THREADS --prefix phylo
+mv phylo.treefile iqtree.nwk
+mv phylo.iqtree iqtree_report.log
+mv phylo.log iqtree.log
 """
 }
 
@@ -507,7 +527,7 @@ nw_distance -m p -s f -n $tree | sort -grk 2 1> branches.txt
 
 if [ `grep OUTGRP branches.txt | cut -f 2 | python3 -c "import sys; print(float(sys.stdin.readline().strip()) > 0)"` = False ]; then
 	cat "branches.txt"
-	echo "Something went wrong: outgroup is not furthest leaf in the tree"
+	echo "Something went wrong: outgroup is not furthest leaf in the tree" >&2
 	exit 1
 fi
 """
@@ -641,88 +661,6 @@ if [-f ms192syn.tsv ]; then
 fi
 """
 }
-
-
-// process neutral_evol_simuation {
-
-// publishDir params.outdir, overwrite: true, mode: 'copy',
-// 	saveAs: {filename ->
-// 	if (filename =~ /.*.tsv$/) "mutspec_tables/$filename"
-// 	else if (filename =~ /.*.pdf$/) "mutspec_images/$filename"
-// 	else if (filename =~ /.*.log$/) "logs/$filename"
-// }
-
-// input:
-//  file spectra from g_410_outputFileTxt_g_422
-//  set val(label), file(tree) from g_326_tree_g_422
-//  file mulal from g_433_multipleFasta_g_422
-//  val gencode from g_396_gencode_g_422
-//  val nspecies from g_397_mode_g_422
-
-// output:
-//  file "*.tsv"  into g_422_outputFileTSV
-//  file "*.pdf"  into g_422_outputFilePdf
-//  file "*.log"  into g_422_logFile
-
-// when:
-// params.run_simulation == "true" && nspecies == "single"
-
-// script:
-// """
-// arrray=($spectra)
-
-// spectra12=\${arrray[0]}
-// spectra192=\${arrray[1]}
-
-// if [-f \$spectra192 ]; then
-// 	substractor192="--substract192 \${spectra192}"
-// else
-// 	substractor192=""
-// fi
-
-// nw_prune $tree OUTGRP | python3 /home/dolphin/dolphin/scripts/resci.py > ${tree}.ingroup
-// echo "Tree outgroup pruned"
-// awk '/^>/ {P=index(\$1, "OUTGRP")==0} {if(P) print}' $mulal > ${mulal}.ingroup
-// echo "Tree outgroup sequence filtered out"
-
-// nw_labels -L ${tree}.ingroup | grep -v ROOT | xargs -I{} echo -e "{}\tNode{}" > map.txt
-// if [ `grep -c NodeNode map.txt` -eq 0 ]; then
-// 	nw_rename ${tree}.ingroup map.txt > ${tree}.tmp
-// 	cat ${tree}.tmp > ${tree}.ingroup
-// 	echo "Internal nodes renamed"
-// fi
-
-// #filter out sequences with ambigous nucleotides
-// cat ${mulal}.ingroup | perl -e '\$p=\$s="777"; while (<STDIN>) {chomp; if (\$_=~/^>/) {\$h=\$_; if (\$s!~/[^ACGT]/i) {print "\$p\n\$s\n"} \$p=\$h; \$s="777"} else {\$s=\$_}} if (\$s!~/[^ACGT]/i) {print "\$p\n\$s\n"}' > ${mulal}.clean
-// if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
-// 	echo -e "There are no sequences without ambigous nucleotides in the alignment.\nInterrupted" > pyvolve_${label}.log
-// 	exit 0
-// fi
-
-// pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s \$spectra12 -o seqfile.fasta -r $params.replics -c $gencode -l $params.scale_tree --write_anc
-// echo "Mutation samples generated"
-
-// for fasta_file in seqfile_sample-*.fasta
-// do
-// 	echo "Processing \$fasta_file"
-// 	alignment2iqtree_states.py \$fasta_file  \${fasta_file}.state
-// 	collect_mutations.py --tree ${tree}.ingroup --states  \${fasta_file}.state --gencode $gencode --syn $params.syn4f_arg --no-mutspec --outdir mout --force
-// 	cat mout/run.log >> pyvolve_${label}.log
-// 	echo -e "\n\n">> pyvolve_${label}.log
-// 	cat mout/mutations.tsv >  \${fasta_file}.mutations
-// done
-// echo "Mutations extraction done"
-
-// concat_mutations.py seqfile_sample-*.fasta.mutations mutations_${label}_pyvolve.tsv
-// echo "Mutations concatenation done"
-
-// calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_freqs.tsv -o . \
-// 	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f_arg $params.all_arg --mnum192 $params.mnum192 --plot -x pdf \
-// 	--substract12 \$spectra12 \$substractor192
-// echo "Mutational spectrum calculated"
-
-// """
-// }
 
 
 if (params.verbose == 'true') {
