@@ -19,6 +19,7 @@ if (!params.save_exp_mutations){params.save_exp_mutations = "false"}
 if (!params.exclude_cons_sites){params.exclude_cons_sites = "false"}
 if (!params.uncertainty_coef){params.uncertainty_coef = "false"}
 if (!params.njobs){params.njobs = "1"}
+if (!params.required_nseqs){params.required_nseqs = 3}
 THREADS = params.njobs
 
 // if DB is NT, check that genus taxid specified
@@ -37,6 +38,7 @@ if (params.verbose == 'true') {
 	println "syn: true"
 	println "syn4f: ${params.syn4f}"
 	println "Minimal number of mutations to save 192-component spectrum (mnum192): ${params.mnum192}"
+	println "Minimal number of sequences (leaves in a tree ingroup) to run the pipeline: ${params.required_nseqs}"
 	println "Use probabilities: ${params.use_probabilities}"
 	if (params.use_probabilities == 'true'){
 		println "Mutation probability cutoff: ${params.proba_cutoff}"
@@ -73,11 +75,6 @@ Channel.value(params.use_macse).set{use_macse_param}
 
 process query_qc {
 
-publishDir params.outdir, overwrite: true, mode: 'copy',
-	saveAs: {filename ->
-	if (filename =~ /input_seq_char_counts.log$/) "logs/$filename"
-}
-
 input:
  file query from query_protein_sequence
 
@@ -103,7 +100,6 @@ else
 fi
 
 mv $query query_single.fasta
-
 """
 }
 
@@ -175,14 +171,14 @@ if [[ $DB == *nt ]]; then
 			-num_threads $THREADS -taxidlist species.taxids \
 			-outfmt "\$outfmt"
 
-	echo "INFO: Filtering out bad hits: ident < 80, coverage < 0.8, gap_opened > 0" >&2
-	awk '\$5 == 0 && \$2 > 80 && \$3 / \$4 > 0.8' blast_output_species.tsv > blast_output_species_filtered.tsv
+	echo "INFO: Filtering out bad hits: ident <= 70, query coverage <= 0.6" >&2
+	awk '\$2 > 70 && \$3 / \$4 > 0.6' blast_output_species.tsv > blast_output_species_filtered.tsv
 
 	echo "INFO: Checking required number of hits" >&2
 	nhits=`wc -l blast_output_species_filtered.tsv | cut -f 1 -d ' '`
-	if [ \$nhits -lt 10 ]; then
+	if [ \$nhits -lt $params.required_nseqs ]; then
 		echo "ERROR: there are only \$nhits valuable hits in the database for given query," >&2
-		echo "but needed at least 10" >&2
+		echo "but needed at least ${params.required_nseqs}" >&2
 		exit 1
 	fi
 
@@ -197,8 +193,8 @@ if [[ $DB == *nt ]]; then
 
 	echo "INFO: Checking required number of extracted seqs" >&2
 	nseqs=`grep -c '>' nucleotide_sequences.fasta`
-	if [ \$nseqs -lt 10 ]; then
-		echo "ERROR: cannot extract more than \$nseqs seqs from the database for given query, but needed at least 10" >&2
+	if [ \$nseqs -lt $params.required_nseqs ]; then
+		echo "ERROR: cannot extract more than \$nseqs seqs from the database for given query, but needed at least ${params.required_nseqs}" >&2
 		exit 1
 	fi
 
@@ -208,8 +204,8 @@ if [[ $DB == *nt ]]; then
 			-num_threads $THREADS -taxidlist relatives.taxids \
 			-outfmt "\$outfmt"
 	
-	echo "INFO: Filtering out bad hits: ident > 80, coverage > 0.8, gap_opened == 0" >&2
-	awk '\$5 == 0 && \$2 > 80 && \$3 / \$4 > 0.8' blast_output_genus.tsv | sort -rk 9 > blast_output_genus_filtered.tsv
+	echo "INFO: Filtering out bad hits: ident <= 70, query coverage <= 0.6" >&2
+	awk '\$2 > 70 && \$3 / \$4 > 0.6' blast_output_genus.tsv | sort -rk 9 > blast_output_genus_filtered.tsv
 
 	echo "INFO: Checking required number of hits for outgroup" >&2
 	if [ `wc -l blast_output_genus_filtered.tsv | cut -f 1 -d ' '` -eq 0 ]; then
@@ -275,7 +271,6 @@ process duplicates_filtration {
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /seqs_unique.fasta$/) "$filename"
-	else if (filename =~ /report_(yes|no).log$/) "logs/$filename"
 }
 
 input:
@@ -283,25 +278,12 @@ input:
 
 output:
  file "seqs_unique.fasta"  into g_409_multipleFasta_g418_428
- file "report_{yes,no}.log"  into g_499_logFile
 
 """
 /opt/scripts_latest/codon_alig_unique.pl $seqs 1>seqs_unique.fasta
-if [ -f report_no.txt ]; then
-	mv report_no.txt report_no.log
-	echo "ERROR: Cannot find in the database required number of sequences" >&2
-	echo "(10) for given gene of the species!" >&2
-	cat report_no.log >&2
-	exit 1
-else
-	mv report_yes.txt report_yes.log
-fi
 """
 }
 
-
-outgrp = "OUTGRP"
-min_input_nseqs = 10
 
 process nucleotide_fasta_qc {
 
@@ -313,13 +295,14 @@ output:
  file "char_numbers.log"
 
 """
-if [ `grep -c ">" $query` -lt $min_input_nseqs ]; then
-	echo "Number of sequences must be >= $min_input_nseqs" >&2
+if [ `grep -c ">" $query` -lt $params.required_nseqs ]; then
+	echo "ERROR: Cannot find in the database required number of sequences" >&2
+	echo "(${params.required_nseqs}) for given gene of the species!" >&2
 	exit 1
 fi
 
-if [ `grep -E -c ">$outgrp" $query` -ne 1 ]; then
-	echo "Cannot find outgroup header in the alignment." >&2
+if [ `grep -E -c ">OUTGRP" $query` -ne 1 ]; then
+	echo "Unexpected error. Cannot find outgroup header in the alignment." >&2
 	echo "Probably outgroup sequence for this gene cannot be found in the database." >&2
 	exit 1
 fi
@@ -332,8 +315,7 @@ else
 	exit 1
 fi
 
-# this script do nothing, TODO drop it. This version of pipeline is for single protein!
-multifasta_coding.py -a $query -g $outgrp -o sequences.fasta -m nothing.txt
+mv $query sequences.fasta
 """
 }
 
@@ -411,7 +393,6 @@ Output structure:
 ├── headers_mapping.txt					# Encoded headers of sequences
 ├── encoded_headers.txt					# Encoded headers of sequences (v2 for different versions of input)
 ├── logs/
-│   ├── char_numbers.log				# Character composition of input sequence (used in query QC)
 │   ├── report.blast					# Tblastn output during orthologs search
 │   ├── *.taxids						# Taxids used in taxa-specific blasing in nt; relatives.taxids contains 
 │	│									# 	other species from the genus of query and used for outgroup selection
@@ -614,7 +595,6 @@ output:
  file "*.tsv"  into g_410_outputFileTSV
  file "*.log"  into g_410_logFile
  file "*.pdf"  into g_410_outputFilePdf
- file "ms*syn.txt" optional true  into g_410_outputFileTxt_g_422
 
 """
 if [ $params.exclude_cons_sites = true ]; then 
@@ -632,6 +612,8 @@ fi
 mv mout/* .
 mv mutations.tsv observed_mutations.tsv
 mv run.log mut_extraction.log
+
+# TODO split this process here
 
 calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
 	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
@@ -653,11 +635,6 @@ if [ $params.branch_spectra = true ]; then
 	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --branches
-fi
-
-cp ms12syn.tsv ms12syn.txt
-if [-f ms192syn.tsv ]; then
-	cp ms192syn.tsv ms192syn.txt
 fi
 """
 }

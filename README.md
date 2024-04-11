@@ -23,7 +23,7 @@ The pipeline relies on a diverse set of dependencies. To simplify execution, ens
 Here listed all dependencies used in the NeMu pipeline during mutatoinal spectra calculations:
 
 - Linux (e.g. Ubuntu)
-- Nextflow 22.10.1.5828
+- Nextflow 22.10.7
 - Python 3.8.12
 - Perl v5.16.3
 - R 3.6.0

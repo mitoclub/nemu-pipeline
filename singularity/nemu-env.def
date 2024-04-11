@@ -75,7 +75,7 @@ From: centos:7
 
     echo 'Installing latest version of Pipeline scripts!'
     git clone https://github.com/mitoclub/nemu-pipeline.git /opt/dolphin
-    mv /opt/dolphin/scripts /opt/scripts_latest
+    mv /opt/dolphin/scripts/perl /opt/scripts_latest
     rm -r /opt/dolphin
     ##final scripts in /opt/scripts_latest
 

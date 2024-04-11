@@ -79,7 +79,6 @@ if (!params.treefile || params.treefile == ''){
 // text_files = Channel.fromPath( '/path/*.txt' ).ifEmpty( file('./default.txt') ) for optioanl input
 
 // TODO write log file fith full params list
-// TODO rename output directories and maybe files
 
 min_input_nseqs = 4
 
@@ -122,6 +121,8 @@ multifasta_coding.py -a $query -g $outgrp -o sequences.fasta -m species_mapping.
 if [ ! -f species_mapping.txt ]; then
 	echo 'required for compatibility reasons' > species_mapping.txt
 fi
+
+# TODO drop dublicates
 """
 }
 
@@ -416,7 +417,6 @@ output:
  file "*.tsv"  into g_410_outputFileTSV
  file "*.log"  into g_410_logFile
  file "*.pdf"  into g_410_outputFilePdf
- file "ms*syn.txt" optional true  into g_410_outputFileTxt_g_422
 
 """
 if [ $params.exclude_cons_sites = true ]; then 
@@ -456,95 +456,8 @@ if [ $params.branch_spectra = true ]; then
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --branches
 fi
-
-cp ms12syn.tsv ms12syn.txt
-if [-f ms192syn.tsv ]; then
-	cp ms192syn.tsv ms192syn.txt
-fi
 """
 }
-
-
-// process neutral_evol_simuation {
-
-// publishDir params.outdir, overwrite: true, mode: 'copy',
-	// 	saveAs: {filename ->
-	// 	if (filename =~ /.*.tsv$/) "mutspec_tables/$filename"
-	// 	else if (filename =~ /.*.pdf$/) "mutspec_images/$filename"
-	// 	else if (filename =~ /.*.log$/) "logs/$filename"
-// }
-
-// input:
- //  file spectra from g_410_outputFileTxt_g_422
- //  set val(label), file(tree) from g_326_tree_g_422
- //  file mulal from g_433_multipleFasta_g_422
- //  val gencode from g_396_gencode_g_422
- //  val nspecies from g_397_mode_g_422
-
-// output:
- //  file "*.tsv"  into g_422_outputFileTSV
- //  file "*.pdf"  into g_422_outputFilePdf
- //  file "*.log"  into g_422_logFile
-
-// when:
-// params.run_simulation == "true" && nspecies == "single"
-
-// script:
-// """
-// arrray=($spectra)
-
-// spectra12=\${arrray[0]}
-// spectra192=\${arrray[1]}
-
-// if [-f \$spectra192 ]; then
-	// 	substractor192="--substract192 \${spectra192}"
-// else
-	// 	substractor192=""
-// fi
-
-// nw_prune $tree OUTGRP | python3 /home/dolphin/dolphin/scripts/resci.py > ${tree}.ingroup
-// echo "Tree outgroup pruned"
-// awk '/^>/ {P=index(\$1, "OUTGRP")==0} {if(P) print}' $mulal > ${mulal}.ingroup
-// echo "Tree outgroup sequence filtered out"
-
-// nw_labels -L ${tree}.ingroup | grep -v ROOT | xargs -I{} echo -e "{}\tNode{}" > map.txt
-// if [ `grep -c NodeNode map.txt` -eq 0 ]; then
-// 	nw_rename ${tree}.ingroup map.txt > ${tree}.tmp
-// 	cat ${tree}.tmp > ${tree}.ingroup
-// 	echo "Internal nodes renamed"
-// fi
-
-// #filter out sequences with ambigous nucleotides
-// cat ${mulal}.ingroup | perl -e '\$p=\$s="777"; while (<STDIN>) {chomp; if (\$_=~/^>/) {\$h=\$_; if (\$s!~/[^ACGT]/i) {print "\$p\n\$s\n"} \$p=\$h; \$s="777"} else {\$s=\$_}} if (\$s!~/[^ACGT]/i) {print "\$p\n\$s\n"}' > ${mulal}.clean
-// if [ `grep -c ">" ${mulal}.clean` -lt 1 ]; then
-// 	echo -e "There are no sequences without ambigous nucleotides in the alignment.\nInterrupted" > pyvolve_${label}.log
-// 	exit 0
-// fi
-
-// pyvolve_process.py -a ${mulal}.clean -t ${tree}.ingroup -s \$spectra12 -o seqfile.fasta -r $params.replics -c $gencode -l $params.scale_tree --write_anc
-// echo "Mutation samples generated"
-
-// for fasta_file in seqfile_sample-*.fasta
-// do
-// 	echo "Processing \$fasta_file"
-// 	alignment2iqtree_states.py \$fasta_file  \${fasta_file}.state
-// 	collect_mutations.py --tree ${tree}.ingroup --states  \${fasta_file}.state --gencode $gencode --syn $params.syn4f_arg --no-mutspec --outdir mout --force
-// 	cat mout/run.log >> pyvolve_${label}.log
-// 	echo -e "\n\n">> pyvolve_${label}.log
-// 	cat mout/mutations.tsv >  \${fasta_file}.mutations
-// done
-// echo "Mutations extraction done"
-
-// concat_mutations.py seqfile_sample-*.fasta.mutations mutations_${label}_pyvolve.tsv
-// echo "Mutations concatenation done"
-
-// calculate_mutspec.py -b mutations_${label}_pyvolve.tsv -e mout/expected_freqs.tsv -o . \
-// 	-l ${label}_simulated --exclude OUTGRP,ROOT --syn $params.syn4f_arg $params.all_arg --mnum192 $params.mnum192 --plot -x pdf \
-// 	--substract12 \$spectra12 \$substractor192
-// echo "Mutational spectrum calculated"
-
-// """
-// }
 
 
 if (params.verbose == 'true') {
