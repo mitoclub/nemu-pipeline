@@ -139,19 +139,23 @@ nseqs=500
 outfmt="6 saccver pident length qlen gapopen sstart send evalue bitscore sframe"
 
 if [[ $DB == *nt ]]; then
-	echo "INFO: Collecting taxids" >&2
+	echo "INFO: Collecting genus taxids" >&2
 	if [[ "$species_name" == Homo* ]]; then
 		get_species_taxids.sh -t 9604 > genus.taxids
 	else
 		get_species_taxids.sh -t $genus_taxid  > genus.taxids
 	fi
 	sleep 2
+
+	echo "INFO: Collecting species taxid information" >&2
 	get_species_taxids.sh -n "$species_name" | head -n 5 > sp_tax.info
 	if [[ `grep "rank : species" sp_tax.info` ]]; then 
 		raw_sp_taxid=`grep Taxid sp_tax.info`
 		species_taxid="\${raw_sp_taxid#*Taxid : }"
 	fi
 	sleep 1
+
+	echo "INFO: Collecting under-species taxids" >&2
 	get_species_taxids.sh -t \$species_taxid > species.taxids
 
 	grep -v -f species.taxids genus.taxids > relatives.taxids
@@ -171,8 +175,8 @@ if [[ $DB == *nt ]]; then
 			-num_threads $THREADS -taxidlist species.taxids \
 			-outfmt "\$outfmt"
 
-	echo "INFO: Filtering out bad hits: ident <= 70, query coverage <= 0.6" >&2
-	awk '\$2 > 70 && \$3 / \$4 > 0.6' blast_output_species.tsv > blast_output_species_filtered.tsv
+	echo "INFO: Filtering out bad hits: ident <= 80, query coverage <= 0.6" >&2
+	awk '\$2 > 80 && \$3 / \$4 > 0.6' blast_output_species.tsv > blast_output_species_filtered.tsv
 
 	echo "INFO: Checking required number of hits" >&2
 	nhits=`wc -l blast_output_species_filtered.tsv | cut -f 1 -d ' '`
