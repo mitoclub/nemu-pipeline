@@ -10,6 +10,9 @@ if (!params.species_name){
 	println "ERROR: Specify species name"
 	exit 1
 }
+if (!params.all){params.all = "false"}
+if (!params.syn4f){params.syn4f = "false"}
+if (!params.nonsyn){params.nonsyn = "true"}
 if (!params.use_macse){params.use_macse = "false"} 
 if (!params.verbose){params.verbose = "false"} 
 if (!params.internal){params.internal = "false"} 
@@ -37,6 +40,8 @@ if (params.verbose == 'true') {
 	println "all: ${params.all}"
 	println "syn: true"
 	println "syn4f: ${params.syn4f}"
+	println "non-syn: ${params.nonsyn}"
+	println "Use macse aligner: ${params.use_macse}"
 	println "Minimal number of mutations to save 192-component spectrum (mnum192): ${params.mnum192}"
 	println "Minimal number of sequences (leaves in a tree ingroup) to run the pipeline: ${params.required_nseqs}"
 	println "Use probabilities: ${params.use_probabilities}"
@@ -60,8 +65,10 @@ if (params.verbose == 'true') {
 	println ""
 }
 
+
 params.all_arg   = params.all == "true" ? "--all" : ""
 params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
+params.nonsyn_arg = params.nonsyn == "true" ? "--nonsyn" : ""
 params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
 
 Channel.value(params.DB).set{g_15_commondb_path_g_406}
@@ -181,7 +188,7 @@ if [[ $DB == *nt ]]; then
 	echo "INFO: Checking required number of hits" >&2
 	nhits=`wc -l blast_output_species_filtered.tsv | cut -f 1 -d ' '`
 	if [ \$nhits -lt $params.required_nseqs ]; then
-		echo "ERROR: there are only \$nhits valuable hits in the database for given query," >&2
+		echo "ERROR: there are only \$nhits valuable hits in the Nucleotide collection for given query," >&2
 		echo "but needed at least ${params.required_nseqs}" >&2
 		exit 1
 	fi
@@ -299,9 +306,9 @@ output:
  file "char_numbers.log"
 
 """
-if [ `grep -c ">" $query` -lt $params.required_nseqs ]; then
-	echo "ERROR: Cannot find in the database required number of sequences" >&2
-	echo "(${params.required_nseqs}) for given gene of the species!" >&2
+nseqs=`grep -c ">" $query`
+if [ \$nseqs -lt $params.required_nseqs ]; then
+	echo "ERROR: Pipeline requires at least ${params.required_nseqs} sequences, but received \${nseqs}" >&2
 	exit 1
 fi
 
@@ -603,15 +610,15 @@ output:
 """
 if [ $params.exclude_cons_sites = true ]; then 
 	collect_mutations.py --tree $tree --states $states1 --states $states2 \
-		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
-		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
-		--rates $rates --cat-cutoff $params.cons_cat_cutoff \
-		--outdir mout $save_exp_muts $use_uncertainty_coef
+		--gencode $gencode --syn $params.syn4f_arg $params.nonsyn_arg \
+		$params.proba_arg --no-mutspec --pcutoff $params.proba_cutoff \
+		--mnum192 $params.mnum192 --outdir mout $save_exp_muts $use_uncertainty_coef \
+		--rates $rates --cat-cutoff $params.cons_cat_cutoff
 else
 	collect_mutations.py --tree $tree --states $states1 --states $states2 \
-		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
-		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
-		--outdir mout $save_exp_muts $use_uncertainty_coef
+		--gencode $gencode --syn $params.syn4f_arg $params.nonsyn_arg \
+		$params.proba_arg --no-mutspec --pcutoff $params.proba_cutoff \
+		--mnum192 $params.mnum192 --outdir mout $save_exp_muts $use_uncertainty_coef
 fi
 mv mout/* .
 mv mutations.tsv observed_mutations.tsv
@@ -621,24 +628,28 @@ mv run.log mut_extraction.log
 
 calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
 	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-	--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf
+	--proba_min $params.proba_cutoff --plot -x pdf \
+	--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 
 if [ $params.internal = true ]; then
 	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset internal
+		--proba_min $params.proba_cutoff --plot -x pdf --subset internal \
+		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_internal.tsv
 fi
 if [ $params.terminal = true ]; then
 	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset terminal
+		--proba_min $params.proba_cutoff --plot -x pdf --subset terminal \
+		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_terminal.tsv
 fi
 if [ $params.branch_spectra = true ]; then
 	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --branches
+		--proba_min $params.proba_cutoff --branches \
+		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 fi
 """
 }

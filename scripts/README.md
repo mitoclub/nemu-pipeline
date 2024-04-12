@@ -1,14 +1,14 @@
 ## Scripts used in NeMu pipeline
 
-- [codon_alig_unique.pl](./codon_alig_unique.pl) - drop duplicated sequences
-- [header_sel_mod3.pl](./header_sel_mod3.pl) - selection of species and outgroup sequences for analysis
-- [macse2.pl](./macse2.pl) - QC after macse alignment
-- [mut_calculation_step.sh](./mut_calculation_step.sh) - legacy??? part of mut extraction step 
-- [mutnumbers.pl](./mutnumbers.pl) - estimating maximum theoretical number of variable positions and mutations
-- [nuc_coding_mod.pl](./nuc_coding_mod.pl) - nucleotide sequences extraction from BLAST database
-- [rename_tree_nodes.sh](./rename_tree_nodes.sh) - part of simulation (pyvolve) process 
-- [resci.py](./resci.py) - reformat scientific notation to float 
-- [blasting.sh](./blasting.sh) - tblastn for homologous sequences search 
+- [blasting.sh](./blasting.sh) - tblastn for homologous sequences search in midori databases (integrated directly to the pipeline script)
+- [blasting_nt.sh](./blasting_nt.sh) - tblastn for homologous sequences search in nt database (integrated directly to the pipeline script)
+- [perl/nuc_coding_mod.pl](./perl/nuc_coding_mod.pl) - nucleotide sequences extraction from BLAST database
+- [perl/macse2.pl](./perl/macse2.pl) - QC after macse alignment
+- [perl/codon_alig_unique.pl](./perl/codon_alig_unique.pl) - drop duplicated sequences
+- [perl/header_sel_mod3.pl](./perl/header_sel_mod3.pl) - selection of species and outgroup sequences for analysis
+- [legacy/resci.py](./legacy/resci.py) - reformat scientific notation to float (legacy)
+- [mut_calculation_step.sh](./mut_calculation_step.sh) - legacy, part of mut extraction step
+- [rename_tree_nodes.sh](./rename_tree_nodes.sh) - part of simulation (pyvolve) process
 
 ## Scripts-formatters
 
