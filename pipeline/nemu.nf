@@ -10,9 +10,10 @@ if (!params.species_name){
 	println "ERROR: Specify species name"
 	exit 1
 }
+
 if (!params.all){params.all = "false"}
 if (!params.syn4f){params.syn4f = "false"}
-if (!params.nonsyn){params.nonsyn = "true"}
+if (!params.nonsyn){params.nonsyn = "false"}
 if (!params.use_macse){params.use_macse = "false"} 
 if (!params.verbose){params.verbose = "false"} 
 if (!params.internal){params.internal = "false"} 

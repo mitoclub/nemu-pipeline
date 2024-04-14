@@ -1,0 +1,30 @@
+Bootstrap: localimage
+From: image_pipeline_latest.sif
+
+%post
+    echo 'Installing latest version of PyMutSpec!'
+    pip install PyMutSpec --upgrade
+
+    echo 'Installing latest version of Pipeline scripts!'
+    git clone https://github.com/mitoclub/nemu-pipeline.git /opt/dolphin
+    rm -rf /opt/scripts_latest
+    mv /opt/dolphin/scripts/perl /opt/scripts_latest
+    cp -r /opt/dolphin/pipeline /opt/
+    rm -r /opt/dolphin
+    ##final scripts in /opt/scripts_latest
+
+%test
+    test_command () {
+    if ! command -v "${1}"; then
+        echo "!!!command ${1} not found!!!"
+        export FAILED_TESTS=1
+    fi
+    }
+
+    test_command calculate_mutspec.py
+    test_command collect_mutations.py
+
+%labels
+    Maintainer MitoFunGen
+    Version v2.11.2
+    Used for ms-utils update

@@ -1,5 +1,3 @@
-// params.outdir = params.sequence.replaceFirst(/\.fasta/, "")
-
 if (!params.sequence){
 	println "ERROR: Specify input nucleotide multifasta file"
 	exit 1
@@ -16,9 +14,10 @@ if (!params.aligned){
 	println "ERROR: Specify if sequences are aligned or not"
 	exit 1
 }
-if (!params.outgroup){params.outgroup = ""} 
-if (!params.aligned){params.aligned = ""} 
 
+if (!params.all){params.all = "false"}
+if (!params.syn4f){params.syn4f = "false"}
+if (!params.nonsyn){params.nonsyn = "false"}
 if (!params.use_macse){params.use_macse = "false"} 
 if (!params.verbose){params.verbose = "false"} 
 if (!params.internal){params.internal = "false"} 
@@ -28,6 +27,7 @@ if (!params.save_exp_mutations){params.save_exp_mutations = "false"}
 if (!params.exclude_cons_sites){params.exclude_cons_sites = "false"}
 if (!params.uncertainty_coef){params.uncertainty_coef = "false"}
 if (!params.njobs){params.njobs = "1"}
+if (!params.required_nseqs){params.required_nseqs = 4}
 THREADS = params.njobs
 
 // TODO add default values for params below
@@ -38,7 +38,10 @@ if (params.verbose == 'true') {
 	println "all: ${params.all}"
 	println "syn: true"
 	println "syn4f: ${params.syn4f}"
+	println "non-syn: ${params.nonsyn}"
+	println "Use macse aligner: ${params.use_macse}"
 	println "Minimal number of mutations to save 192-component spectrum (mnum192): ${params.mnum192}"
+	println "Minimal number of sequences (leaves in a tree ingroup) to run the pipeline: ${params.required_nseqs}"
 	println "Use probabilities: ${params.use_probabilities}"
 	if (params.use_probabilities == 'true'){
 		println "Mutation probability cutoff: ${params.proba_cutoff}"
@@ -60,8 +63,10 @@ if (params.verbose == 'true') {
 	println ""
 }
 
+
 params.all_arg   = params.all == "true" ? "--all" : ""
 params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
+params.nonsyn_arg = params.nonsyn == "true" ? "--nonsyn" : ""
 params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
 
 query_nucleotide_fasta = file(params.sequence, type: 'any') 
@@ -80,7 +85,6 @@ if (!params.treefile || params.treefile == ''){
 
 // TODO write log file fith full params list
 
-min_input_nseqs = 4
 
 process nucleotide_fasta_qc {
 
@@ -96,24 +100,24 @@ input:
 output:
  file "sequences.fasta"  into g_428_multipleFasta_g_433
  file "species_mapping.txt" into g_428_outputFileTxt
- file "char_numbers.log"  into g_428_logFile
 
 """
-if [ `grep -c ">" $query` -lt $min_input_nseqs ]; then
-	echo "Number of sequences must be >= $min_input_nseqs"
+nseqs=`grep -c ">" $query`
+if [ \$nseqs -lt $params.required_nseqs ]; then
+	echo "ERROR: Pipeline requires at least ${params.required_nseqs} sequences, but received \${nseqs}" >&2
 	exit 1
 fi
 
 if [ `grep -E -c ">$outgrp" $query` -ne 1 ]; then
-	echo "Cannot fing outgroup header in the alignment"
+	echo "Cannot fing outgroup header in the alignment." >&2
 	exit 1
 fi
 
 grep -v  ">" $query | grep -o . | sort | uniq -c | sort -nr > char_numbers.log
 if [ `head -n 5 char_numbers.log | grep -Ec "[ACGTacgt]"` -ge 3 ] && [ `grep -Ec "[EFILPQU]" char_numbers.log` -eq 0 ]; then
-	echo "All right"
+	echo "All right" >&2
 else
-	echo "Query fasta must contain nucleotides"
+	echo "Query fasta must contain nucleotides" >&2
 	exit 1
 fi
 
@@ -147,15 +151,15 @@ output:
 """
 if [ $aligned = true ]; then
 	# TODO add verification of aligment and delete this useless argument!!!!
-	echo "No need to align!"
+	echo "No need to align!" >&2
 	cp $seqs aln.fasta
 elif [ $aligned = false ]; then
 	if [ $use_macse = true ]; then
-echo "Use macse as aligner"
+		echo "Use macse as aligner" >&2
 		java -jar /opt/macse_v2.06.jar -prog alignSequences -gc_def $gencode \
 			-out_AA aln_aa.fasta -out_NT aln.fasta -seq $seqs
 	else
-		echo "Use mafft as aligner"
+		echo "Use mafft as aligner" >&2
 		# NT2AA
 		java -jar /opt/macse_v2.06.jar -prog translateNT2AA -seq $seqs \
 			-gc_def $gencode -out_AA translated.faa
@@ -167,11 +171,11 @@ echo "Use macse as aligner"
 
 	fi
 else
-	echo "Inappropriate value for 'aligned' parameter; must be 'true' or 'false'"
+	echo "ERROR: Inappropriate value for 'aligned' parameter; must be 'true' or 'false'" >&2
 	exit 1
 fi
 
-echo "Do quality control"
+echo "Do quality control" >&2
 /opt/scripts_latest/macse2.pl aln.fasta msa_nuc.fasta
 """
 }
@@ -197,11 +201,8 @@ Output structure:
 ├── final_tree.nwk						# Final phylogenetic tree
 ├── seqs_unique.fasta					# Filtered orthologous sequences
 ├── msa_nuc.fasta						# Verified multiple sequence alignment
-├── headers_mapping.txt					# Encoded headers of sequences
 ├── species_mapping.txt					# Encoded headers of sequences (v2 for different version of pipeline)
 ├── logs/
-│   ├── char_numbers.log				# Character composition of input sequence (used in query QC)
-│   ├── report.blast					# Tblastn output during orthologs search
 │   ├── iqtree.log						# IQ-TREE logs during phylogenetic tree inference
 │   ├── iqtree_report.log				# IQ-TREE report during phylogenetic tree inference
 │   ├── iqtree_treeshrink.log			# TreeShrink logs
@@ -330,7 +331,7 @@ nw_distance -m p -s f -n $tree | sort -grk 2 1> branches.txt
 
 if [ `grep OUTGRP branches.txt | cut -f 2 | python3 -c "import sys; print(float(sys.stdin.readline().strip()) > 0)"` = False ]; then
 	cat "branches.txt"
-	echo "Something went wrong: outgroup is not furthest leaf in the tree"
+	echo "Something went wrong: outgroup is not furthest leaf in the tree" >&2
 	exit 1
 fi
 """
@@ -421,40 +422,46 @@ output:
 """
 if [ $params.exclude_cons_sites = true ]; then 
 	collect_mutations.py --tree $tree --states $states1 --states $states2 \
-		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
-		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
-		--rates $rates --cat-cutoff $params.cons_cat_cutoff \
-		--outdir mout $save_exp_muts $use_uncertainty_coef
+		--gencode $gencode --syn $params.syn4f_arg $params.nonsyn_arg \
+		$params.proba_arg --no-mutspec --pcutoff $params.proba_cutoff \
+		--mnum192 $params.mnum192 --outdir mout $save_exp_muts $use_uncertainty_coef \
+		--rates $rates --cat-cutoff $params.cons_cat_cutoff
 else
 	collect_mutations.py --tree $tree --states $states1 --states $states2 \
-		--gencode $gencode --syn $params.syn4f_arg $params.proba_arg --no-mutspec \
-		--pcutoff $params.proba_cutoff --mnum192 $params.mnum192 \
-		--outdir mout $save_exp_muts $use_uncertainty_coef
+		--gencode $gencode --syn $params.syn4f_arg $params.nonsyn_arg \
+		$params.proba_arg --no-mutspec --pcutoff $params.proba_cutoff \
+		--mnum192 $params.mnum192 --outdir mout $save_exp_muts $use_uncertainty_coef
 fi
 mv mout/* .
 mv mutations.tsv observed_mutations.tsv
 mv run.log mut_extraction.log
 
+# TODO split this process here
+
 calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
 	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-	--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf
+	--proba_min $params.proba_cutoff --plot -x pdf \
+	--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 
 if [ $params.internal = true ]; then
 	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset internal
+		--proba_min $params.proba_cutoff --plot -x pdf --subset internal \
+		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_internal.tsv
 fi
 if [ $params.terminal = true ]; then
 	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --plot -x pdf --subset terminal
+		--proba_min $params.proba_cutoff --plot -x pdf --subset terminal \
+		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_terminal.tsv
 fi
 if [ $params.branch_spectra = true ]; then
 	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --syn $params.syn4f_arg $params.all_arg --branches
+		--proba_min $params.proba_cutoff --branches \
+		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 fi
 """
 }
