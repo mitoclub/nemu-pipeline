@@ -1,7 +1,14 @@
 Bootstrap: localimage
 From: image_pipeline_latest.sif
 
+%files
+    tools/goalign* /opt
+    tools/seqkit /opt
+    tools/macse_v2.07.jar /opt
+
 %post
+    ls /opt
+
     echo 'Installing latest version of PyMutSpec!'
     pip install PyMutSpec --upgrade
 
