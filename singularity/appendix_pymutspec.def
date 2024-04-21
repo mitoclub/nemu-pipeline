@@ -10,7 +10,10 @@ From: image_pipeline_latest.sif
     ls /opt
 
     echo 'Installing latest version of PyMutSpec!'
-    pip install PyMutSpec --upgrade
+    git clone https://github.com/mitoclub/PyMutSpec.git /opt/pymutspec
+    pip uninstall -y PyMutSpec
+    cd /opt/pymutspec
+    python3 setup.py install
 
     echo 'Installing latest version of Pipeline scripts!'
     git clone https://github.com/mitoclub/nemu-pipeline.git /opt/dolphin
