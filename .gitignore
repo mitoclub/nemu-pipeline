@@ -10,3 +10,4 @@ nemu-pipeline.wiki
 .nextflow*
 work
 test_output*
+.DS_Store
