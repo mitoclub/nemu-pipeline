@@ -66,8 +66,10 @@ From: centos:7
     cd ..
     rm TreeShrink-$TREESHRINK_VERSION.tar.gz
     
-    echo 'Installing PyMutSpec!'
-    pip3 install pymutspec==0.0.9
+    echo 'Installing latest version of PyMutSpec!'
+    git clone https://github.com/mitoclub/PyMutSpec.git /opt/pymutspec
+    cd /opt/pymutspec
+    python3 setup.py install
 
     echo 'Installing Pyvolve!'
     pip3 install pyvolve==$PYVOLVE_VERSION
@@ -75,7 +77,9 @@ From: centos:7
 
     echo 'Installing latest version of Pipeline scripts!'
     git clone https://github.com/mitoclub/nemu-pipeline.git /opt/dolphin
+    rm -rf /opt/scripts_latest
     mv /opt/dolphin/scripts/perl /opt/scripts_latest
+    cp -r /opt/dolphin/pipeline /opt/
     rm -r /opt/dolphin
     ##final scripts in /opt/scripts_latest
 

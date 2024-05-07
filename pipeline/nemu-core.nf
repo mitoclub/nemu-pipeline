@@ -108,8 +108,12 @@ if [ \$nseqs -lt $params.required_nseqs ]; then
 	exit 1
 fi
 
-if [ `grep -E -c ">$outgrp" $query` -ne 1 ]; then
-	echo "Cannot fing outgroup header in the alignment." >&2
+noutgrps=`grep -E -c "$outgrp" $query`
+if [ \$noutgrps -eq 0 ]; then
+	echo "Cannot find outgroup header in the query fasta." >&2
+	exit 1
+elif [ \$noutgrps -gt 1 ]; then
+	echo "Cannot automatically find single outgroup in the query fasta. Found \$noutgrps records with '$outgrp' substring" >&2
 	exit 1
 fi
 
@@ -121,7 +125,7 @@ else
 	exit 1
 fi
 
-multifasta_coding.py -a $query -g $outgrp -o sequences.fasta -m species_mapping.txt
+multifasta_coding.py -a $query -g "$outgrp" -o sequences.fasta -m species_mapping.txt
 if [ ! -f species_mapping.txt ]; then
 	echo 'required for compatibility reasons' > species_mapping.txt
 fi
@@ -130,53 +134,90 @@ fi
 """
 }
 
+thr_gaps = 0.05
 
 process MSA {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /msa_nuc.fasta$/) "$filename"
+	else if (filename =~ /.*.csv$/) "logs/$filename"
 }
 
 input:
- val aligned from aligned_param
  file seqs from g_428_multipleFasta_g_433
  val gencode from g_396_gencode_g_433
+ val aligned from aligned_param
  val use_macse from use_macse_param
 
 output:
  file "msa_nuc.fasta"  into g_433_multipleFasta_g_420, g_433_multipleFasta_g_421, g_433_multipleFasta_g_422, g_433_multipleFasta_g_424, g_433_multipleFasta_g_425
- file "aln_aa.fasta" optional true  into g_433_multipleFasta_lol
+ file "seq_dd_AA.fa" into seq_dd_AA_for_QC
+ file "*.csv" optional true
 
 """
 if [ $aligned = true ]; then
 	# TODO add verification of aligment and delete this useless argument!!!!
 	echo "No need to align!" >&2
-	cp $seqs aln.fasta
+	cp $seqs msa_nuc.fasta
+	echo ">>>>>>>>>>>>>>>" > seq_dd_AA.fa
+
 elif [ $aligned = false ]; then
 	if [ $use_macse = true ]; then
 		echo "Use macse as aligner" >&2
-		java -jar /opt/macse_v2.06.jar -prog alignSequences -gc_def $gencode \
+		java -jar /opt/macse_v2.07.jar -prog alignSequences -gc_def $gencode \
 			-out_AA aln_aa.fasta -out_NT aln.fasta -seq $seqs
+		echo "Do quality control" >&2
+		/opt/scripts_latest/macse2.pl aln.fasta msa_nuc.fasta
+		cp aln_aa.fasta seq_dd_AA.fa
 	else
-		echo "Use mafft as aligner" >&2
-		# NT2AA
-		java -jar /opt/macse_v2.06.jar -prog translateNT2AA -seq $seqs \
-			-gc_def $gencode -out_AA translated.faa
-		#ALN AA
-		mafft --thread $THREADS translated.faa > translated_aln.faa
-		#AA_ALN --> NT_ALN
-		java -jar /opt/macse_v2.06.jar -prog reportGapsAA2NT \
-			-align_AA translated_aln.faa -seq $seqs -out_NT aln.fasta
+		mafft --thread $THREADS $seqs > seqM.fa
+		sed '/^>/!s/[actg]/\\U&/g' seqM.fa > seqMU.fa
+		goalign clean seqs -c 0.3 -i seqMU.fa -o seqMC.fa
+		goalign clean sites -c $thr_gaps -i seqMC.fa -o seqMCC.fa
+		seqkit rmdup -s < seqMCC.fa > seq_dd.fa
+		java -jar /opt/macse_v2.07.jar -prog alignSequences -seq seq_dd.fa \
+			-gc_def $gencode -optim 2 -max_refine_iter 0 -ambi_OFF
+		
+		java -jar /opt/macse_v2.07.jar -prog exportAlignment \
+			-align seq_dd_NT.fa -gc_def $gencode -ambi_OFF \
+			-codonForInternalStop "NNN" -codonForFinalStop "---" \
+			-codonForInternalFS "NNN" -codonForExternalFS "---" \
+			-out_stat_per_seq macse_stat_per_seq.csv -out_stat_per_site macse_stat_per_site.csv 
 
+		sed 's/!/n/g' seq_dd_NT_NT.fa > seq_dd_NT_FS.fa
+		goalign clean sites -c $thr_gaps -i seq_dd_NT_FS.fa -o seq_dd_NT_FS_clean.fa
+		seqkit rmdup -s < seq_dd_NT_FS_clean.fa > msa_nuc_lower.fasta
+		sed '/^>/!s/[actg]/\\U&/g' msa_nuc_lower.fasta > msa_nuc.fasta
 	fi
 else
 	echo "ERROR: Inappropriate value for 'aligned' parameter; must be 'true' or 'false'" >&2
 	exit 1
 fi
+"""
+}
 
-echo "Do quality control" >&2
-/opt/scripts_latest/macse2.pl aln.fasta msa_nuc.fasta
+
+process MSA_QC {
+
+input:
+ file msa from g_433_multipleFasta_g_422
+ file aa from seq_dd_AA_for_QC
+
+"""
+nstops=`grep -Eo "\\*[A-Za-z]" $aa | wc -l`
+nseqs_aa=`grep -c ">" $aa`
+thr_for_nstops=\$((nseqs_aa * 2)) # num of seqs * 2 is the max number of stops
+if [ \$nstops -gt \$thr_for_nstops ]; then
+	echo "There are stops in \${nstops} sequences. It's possible that you set incorrect gencode" >&2
+	exit 1
+fi
+
+nseqs=`grep -c ">" $msa`
+if [ \$nseqs -lt $params.required_nseqs ]; then
+	echo "ERROR: Too low number of sequences! Pipeline requires at least ${params.required_nseqs} sequences, but after deduplication left only \${nseqs}" >&2
+	exit 1
+fi
 """
 }
 
@@ -398,26 +439,26 @@ iqtree_states_add_part.py anc.state iqtree_anc.state
 save_exp_muts = params.save_exp_mutations == "true" ? "--save-exp-muts" : ""
 use_uncertainty_coef = params.uncertainty_coef == "true" ? "--phylocoef" : "--no-phylocoef"
 
-process mutations_extraction {
+process mutations_reconstruction {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /.*.tsv$/) "tables/$filename"
 	else if (filename =~ /.*.log$/) "logs/$filename"
-	else if (filename =~ /.*.pdf$/) "figures/$filename"
 }
 
 input:
  set val(namet), file(tree) from g_326_tree_g_410
  set val(label), file(states1) from g_326_state_g_410
- path rates from g_326_ratefile
  file states2 from g_421_state_g_410
  val gencode from g_396_gencode_g_410
+ path rates from g_326_ratefile
 
 output:
- file "*.tsv"  into g_410_outputFileTSV
- file "*.log"  into g_410_logFile
- file "*.pdf"  into g_410_outputFilePdf
+ file "observed_mutations.tsv"  into g_410_outputFileTSV
+ file "expected_freqs.tsv"  into g_411_outputFileTSV
+ file "expected_mutations.tsv" optional true
+ file "mut_extraction.log"
 
 """
 if [ $params.exclude_cons_sites = true ]; then 
@@ -435,30 +476,54 @@ fi
 mv mout/* .
 mv mutations.tsv observed_mutations.tsv
 mv run.log mut_extraction.log
+"""
+}
 
-# TODO split this process here
 
-calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+process spectra_calculation {
+
+publishDir params.outdir, overwrite: true, mode: 'copy',
+	saveAs: {filename ->
+	if (filename =~ /.*.tsv$/) "tables/$filename"
+	else if (filename =~ /.*.pdf$/) "figures/$filename"
+}
+
+input:
+ file obs_muts from g_410_outputFileTSV
+ file exp_freqs from g_411_outputFileTSV
+
+output:
+ file "*.tsv"
+ file "*.pdf" optional true
+
+"""
+nmuts=`cat $obs_muts | wc -l`
+if [ \$nmuts -lt 2 ]; then
+	echo "ERROR: There are no reconstructed mutations after pipeline execution." >&2
+	echo "Unfortunately this gene cannot be processed authomatically on available data." >&2
+fi
+
+calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
 	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 	--proba_min $params.proba_cutoff --plot -x pdf \
 	--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 
 if [ $params.internal = true ]; then
-	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --plot -x pdf --subset internal \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_internal.tsv
 fi
 if [ $params.terminal = true ]; then
-	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --plot -x pdf --subset terminal \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_terminal.tsv
 fi
 if [ $params.branch_spectra = true ]; then
-	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --branches \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg

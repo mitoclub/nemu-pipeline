@@ -1,38 +1,51 @@
 if (!params.sequence){
-	println "ERROR: Specify input nucleotide multifasta file"
+	println "INPUT ERROR: Specify input nucleotide multifasta file"
 	exit 1
 }
 if (!params.gencode){
-	println "ERROR: Specify gencode number (e.g. 1,2,3 etc.)"
+	println "INPUT ERROR: Specify gencode number (e.g. 1,2,3 etc.)"
 	exit 1
 }
 if (!params.species_name){
-	println "ERROR: Specify species name"
+	println "INPUT ERROR: Specify species name"
 	exit 1
+}
+if (!params.DB){
+	println "INPUT ERROR: Specify nucleotide database"
+	exit 1
+}
+if (!params.iqtree_model){
+	println "INPUT ERROR: Specify substitution model 'iqtree_model'"
+	exit 1
+}
+if (!params.iqtree_anc_model){
+	println "INPUT ERROR: Specify substitution model 'iqtree_anc_model'"
+	exit 1
+}
+// if DB is NT, check that genus taxid specified
+if (params.DB.endsWith("nt")){
+	if (!params.genus_taxid){
+		println "INPUT ERROR: Specify genus taxid when run pipeline on NT database"
+		exit 1
+	}
 }
 
 if (!params.all){params.all = "false"}
 if (!params.syn4f){params.syn4f = "false"}
 if (!params.nonsyn){params.nonsyn = "false"}
-if (!params.use_macse){params.use_macse = "false"} 
+if (!params.run_shrinking){params.run_shrinking = "true"} 
+if (!params.quantile){params.quantile = "0.1"} 
 if (!params.verbose){params.verbose = "false"} 
 if (!params.internal){params.internal = "false"} 
 if (!params.terminal){params.terminal = "false"} 
 if (!params.branch_spectra){params.branch_spectra = "false"}
-if (!params.save_exp_mutations){params.save_exp_mutations = "false"}
 if (!params.exclude_cons_sites){params.exclude_cons_sites = "false"}
+if (!params.use_probabilities){params.use_probabilities = "false"}
+if (!params.save_exp_mutations){params.save_exp_mutations = "false"}
 if (!params.uncertainty_coef){params.uncertainty_coef = "false"}
 if (!params.njobs){params.njobs = "1"}
 if (!params.required_nseqs){params.required_nseqs = 3}
 THREADS = params.njobs
-
-// if DB is NT, check that genus taxid specified
-if (params.DB.endsWith("nt")){
-	if (!params.genus_taxid){
-		println "ERROR: Specify genus taxid when run pipeline on NT database"
-		exit 1
-	}
-}
 
 // TODO add specific params logs
 if (params.verbose == 'true') {
@@ -42,7 +55,6 @@ if (params.verbose == 'true') {
 	println "syn: true"
 	println "syn4f: ${params.syn4f}"
 	println "non-syn: ${params.nonsyn}"
-	println "Use macse aligner: ${params.use_macse}"
 	println "Minimal number of mutations to save 192-component spectrum (mnum192): ${params.mnum192}"
 	println "Minimal number of sequences (leaves in a tree ingroup) to run the pipeline: ${params.required_nseqs}"
 	println "Use probabilities: ${params.use_probabilities}"
@@ -72,13 +84,11 @@ params.syn4f_arg = params.syn4f == "true" ? "--syn4f" : ""
 params.nonsyn_arg = params.nonsyn == "true" ? "--nonsyn" : ""
 params.proba_arg = params.use_probabilities == "true" ? "--proba" : ""
 
-Channel.value(params.DB).set{g_15_commondb_path_g_406}
+Channel.value(params.DB).into{g_15_commondb_path_g_406;g_15_commondb_path_g_444}
 Channel.value(params.genus_taxid).set{genus_taxid_value}
 query_protein_sequence = file(params.sequence, type: 'any') 
 Channel.value(params.gencode).into{g_220_gencode_g_406;g_396_gencode_g_410;g_396_gencode_g_411;g_396_gencode_g_422;g_396_gencode_g_423;g_396_gencode_g_433}
-Channel.value("false").set{aligned_param}
 Channel.value(params.species_name).set{g_1_species_name_g_415}
-Channel.value(params.use_macse).set{use_macse_param}
 
 
 process query_qc {
@@ -113,6 +123,7 @@ mv $query query_single.fasta
 
 
 NSEQS_LIMIT=33000
+max_target_seqs = 1000
 
 process tblastn_and_seqs_extraction {
 
@@ -143,20 +154,28 @@ output:
 
 script:
 """
-nseqs=500
 outfmt="6 saccver pident length qlen gapopen sstart send evalue bitscore sframe"
 
 if [[ $DB == *nt ]]; then
-	echo "INFO: Collecting genus taxids" >&2
+	echo "INFO: Collecting relatives taxids" >&2
 	if [[ "$species_name" == Homo* ]]; then
 		get_species_taxids.sh -t 9604 > genus.taxids
 	else
+		# TODO parse prepared table instead of fetching remote database. If table exist of course, make it general
 		get_species_taxids.sh -t $genus_taxid  > genus.taxids
+	fi
+	if [ `cat genus.taxids | wc -l` -eq 0 ]; then
+		echo "Internal server error during fetching of genus taxids. Try again later" >&2
+		exit 1
 	fi
 	sleep 2
 
 	echo "INFO: Collecting species taxid information" >&2
 	get_species_taxids.sh -n "$species_name" | head -n 5 > sp_tax.info
+	if [ `cat sp_tax.info | wc -l` -eq 0 ]; then
+		echo "Internal server error during fetching of species taxa information. Try again later" >&2
+		exit 1
+	fi
 	if [[ `grep "rank : species" sp_tax.info` ]]; then 
 		raw_sp_taxid=`grep Taxid sp_tax.info`
 		species_taxid="\${raw_sp_taxid#*Taxid : }"
@@ -165,32 +184,36 @@ if [[ $DB == *nt ]]; then
 
 	echo "INFO: Collecting under-species taxids" >&2
 	get_species_taxids.sh -t \$species_taxid > species.taxids
+	if [ `cat species.taxids | wc -l` -eq 0 ]; then
+		echo "Internal server error during fetching of species taxids. Try again later" >&2
+		exit 1
+	fi
 
 	grep -v -f species.taxids genus.taxids > relatives.taxids
 
 	echo "INFO: Checking number of taxids for outgroup" >&2
-	if [ `wc -l relatives.taxids | cut -f 1 -d ' '` -eq 0 ]; then
+	if [ `cat relatives.taxids | wc -l` -eq 0 ]; then
 		echo "ERROR: there are no taxids that can be used as outgroup." >&2
-		echo "Maybe this species is single in the genus, so pipeline can build incorrect phylogeneti tree" >&2
+		echo "Maybe this species is single in the family, so pipeline can build incorrect phylogeneti tree" >&2
 		echo "due to potential incorrect tree rooting. You can select sequences and outgroup manually and" >&2
 		echo "run pipeline on your nucleotide sequences" >&2
 		exit 1
 	fi
 
 	echo "INFO: Blasting species sequences in the nt" >&2
-	tblastn -db $DB -db_gencode $gencode -max_target_seqs \$nseqs \
+	tblastn -db $DB -db_gencode $gencode -max_target_seqs $max_target_seqs \
 			-query $query -out blast_output_species.tsv -evalue 0.00001 \
 			-num_threads $THREADS -taxidlist species.taxids \
 			-outfmt "\$outfmt"
 
-	echo "INFO: Filtering out bad hits: ident <= 80, query coverage <= 0.6" >&2
-	awk '\$2 > 80 && \$3 / \$4 > 0.6' blast_output_species.tsv > blast_output_species_filtered.tsv
+	echo "INFO: Filtering out bad hits: ident <= 80, query coverage <= 0.5" >&2
+	awk '\$2 > 80 && \$3 / \$4 > 0.5' blast_output_species.tsv > blast_output_species_filtered.tsv
 
 	echo "INFO: Checking required number of hits" >&2
-	nhits=`wc -l blast_output_species_filtered.tsv | cut -f 1 -d ' '`
+	nhits=`cat blast_output_species_filtered.tsv | wc -l`
 	if [ \$nhits -lt $params.required_nseqs ]; then
 		echo "ERROR: there are only \$nhits valuable hits in the Nucleotide collection for given query," >&2
-		echo "but needed at least ${params.required_nseqs}" >&2
+		echo "but needed at least ${params.required_nseqs}." >&2
 		exit 1
 	fi
 
@@ -216,16 +239,17 @@ if [[ $DB == *nt ]]; then
 			-num_threads $THREADS -taxidlist relatives.taxids \
 			-outfmt "\$outfmt"
 	
-	echo "INFO: Filtering out bad hits: ident <= 70, query coverage <= 0.6" >&2
-	awk '\$2 > 70 && \$3 / \$4 > 0.6' blast_output_genus.tsv | sort -rk 9 > blast_output_genus_filtered.tsv
+	echo "INFO: Filtering out bad hits: ident <= 70, query coverage <= 0.5" >&2
+	awk '\$2 > 70 && \$3 / \$4 > 0.5' blast_output_genus.tsv | sort -rk 9 > blast_output_genus_filtered.tsv
 
 	echo "INFO: Checking required number of hits for outgroup" >&2
-	if [ `wc -l blast_output_genus_filtered.tsv | cut -f 1 -d ' '` -eq 0 ]; then
-		echo "ERROR: there are no hits in the database that could be used as outgroup" >&2
+	if [ `cat blast_output_genus_filtered.tsv | wc -l` -eq 0 ]; then
+		echo "ERROR: there are no hits in the database that could be used as outgroup." >&2
+		echo "Unfortunately pipeline cannot analyse this species using nt databse." >&2
 		exit 1
 	fi
 
-	echo "INFO: Preparing genus coords for nucleotide sequences extraction" >&2
+	echo "INFO: Preparing outgroup coords for nucleotide sequences extraction" >&2
 	# entry|range|strand, e.g. ID09 x-y minus
 	head -n 1 blast_output_genus_filtered.tsv | awk '{print \$1, \$6, \$7, (\$NF ~ /^-/) ? "minus" : "plus"}' > raw_coords_genus.txt
 	awk '\$2 > \$3 {print \$1, \$3 "-" \$2, \$4}' raw_coords_genus.txt >  coords_genus.txt
@@ -241,9 +265,11 @@ if [[ $DB == *nt ]]; then
 
 else
 	report=report.blast
+	nseqs=$max_target_seqs
+
 	while true
 	do   
-		echo "INFO: Blasting in midori2 database; nseqs=\$nseqs" >&2
+		echo "INFO: Blasting in midori2 database; max_target_seqs=\$nseqs" >&2
 		tblastn -db $DB -db_gencode $gencode -num_descriptions \$nseqs -num_alignments \$nseqs \
 				-query $query -out \$report -num_threads $THREADS
 		
@@ -331,53 +357,85 @@ mv $query sequences.fasta
 """
 }
 
+thr_gaps = 0.05
 
 process MSA {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /msa_nuc.fasta$/) "$filename"
+	else if (filename =~ /.*.csv$/) "logs/$filename"
 }
 
 input:
- val aligned from aligned_param
  file seqs from g_428_multipleFasta_g_433
  val gencode from g_396_gencode_g_433
- val use_macse from use_macse_param
+ val DB from g_15_commondb_path_g_444
 
 output:
  file "msa_nuc.fasta"  into g_433_multipleFasta_g_420, g_433_multipleFasta_g_421, g_433_multipleFasta_g_422, g_433_multipleFasta_g_424, g_433_multipleFasta_g_425
- file "aln_aa.fasta" optional true  into g_433_multipleFasta_lol
+ file "seq_dd_AA.fa" into seq_dd_AA_for_QC
+ file "*.csv" optional true
 
 """
-if [ $aligned = true ]; then
-	# TODO add verification of aligment and delete this useless argument!!!!
-	echo "No need to align!" >&2
-	cp $seqs aln.fasta
-elif [ $aligned = false ]; then
-	if [ $use_macse = true ]; then
-		echo "Use macse as aligner" >&2
-		java -jar /opt/macse_v2.06.jar -prog alignSequences -gc_def $gencode \
-			-out_AA aln_aa.fasta -out_NT aln.fasta -seq $seqs
-	else
-		echo "Use mafft as aligner" >&2
-		# NT2AA
-		java -jar /opt/macse_v2.06.jar -prog translateNT2AA -seq $seqs \
-			-gc_def $gencode -out_AA translated.faa
-		#ALN AA
-		mafft --thread $THREADS translated.faa > translated_aln.faa
-		#AA_ALN --> NT_ALN
-		java -jar /opt/macse_v2.06.jar -prog reportGapsAA2NT \
-			-align_AA translated_aln.faa -seq $seqs -out_NT aln.fasta
+if [[ $DB == *nt ]]; then
+	mafft --thread $THREADS $seqs > seqM.fa
+	sed '/^>/!s/[actg]/\\U&/g' seqM.fa > seqMU.fa
+	goalign clean seqs -c 0.3 -i seqMU.fa -o seqMC.fa
+	goalign clean sites -c $thr_gaps -i seqMC.fa -o seqMCC.fa
+	seqkit rmdup -s < seqMCC.fa > seq_dd.fa
+	java -jar /opt/macse_v2.07.jar -prog alignSequences -seq seq_dd.fa \
+		-gc_def $gencode -optim 2 -max_refine_iter 0 -ambi_OFF
+	
+	java -jar /opt/macse_v2.07.jar -prog exportAlignment \
+		-align seq_dd_NT.fa -gc_def $gencode -ambi_OFF \
+		-codonForInternalStop "NNN" -codonForFinalStop "---" \
+		-codonForInternalFS "NNN" -codonForExternalFS "---" \
+		-out_stat_per_seq macse_stat_per_seq.csv -out_stat_per_site macse_stat_per_site.csv 
 
-	fi
+	sed 's/!/n/g' seq_dd_NT_NT.fa > seq_dd_NT_FS.fa
+	goalign clean sites -c $thr_gaps -i seq_dd_NT_FS.fa -o seq_dd_NT_FS_clean.fa
+	seqkit rmdup -s < seq_dd_NT_FS_clean.fa > msa_nuc_lower.fasta
+	sed '/^>/!s/[actg]/\\U&/g' msa_nuc_lower.fasta > msa_nuc.fasta
+
 else
-	echo "ERROR: Inappropriate value for 'aligned' parameter; must be 'true' or 'false'" >&2
+	# NT2AA
+	java -jar /opt/macse_v2.07.jar -prog translateNT2AA -seq $seqs \
+		-gc_def $gencode -out_AA translated.faa
+	#ALN AA
+	mafft --thread $THREADS translated.faa > translated_aln.faa
+	#AA_ALN --> NT_ALN
+	java -jar /opt/macse_v2.07.jar -prog reportGapsAA2NT \
+		-align_AA translated_aln.faa -seq $seqs -out_NT aln.fasta
+	echo "Do quality control" >&2
+	/opt/scripts_latest/macse2.pl aln.fasta msa_nuc.fasta
+
+	cp translated_aln.faa seq_dd_AA.fa
+fi
+"""
+}
+
+
+process MSA_QC {
+
+input:
+ file msa from g_433_multipleFasta_g_422
+ file aa from seq_dd_AA_for_QC
+
+"""
+nstops=`grep -Eo "\\*[A-Za-z]" $aa | wc -l`
+nseqs_aa=`grep -c ">" $aa`
+thr_for_nstops=\$((nseqs_aa * 2)) # num of seqs * 2 is the max number of stops
+if [ \$nstops -gt \$thr_for_nstops ]; then
+	echo "There are stops in \${nstops} sequences. It's possible that you set incorrect gencode" >&2
 	exit 1
 fi
 
-echo "Do quality control" >&2
-/opt/scripts_latest/macse2.pl aln.fasta msa_nuc.fasta
+nseqs=`grep -c ">" $msa`
+if [ \$nseqs -lt $params.required_nseqs ]; then
+	echo "ERROR: Too low number of sequences! Pipeline requires at least ${params.required_nseqs} sequences, but after deduplication left only \${nseqs}" >&2
+	exit 1
+fi
 """
 }
 
@@ -587,26 +645,26 @@ iqtree_states_add_part.py anc.state iqtree_anc.state
 save_exp_muts = params.save_exp_mutations == "true" ? "--save-exp-muts" : ""
 use_uncertainty_coef = params.uncertainty_coef == "true" ? "--phylocoef" : "--no-phylocoef"
 
-process mutations_extraction {
+process mutations_reconstruction {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /.*.tsv$/) "tables/$filename"
 	else if (filename =~ /.*.log$/) "logs/$filename"
-	else if (filename =~ /.*.pdf$/) "figures/$filename"
 }
 
 input:
  set val(namet), file(tree) from g_326_tree_g_410
  set val(label), file(states1) from g_326_state_g_410
- path rates from g_326_ratefile
  file states2 from g_421_state_g_410
  val gencode from g_396_gencode_g_410
+ path rates from g_326_ratefile
 
 output:
- file "*.tsv"  into g_410_outputFileTSV
- file "*.log"  into g_410_logFile
- file "*.pdf"  into g_410_outputFilePdf
+ file "observed_mutations.tsv"  into g_410_outputFileTSV
+ file "expected_freqs.tsv"  into g_411_outputFileTSV
+ file "expected_mutations.tsv" optional true
+ file "mut_extraction.log"
 
 """
 if [ $params.exclude_cons_sites = true ]; then 
@@ -624,30 +682,54 @@ fi
 mv mout/* .
 mv mutations.tsv observed_mutations.tsv
 mv run.log mut_extraction.log
+"""
+}
 
-# TODO split this process here
 
-calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+process spectra_calculation {
+
+publishDir params.outdir, overwrite: true, mode: 'copy',
+	saveAs: {filename ->
+	if (filename =~ /.*.tsv$/) "tables/$filename"
+	else if (filename =~ /.*.pdf$/) "figures/$filename"
+}
+
+input:
+ file obs_muts from g_410_outputFileTSV
+ file exp_freqs from g_411_outputFileTSV
+
+output:
+ file "*.tsv"
+ file "*.pdf" optional true
+
+"""
+nmuts=`cat $obs_muts | wc -l`
+if [ \$nmuts -lt 2 ]; then
+	echo "ERROR: There are no reconstructed mutations after pipeline execution." >&2
+	echo "Unfortunately this gene cannot be processed authomatically on available data." >&2
+fi
+
+calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
 	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 	--proba_min $params.proba_cutoff --plot -x pdf \
 	--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 
 if [ $params.internal = true ]; then
-	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --plot -x pdf --subset internal \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_internal.tsv
 fi
 if [ $params.terminal = true ]; then
-	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --plot -x pdf --subset terminal \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_terminal.tsv
 fi
 if [ $params.branch_spectra = true ]; then
-	calculate_mutspec.py -b observed_mutations.tsv -e expected_freqs.tsv -o . \
+	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
 		--proba_min $params.proba_cutoff --branches \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
