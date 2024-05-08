@@ -1,20 +1,28 @@
 # Nemu-pipeline
 
-The pipeline for neutral mutation spectra evaluation based on evolutionary data.
-
-Check [Wiki](https://github.com/mitoclub/nemu-pipeline/wiki) to read how to use the pipeline
+This repository contains the pipeline for neutral mutational spectra evaluation based on evolutionary data and materials for the publication titled "NeMu: A Comprehensive Pipeline for Accurate Reconstruction of Neutral Mutation Spectra from Evolutionary Data" by Efimenko B. et al.
 
 ## Webserver
 
-Enjoy the pipeline using our user-friendly [webserver](https://nemu-pipeline.streamlit.app/)!
+Enjoy the pipeline using our user-friendly [webserver](https://nemu-pipeline.com/)!
 
-## Nextflow script
+Check [Wiki](https://nemu-pipeline.com/Information) to read how to use the pipeline
 
-NeMu pipeline developed using Nextflow. Available [here](./pipeline/).
+## Repository details
+
+- `./pipeline/` directory contains *.nf files (Nextflow) with 2 versions of the pipeline: for single-protein and multiple-nucleotide inputs
+- `./singularity/` - definition files for the container used to store all dependencies
+- `./data/` - several intermediate files from analyses, example inputs, full example run and supplementary data for the article
+- `./figures/` - figures from all performed analyses and comparisons, pipeline schemes, etc.
+- `./notebooks/` - all performed analyses on python
+- `./scripts/` - all used scripts for specific data processing during analyses and scripts, used in the NeMu pipeline
+- `./docs/` - notes for used tools
+
+Each main directory contains readme file with detailed information.
 
 ## Dependencies
 
-## Singularity container
+### Singularity container
 
 The pipeline relies on a diverse set of dependencies. To simplify execution, ensure compatibility across different operating systems, all these dependencies have been packaged within a [Singularity container](./singularity/). We used Singularity 3.10.2.
 

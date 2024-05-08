@@ -1,0 +1,87 @@
+# Supplementary 1. Additional species used in analysis of alignment sites variability.
+
+CYTB Hominidae dataset: 
+Gorilla_beringei
+Gorilla_gorilla_diehli
+Gorilla_gorilla_gorilla
+Homo_heidelbergensis
+Pan_paniscus
+Pan_troglodytes_ellioti
+Pan_troglodytes_schweinfurthii
+Pan_troglodytes_troglodytes
+Pan_troglodytes_verus
+Pongo_abelii
+Pongo_pygmaeus
+
+COX1 Hominidae dataset: 
+Gorilla_beringei
+Gorilla_gorilla_diehli
+Gorilla_gorilla_gorilla
+Homo_heidelbergensis
+Pan_paniscus
+Pan_troglodytes_ellioti
+Pan_troglodytes_schweinfurthii
+Pan_troglodytes_troglodytes
+Pan_troglodytes_verus
+Pongo_abelii
+Pongo_pygmaeus
+
+ND1 Hominidae dataset: 
+Gorilla_beringei
+Gorilla_gorilla_gorilla
+Homo_heidelbergensis
+Pan_paniscus
+Pan_troglodytes
+Pan_troglodytes_ellioti
+Pan_troglodytes_schweinfurthii
+Pongo_abelii
+Pongo_pygmaeus
+
+CYTB Muridae dataset:
+Mus_booduga
+Mus_caroli
+Mus_cervicolor
+Mus_cookii
+Mus_crociduroides
+Mus_cypriacus
+Mus_famulus
+Mus_fernandoni
+Mus_fragilicauda
+Mus_harennensis
+Mus_haussa
+Mus_lepidoides
+Mus_mahomet
+Mus_mattheyi
+Mus_mayori
+Mus_neavei
+Mus_nitidulus
+Mus_pahari
+Mus_platythrix
+Mus_poschiavinus
+Mus_saxicola
+Mus_spicilegus
+Mus_spretus
+Mus_terricolor
+Mus_triton
+
+COX1 Muridae dataset:
+Mus_baoulei
+Mus_caroli
+Mus_cookii
+Mus_famulus
+Mus_fragilicauda
+Mus_minutoides
+Mus_saxicola
+Mus_terricolor
+
+ND1 Muridae dataset:
+Mus_baoulei
+Mus_caroli
+Mus_cervicolor
+Mus_cookii
+Mus_famulus
+Mus_fragilicauda
+Mus_pahari
+Mus_saxicola
+Mus_spretus
+Mus_terricolor
