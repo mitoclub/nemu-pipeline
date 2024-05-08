@@ -1,0 +1,204 @@
+IQ-TREE 2.2.0 COVID-edition built Jun  1 2022
+
+Input file name: aln.phy
+Type of analysis: tree reconstruction
+Random seed number: 666693
+
+REFERENCES
+----------
+
+To cite IQ-TREE please use:
+
+Bui Quang Minh, Heiko A. Schmidt, Olga Chernomor, Dominik Schrempf,
+Michael D. Woodhams, Arndt von Haeseler, and Robert Lanfear (2020)
+IQ-TREE 2: New models and efficient methods for phylogenetic inference
+in the genomic era. Mol. Biol. Evol., in press.
+https://doi.org/10.1093/molbev/msaa015
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 51 sequences with 1137 nucleotide sites
+Number of constant sites: 481 (= 42.3043% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 481 (= 42.3043% of all sites)
+Number of parsimony informative sites: 591
+Number of distinct site patterns: 640
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: RY10.12+I+G6
+
+Rate parameter R:
+
+  A-C: 0.0734
+  A-G: 0.3866
+  A-T: 0.1922
+  C-A: 0.1401
+  C-G: 0.0598
+  C-T: 2.5150
+  G-A: 3.8100
+  G-C: 0.1361
+  G-T: 0.1295
+  T-A: 0.1200
+  T-C: 4.3572
+  T-G: 0.0800
+
+State frequencies: (estimated with maximum likelihood)
+
+  pi(A) = 0.3837
+  pi(C) = 0.3563
+  pi(G) = 0.04583
+  pi(T) = 0.2141
+
+Rate matrix Q:
+
+  A    -0.274   0.03083    0.1624   0.08076
+  C   0.05887    -1.141   0.02514     1.057
+  G     1.601   0.05718    -1.712    0.0544
+  T   0.05042      1.83   0.03359    -1.914
+
+Model of rate heterogeneity: Invar+Gamma with 6 categories
+Proportion of invariable sites: 0.3635
+Gamma shape alpha: 0.4718
+
+ Category  Relative_rate  Proportion
+  0         0              0.3635
+  1         0.01863        0.1061
+  2         0.1473         0.1061
+  3         0.45           0.1061
+  4         1.018          0.1061
+  5         2.112          0.1061
+  6         5.681          0.1061
+Relative rates are computed as MEAN of the portion of the Gamma distribution falling in the category.
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -21992.0638 (s.e. 609.4837)
+Unconstrained log-likelihood (without tree): -5650.6256
+Number of free parameters (#branches + #model parameters): 111
+Akaike information criterion (AIC) score: 44206.1275
+Corrected Akaike information criterion (AICc) score: 44230.3851
+Bayesian information criterion (BIC) score: 44765.1400
+
+Total tree length (sum of branch lengths): 30.7699
+Sum of internal branch lengths: 9.8873 (32.1331% of tree length)
+
+NOTE: Tree is ROOTED at virtual root '__root__'
+
+   +--RN_1
++--|
+|  |                                       +--RN_2
+|  |                                    +--|
+|  |                                    |  +--RN_21
+|  |                                 +--|
+|  |                                 |  +--RN_5
+|  |                              +--|
+|  |                              |  |              +--RN_10
+|  |                              |  |           +--|
+|  |                              |  |           |  +--RN_11
+|  |                              |  |        +--|
+|  |                              |  |        |  +--RN_22
+|  |                              |  |     +--|
+|  |                              |  |     |  +--RN_25
+|  |                              |  |  +--|
+|  |                              |  |  |  +--RN_23
+|  |                              |  +--|
+|  |                              |     |  +--RN_24
+|  |                              |     +--|
+|  |                              |        +--RN_26
+|  |                           +--|
+|  |                           |  +--RN_3
+|  |                        +--|
+|  |                        |  +--RN_4
+|  |                     +--|
+|  |                     |  |  +--RN_27
+|  |                     |  +--|
+|  |                     |     +--RN_28
+|  |                  +--|
+|  |                  |  |     +----RN_19
+|  |                  |  |  +--|
+|  |                  |  |  |  +--RN_20
+|  |                  |  +--|
+|  |                  |     +---------RN_29
+|  |               +--|
+|  |               |  |  +--------RN_6
+|  |               |  +--|
+|  |               |     |                +----RN_30
+|  |               |     |             +--|
+|  |               |     |             |  |  +--------------------------OUTGRP
+|  |               |     |             |  +--|
+|  |               |     |             |     |  +--RN_49
+|  |               |     |             |     +--|
+|  |               |     |             |        +--RN_50
+|  |               |     |          +--|
+|  |               |     |          |  +-----RN_37
+|  |               |     |       +--|
+|  |               |     |       |  +-----RN_34
+|  |               |     |    +--|
+|  |               |     |    |  |  +---RN_32
+|  |               |     |    |  +--|
+|  |               |     |    |     |  +-----RN_35
+|  |               |     |    |     +--|
+|  |               |     |    |        |  +-----RN_36
+|  |               |     |    |        +--|
+|  |               |     |    |           |  +----RN_40
+|  |               |     |    |           +--|
+|  |               |     |    |              |   +--RN_41
+|  |               |     |    |              +---|
+|  |               |     |    |                  +--RN_42
+|  |               |     +----|
+|  |               |          |     +--RN_31
+|  |               |          |  +--|
+|  |               |          |  |  +--RN_33
+|  |               |          +--|
+|  |               |             |     +----RN_38
+|  |               |             |  +--|
+|  |               |             |  |  +-----RN_51
+|  |               |             +--|
+|  |               |                +----RN_39
+|  +---------------|
+|                  |                    +--RN_7
+|                  |                 +--|
+|                  |                 |  +**RN_9
+|                  |              +--|
+|                  |              |  +--RN_8
+|                  |           +--|
+|                  |           |  +--RN_17
+|                  |        +--|
+|                  |        |  |  +--RN_12
+|                  |        |  +--|
+|                  |        |     +--RN_13
+|                  |     +--|
+|                  |     |  |     +--RN_15
+|                  |     |  |  +--|
+|                  |     |  |  |  |  +--RN_47
+|                  |     |  |  |  +--|
+|                  |     |  |  |     +--RN_48
+|                  |     |  +--|
+|                  |     |     |  +--RN_16
+|                  |     |     +--|
+|                  |     |        |  +--RN_45
+|                  |     |        +--|
+|                  |     |           +--RN_46
+|                  |  +--|
+|                  |  |  +--RN_14
+|                  +--|
+|                     +--RN_18
+|
++--RN_43
+|
++**__root__
+
+Tree in newick format:
+
+((RN_1:0.0824065644,(((((((((RN_2:0.2697734128,RN_21:0.2395082249):0.0576963484,RN_5:0.3499337918):0.0540900968,(((((RN_10:0.0262752032,RN_11:0.0286788306):0.2115393549,RN_22:0.1650837112):0.0392958416,RN_25:0.2123743365):0.0165136034,RN_23:0.2314583617):0.0198284808,(RN_24:0.1503849882,RN_26:0.2530140085):0.0650944839):0.1696337609):0.1084824607,RN_3:0.3290774990):0.2439384918,RN_4:0.4322067057):0.1576753963,(RN_27:0.2917102518,RN_28:0.2948986759):0.0825669616):0.1892531922,((RN_19:0.6660168863,RN_20:0.4471203611):0.3455496285,RN_29:1.3567495906):0.3708360202):0.0779300656,(RN_6:1.1849070175,(((((RN_30:0.6428975720,(OUTGRP:3.5517800855,(RN_49:0.3448651255,RN_50:0.4050131278):0.3692124587):0.0099658641):0.2309231700,RN_37:0.8121492025):0.0364865799,RN_34:0.8408200298):0.0725831801,(RN_32:0.6312541846,(RN_35:0.7741954173,(RN_36:0.7836870791,(RN_40:0.6777673869,(RN_41:0.0950890163,RN_42:0.1304795605):0.5607288981):0.2151673889):0.0417799086):0.1405857576):0.1313513652):0.1465118489,((RN_31:0.3956963582,RN_33:0.4967047385):0.2074382019,((RN_38:0.6393656002,RN_51:0.8553843227):0.0651717351,RN_39:0.7577307632):0.1102209510):0.0755910082):0.6902966711):0.1533279674):0.4595068394,(((((((RN_7:0.0038326181,RN_9:0.0004590565):0.0355621761,RN_8:0.0255915732):0.0510645447,RN_17:0.1054134366):0.0713406695,(RN_12:0.0361349840,RN_13:0.0629182066):0.1296988889):0.1023076951,((RN_15:0.1452950012,(RN_47:0.0179614268,RN_48:0.0089421298):0.1818199175):0.1175897177,(RN_16:0.2358808152,(RN_45:0.0027177111,RN_46:0.0131994940):0.1071496885):0.0366645114):0.2423244368):0.0505646719,RN_14:0.1998329577):0.1500200986,RN_18:0.1569444296):0.3796608490):2.1047027541):0.2000808039,RN_43:0.0210251099):0.0000009985;
+
+TIME STAMP
+----------
+
+Date and time: Mon Oct 16 18:41:34 2023
+Total CPU time used: 2381.223113 seconds (0h:39m:41s)
+Total wall-clock time used: 150.0517116 seconds (0h:2m:30s)
+
