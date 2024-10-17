@@ -505,27 +505,27 @@ fi
 
 calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
 	--exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-	--proba_min $params.proba_cutoff --plot -x pdf \
+	--proba_cutoff $params.proba_cutoff --plot -x pdf \
 	--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 
 if [ $params.internal = true ]; then
 	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --plot -x pdf --subset internal \
+		--proba_cutoff $params.proba_cutoff --plot -x pdf --subset internal \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_internal.tsv
 fi
 if [ $params.terminal = true ]; then
 	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --plot -x pdf --subset terminal \
+		--proba_cutoff $params.proba_cutoff --plot -x pdf --subset terminal \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 	rm mean_expexted_mutations_terminal.tsv
 fi
 if [ $params.branch_spectra = true ]; then
 	calculate_mutspec.py -b $obs_muts -e $exp_freqs -o . \
         --exclude OUTGRP,ROOT --mnum192 $params.mnum192 $params.proba_arg \
-		--proba_min $params.proba_cutoff --branches \
+		--proba_cutoff $params.proba_cutoff --branches \
 		--syn $params.syn4f_arg $params.all_arg $params.nonsyn_arg
 fi
 """
