@@ -46,10 +46,8 @@ Here listed all dependencies used in the NeMu pipeline during mutatoinal spectra
 8. **Pymutspec** 0.0.8 Python package that we developed for mutation extraction and spectrum calculation.
 9. **Pyvolve** 1.1.0 (modified) for neutral evolution simutation using MutSel models
 
-## Article
+## How to cite?
 
-Read our draft article for more details!
-
-- NeMu: A Comprehensive Pipeline for Accurate Reconstruction of Neutral Mutation Spectra 
-from Evolutionary Data Bogdan Efimenko, Konstantin Popadin, Konstantin Gunbin 
-**bioRxiv** 2023.12.13.571433; doi: https://doi.org/10.1101/2023.12.13.571433
+```text
+Bogdan Efimenko, Konstantin Popadin, Konstantin Gunbin, NeMu: a comprehensive pipeline for accurate reconstruction of neutral mutation spectra from evolutionary data, Nucleic Acids Research, Volume 52, Issue W1, 5 July 2024, Pages W108–W115, https://doi.org/10.1093/nar/gkae438
+```

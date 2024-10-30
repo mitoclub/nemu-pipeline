@@ -1,8 +1,8 @@
 # syn4f="false" #//* @checkbox @description:"Run extraction of synonymous fourfold mutational spectra"
 # use_probabilities="true" #//* @checkbox @description:"Use probabilities of nucleotides in mutational spectra calculation"
 mnum192="16" #//* @input @description:"Number of mutation types (max 192) required to calculate and plot 192-component mutational spectra"
-proba_min="0.1" #//* @input @description:"Mutation probability cutoff: mutations with lower probability will not be considered in spectra calculation"
-#//* @style @multicolumn:{syn4f, use_probabilities}, {mnum192, proba_min}
+proba_cutoff="0.1" #//* @input @description:"Mutation probability cutoff: mutations with lower probability will not be considered in spectra calculation"
+#//* @style @multicolumn:{syn4f, use_probabilities}, {mnum192, proba_cutoff}
 
 # input
 # val(namet), file(tree)
@@ -36,9 +36,9 @@ if [ $nspecies == "single" ]; then
     # mv run.log ${label}_mut_extraction.log
 
     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_mutations.txt -o . \
-        --exclude OUTGRP,ROOT --mnum192 $mnum192 -l $label --proba --proba_min $proba_min --syn --plot -x pdf
+        --exclude OUTGRP,ROOT --mnum192 $mnum192 -l $label --proba --proba_cutoff $proba_cutoff --syn --plot -x pdf
     calculate_mutspec.py -b observed_mutations_${label}.tsv -e expected_mutations.txt -o . \
-        --exclude OUTGRP,ROOT --mnum192 $mnum192 -l $label --proba --proba_min $proba_min --syn --plot -x pdf --subset internal
+        --exclude OUTGRP,ROOT --mnum192 $mnum192 -l $label --proba --proba_cutoff $proba_cutoff --syn --plot -x pdf --subset internal
 
     cp ms12syn_${label}.tsv ms12syn_${label}.txt
 
