@@ -67,9 +67,7 @@ From: centos:7
     rm TreeShrink-$TREESHRINK_VERSION.tar.gz
     
     echo 'Installing latest version of PyMutSpec!'
-    git clone https://github.com/mitoclub/PyMutSpec.git /opt/pymutspec
-    cd /opt/pymutspec
-    python3 setup.py install
+    pip install PyMutSpec==0.0.12
 
     echo 'Installing Pyvolve!'
     pip3 install pyvolve==$PYVOLVE_VERSION
@@ -262,4 +260,5 @@ From: centos:7
     fi
 
 %labels
-    Version v3.2
+    Maintainer kpotoh, mitofungen.com
+    Version v1.0.2
