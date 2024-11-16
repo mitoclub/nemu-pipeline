@@ -1,5 +1,10 @@
 # Nemu-pipeline
 
+[![NeMu Paper](https://img.shields.io/badge/DOI-10.1093%2Fnar%2Fgkae438-blue)](https://doi.org/10.1093/nar/gkae438)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/mitoclub/nemu-pipeline)
+![GitHub last commit](https://img.shields.io/github/last-commit/mitoclub/nemu-pipeline)
+
+
 This repository contains the pipeline for neutral mutational spectra evaluation based on evolutionary data and materials for the publication titled "NeMu: A Comprehensive Pipeline for Accurate Reconstruction of Neutral Mutation Spectra from Evolutionary Data" by Efimenko B. et al.
 
 ## Webserver
