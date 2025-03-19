@@ -4,4 +4,4 @@
 
 [submodule "nemu-pipeline-nf"]
 	path = nemu-pipeline-nf
-	url = https://github.com/mitofungen/nemu-pipeline-nf.git
+	url = https://github.com/mitoclub/nemu-pipeline-nf.git
