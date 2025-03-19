@@ -17,7 +17,7 @@ Check [Wiki](https://nemu-pipeline.com/Information) to read how to use the pipel
 
 ## Repository details
 
-- `./pipeline/` directory contains *.nf files (Nextflow) with 2 versions of the pipeline: for single-protein and multiple-nucleotide inputs
+- `./nemu-pipeline-nf/` link to repo that contains *.nf files (Nextflow) with 2 versions of the pipeline: for single-protein and multiple-nucleotide inputs
 - `./singularity/` - definition files for the container used to store all dependencies
 - `./data/` - several intermediate files from analyses, example inputs, full example run and supplementary data for the article
 - `./figures/` - figures from all performed analyses and comparisons, pipeline schemes, etc.
