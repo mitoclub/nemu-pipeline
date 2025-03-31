@@ -67,7 +67,7 @@ From: centos:7
     rm TreeShrink-$TREESHRINK_VERSION.tar.gz
     
     echo 'Installing latest version of PyMutSpec!'
-    pip install PyMutSpec==0.0.12
+    pip install PyMutSpec==0.0.13
 
     echo 'Installing Pyvolve!'
     pip3 install pyvolve==$PYVOLVE_VERSION
