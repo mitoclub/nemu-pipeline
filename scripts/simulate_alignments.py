@@ -241,7 +241,11 @@ def main(path_to_msa, path_to_tree, path_to_mutspec, rates, path_to_rec, iqtree_
     consensus = get_consensus(path_to_msa, gencode)
     used_codons_share = len(codons) * 3 / len(consensus) * 100
     print(f'rates: {custom_mutation_asym}\n#variable codons: {len(codons)}\nused codons share: {used_codons_share:.2f}%', file=sys.stderr)
+    
+    ################ THIS SHOULD BE EQUILIBRIUM FREQUENCIES INSTEAD OF OBSERVED ##############
     freqs = get_codon_freqs(path_to_msa, codons, 2)
+    ##########################################################################################
+
     n_par_sites = read_parsimony_informative_sites_num(iqtree_log) if iqtree_log else len(codons)
     par_factor = n_par_sites // 3
     trees = read_codon_specific_trees(path_to_tree, path_to_rec, len(consensus), par_factor)

@@ -1,3 +1,7 @@
 [submodule "pyvolve"]
 	path = pyvolve
 	url = https://github.com/kpotoh/pyvolve.git
+
+[submodule "nemu-pipeline-nf"]
+	path = nemu-pipeline-nf
+	url = https://github.com/mitoclub/nemu-pipeline-nf.git
