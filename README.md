@@ -6,8 +6,7 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/mitoclub/nemu-pipeline)
 ![GitHub last commit](https://img.shields.io/github/last-commit/mitoclub/nemu-pipeline)
 
-
-This repository contains the pipeline for neutral mutational spectra evaluation based on evolutionary data and materials for the publication titled "NeMu: A Comprehensive Pipeline for Accurate Reconstruction of Neutral Mutation Spectra from Evolutionary Data" by Efimenko B. et al.
+This repository contains the materials for the paper about NeMu-pipeline titled "NeMu: A Comprehensive Pipeline for Accurate Reconstruction of Neutral Mutation Spectra from Evolutionary Data" by Efimenko B. et al.
 
 ## Webserver
 
@@ -15,9 +14,12 @@ Enjoy the pipeline using our user-friendly [webserver](https://nemu-pipeline.com
 
 Check [Wiki](https://nemu-pipeline.com/Information) to read how to use the pipeline
 
+## NeMu-pipeline code
+
+Nextflow workflow is available at https://github.com/mitoclub/nemu-pipeline-nf
+
 ## Repository details
 
-- `./nemu-pipeline-nf/` link to repo that contains *.nf files (Nextflow) with 2 versions of the pipeline: for single-protein and multiple-nucleotide inputs
 - `./singularity/` - definition files for the container used to store all dependencies
 - `./data/` - several intermediate files from analyses, example inputs, full example run and supplementary data for the article
 - `./figures/` - figures from all performed analyses and comparisons, pipeline schemes, etc.
